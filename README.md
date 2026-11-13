@@ -1,4 +1,4 @@
-# PortFlow-SimOpt-MCP · Chattogram NCT
+﻿# PortFlow-SimOpt-MCP Â· Chattogram NCT
 
 ![Python](https://img.shields.io/badge/python-3.10%2B-3776AB?logo=python&logoColor=white)
 ![OR-Tools CP-SAT](https://img.shields.io/badge/OR--Tools-CP--SAT-4285F4)
@@ -12,7 +12,7 @@ A simulation-optimisation digital twin of the **New Mooring Container Terminal (
 
 The engine is served over the Model Context Protocol, so an AI assistant can call it. A control-room web page carries a JavaScript port of the planner and simulator, so it can re-plan a typed disruption on the spot.
 
-> **Live HMI:** `<add the share link of the PortFlow Control Tower artifact>` · **Design file:** [Figma](https://www.figma.com/design/u2uDIWNSOxIM0IFEvztXZ8)
+> **Live HMI:** `<add the share link of the PortFlow Control Tower artifact>` Â· **Design file:** [Figma](https://www.figma.com/design/u2uDIWNSOxIM0IFEvztXZ8)
 >
 > ![Control tower](docs/screenshots/01_nominal.png)
 
@@ -23,9 +23,9 @@ The engine is served over the Model Context Protocol, so an AI assistant can cal
 | Capability | Plain words | Method |
 |---|---|---|
 | Predicts yard gridlock | Plays the next days forward to see whether discharging fast will pack the yard past the point where yard cranes spend their time digging. | SimPy DES of a berth's yard cluster with a closed truck loop that blocks the quay; 20 replications per crane mode |
-| Grooms stacks at night | Rearranges stacks during the quiet shift so boxes leaving first sit on top. | Weibull dwell-aware slotting on a 40 × 6 × 5 NumPy tensor, then greedy pre-marshalling that never moves dangerous goods |
+| Grooms stacks at night | Rearranges stacks during the quiet shift so boxes leaving first sit on top. | Weibull dwell-aware slotting on a 40 Ã— 6 Ã— 5 NumPy tensor, then greedy pre-marshalling that never moves dangerous goods |
 | Berths ships only on enough water | Lets a ship enter or leave only in hours when the predicted tide covers its draught plus clearance, by daylight if it is large. | Tide-gated CP-SAT start/departure domains, 2-D no-overlap on the quay, cumulative pilot/tug resource |
-| Shaves reefer peak power | Pre-cools refrigerated boxes so compressors can be capped in the 17:00–22:00 tariff window without any box warming past −18 °C. | Lumped RC thermal model; minimum compressor cap by bisection over 7 simulated days |
+| Shaves reefer peak power | Pre-cools refrigerated boxes so compressors can be capped in the 17:00â€“22:00 tariff window without any box warming past âˆ’18 Â°C. | Lumped RC thermal model; minimum compressor cap by bisection over 7 simulated days |
 
 ---
 
@@ -33,46 +33,46 @@ The engine is served over the Model Context Protocol, so an AI assistant can cal
 
 Eight container ships: HAIAN ZETA and HR HERA at anchor; HR FARHA, KOTA DUNIA, CNC NEPTUNE, MTT PELEPAS, SINAR SABA and KOTA RAJIN inbound. SOL MALAYSIA is already alongside. Simulation figures are means of 20 replications.
 
-| KPI | FCFS baseline¹ | CP-SAT + Benders, no off-dock relief | **CP-SAT + Benders + 33% ICD evacuation** | Change vs baseline |
+| KPI | FCFS baselineÂ¹ | CP-SAT + Benders, no off-dock relief | **CP-SAT + Benders + 33% ICD evacuation** | Change vs baseline |
 |---|---:|---:|---:|---:|
-| Average turnaround | 3.04 d | 2.95 d | **2.01 d** | −33.9% |
-| Anchorage waiting (all ships) | 53 h | 35 h | **35 h** | −34.0% |
-| Quay slowdown from the yard, β | 2.02 | 2.02 | **1.00** | −50.5% |
-| Peak yard occupancy | 95.5% | 95.5% | **62.1%** | −33.4 pts |
-| Gate truck wait | 1,882 min | 1,882 min | **69 min** | −96.3% |
+| Average turnaround | 3.04 d | 2.95 d | **2.01 d** | âˆ’33.9% |
+| Anchorage waiting (all ships) | 53 h | 35 h | **35 h** | âˆ’34.0% |
+| Quay slowdown from the yard, Î² | 2.02 | 2.02 | **1.00** | âˆ’50.5% |
+| Peak yard occupancy | 95.5% | 95.5% | **62.1%** | âˆ’33.4 pts |
+| Gate truck wait | 1,882 min | 1,882 min | **69 min** | âˆ’96.3% |
 | Unproductive rehandle crane time | 171 h | 171 h | **0 h** | eliminated |
 | Held alongside for tide or daylight | 66 h | 25 h | 94 h | +42% (see note) |
-| Fuel burned waiting, proxy² | 98.1 t | 64.8 t | **64.8 t** | −33.3 t |
-| CP-SAT objective | 3,948 | 3,624 | **2,544** | −35.6% |
+| Fuel burned waiting, proxyÂ² | 98.1 t | 64.8 t | **64.8 t** | âˆ’33.3 t |
+| CP-SAT objective | 3,948 | 3,624 | **2,544** | âˆ’35.6% |
 
-¹ Ships berth in arrival order, each with every crane it can take, no off-dock evacuation. ² 1.85 t of HFO per hour at anchor, a service-speed burn rate; read it as the upper bound of what Virtual Arrival slow-steaming could save.
+Â¹ Ships berth in arrival order, each with every crane it can take, no off-dock evacuation. Â² 1.85 t of HFO per hour at anchor, a service-speed burn rate; read it as the upper bound of what Virtual Arrival slow-steaming could save.
 
-**Bottleneck migration.** Optimising the berth plan alone buys 3% (3.04 → 2.95 days), because the yard is the constraint: at 78% starting occupancy the discharge wave pushes it to 95%, and every extra crane only fills it faster (β = 2.02). Evacuating a third of the boxes to off-dock depots during the night shift keeps the yard at 62%, β falls to 1.00, and the same CP-SAT plan delivers the remaining 31%. Ships then finish cargo sooner and wait alongside for a legal tide more often (94 h of holds), which is why holds rise while turnaround falls.
+**Bottleneck migration.** Optimising the berth plan alone buys 3% (3.04 â†’ 2.95 days), because the yard is the constraint: at 78% starting occupancy the discharge wave pushes it to 95%, and every extra crane only fills it faster (Î² = 2.02). Evacuating a third of the boxes to off-dock depots during the night shift keeps the yard at 62%, Î² falls to 1.00, and the same CP-SAT plan delivers the remaining 31%. Ships then finish cargo sooner and wait alongside for a legal tide more often (94 h of holds), which is why holds rise while turnaround falls.
 
 **Optimised berth plan**
 
-| Vessel | Berth (m) | Alongside | Sails | Quay cranes | Moves³ | Wait (h) | Tide/daylight hold (h) |
+| Vessel | Berth (m) | Alongside | Sails | Quay cranes | MovesÂ³ | Wait (h) | Tide/daylight hold (h) |
 |---|---:|---|---|---:|---:|---:|---:|
-| HAIAN ZETA | 398–581 | Fri 13 Nov 14:00 | Sun 15 Nov 06:00 | 3 | 1,456 | 0 | 10 |
-| HR HERA | 601–784 | Fri 13 Nov 15:00 | Sun 15 Nov 15:00 | 3 | 1,448 | 1 | 18 |
-| KOTA DUNIA | 206–322 | Sat 14 Nov 14:00 | Sun 15 Nov 05:00 | 2 | 499 | 0 | 0 |
-| HR FARHA | 0–185 | Sat 14 Nov 16:00 | Tue 17 Nov 06:00 | 3 | 1,497 | 9 | 31 |
-| CNC NEPTUNE | 205–377 | Sun 15 Nov 16:00 | Tue 17 Nov 06:00 | 3 | 1,341 | 5 | 10 |
-| MTT PELEPAS | 206–378 | Tue 17 Nov 10:00 | Thu 19 Nov 06:00 | 3 | 1,490 | 0 | 13 |
-| KOTA RAJIN | 40–186 | Tue 17 Nov 20:00 | Wed 18 Nov 20:00 | 2 | 802 | 0 | 0 |
-| SINAR SABA | 410–582 | Wed 18 Nov 08:00 | Fri 20 Nov 08:00 | 3 | 1,740 | 20 | 12 |
+| HAIAN ZETA | 398â€“581 | Fri 13 Nov 14:00 | Sun 15 Nov 06:00 | 3 | 1,456 | 0 | 10 |
+| HR HERA | 601â€“784 | Fri 13 Nov 15:00 | Sun 15 Nov 15:00 | 3 | 1,448 | 1 | 18 |
+| KOTA DUNIA | 206â€“322 | Sat 14 Nov 14:00 | Sun 15 Nov 05:00 | 2 | 499 | 0 | 0 |
+| HR FARHA | 0â€“185 | Sat 14 Nov 16:00 | Tue 17 Nov 06:00 | 3 | 1,497 | 9 | 31 |
+| CNC NEPTUNE | 205â€“377 | Sun 15 Nov 16:00 | Tue 17 Nov 06:00 | 3 | 1,341 | 5 | 10 |
+| MTT PELEPAS | 206â€“378 | Tue 17 Nov 10:00 | Thu 19 Nov 06:00 | 3 | 1,490 | 0 | 13 |
+| KOTA RAJIN | 40â€“186 | Tue 17 Nov 20:00 | Wed 18 Nov 20:00 | 2 | 802 | 0 | 0 |
+| SINAR SABA | 410â€“582 | Wed 18 Nov 08:00 | Fri 20 Nov 08:00 | 3 | 1,740 | 20 | 12 |
 
-³ Estimated as 0.85 × deadweight / 14; box counts per call are not published.
+Â³ Estimated as 0.85 Ã— deadweight / 14; box counts per call are not published.
 
 **Other results**
 
 | Item | Result |
 |---|---|
-| Stability, HAIAN ZETA with a 360-box parcel | KG 9.36 m, KM 10.79 m, **GM 1.44 m** (≥ 1.20), list **1.81°** (≤ 3.0) |
-| Blocking boxes in one 40-bay block, 80% full | random 485 → dwell-aware 293 → **260 after 33 night moves** (−46%) |
-| Off-dock evacuation | ≈ 1,325 boxes per berth-cluster cycle (logged run: 1,081 at night, 240 direct from quay) |
-| Reefer power, 400 plugs | mean daily peak 1,351 → **1,080 kW** (−20.1%); 17:00–22:00 peak 1,395 → 1,065 kW (−23.7%); **0** breaches, warmest box −18.27 °C over 7 days |
-| Pilot/tug sets (v6 upgrade) | 1 set: 2.62 d, 77 h waiting · 2 sets: 2.01 d · 3 sets: 2.01 d |
+| Stability, HAIAN ZETA with a 360-box parcel | KG 9.36 m, KM 10.79 m, **GM 1.44 m** (â‰¥ 1.20), list **1.81Â°** (â‰¤ 3.0) |
+| Blocking boxes in one 40-bay block, 80% full | random 485 â†’ dwell-aware 293 â†’ **260 after 33 night moves** (âˆ’46%) |
+| Off-dock evacuation | â‰ˆ 1,325 boxes per berth-cluster cycle (logged run: 1,081 at night, 240 direct from quay) |
+| Reefer power, 400 plugs | mean daily peak 1,351 â†’ **1,080 kW** (âˆ’20.1%); 17:00â€“22:00 peak 1,395 â†’ 1,065 kW (âˆ’23.7%); **0** breaches, warmest box âˆ’18.27 Â°C over 7 days |
+| Pilot/tug sets (v6 upgrade) | 1 set: 2.62 d, 77 h waiting Â· 2 sets: 2.01 d Â· 3 sets: 2.01 d |
 | Draught check | at the 9.5 m planning draught HR FARHA has 13 daylight bar windows and SINAR SABA 9; at their AIS-reported 9.6 m and 9.8 m each has one, on 21 Nov, because the spring tides end on 15 Nov |
 | Night cut-off | moving the daylight-only cut-off from sunset (17:09) to 18:00 leaves the plan unchanged (2.01 d) |
 
@@ -92,17 +92,17 @@ flowchart LR
   S2 --> L
   S3 --> L
   S4 -. "ingest/aisstream_ingest.py" .-> L
-  L --> SITE["sites/chattogram_nct.py<br/>tide curve · bar gates · NCT config"]
-  SITE --> M["CP-SAT master<br/>berths · cranes · tide · pilots/tugs"]
+  L --> SITE["sites/chattogram_nct.py<br/>tide curve Â· bar gates Â· NCT config"]
+  SITE --> M["CP-SAT master<br/>berths Â· cranes Â· tide Â· pilots/tugs"]
   M -- "crane modes in the plan" --> D["SimPy yard DES<br/>20 replications per mode"]
-  D -- "β cuts" --> M
+  D -- "Î² cuts" --> M
   Y["NumPy yard tensor<br/>Weibull stacking + grooming"] --> D
   M --> OUT["nct_control_tower_data.json"]
   R["Reefer RC model"] --> OUT
   H["Hydrostatics"] --> OUT
   OUT --> WEB["web/build.py"]
   WEB --> HMI["Control-tower HMI<br/>engine.js re-plans in the page"]
-  SRV["server.py · FastMCP · 13 tools"] --- M
+  SRV["server.py Â· FastMCP Â· 13 tools"] --- M
 ```
 
 ```mermaid
@@ -115,7 +115,7 @@ sequenceDiagram
   C->>E: {"actions":[{"type":"delay","vessel":"HR FARHA","hours":6}]}
   loop Benders iterations
     E->>E: berth planner over 400 berthing orders
-    E->>E: yard DES for each new crane mode → β cut
+    E->>E: yard DES for each new crane mode â†’ Î² cut
   end
   E->>V: schedule, KPIs, occupancy trace
   V->>U: KPIs count to new values, ships replay, Gantt bars slide
@@ -125,7 +125,7 @@ sequenceDiagram
 
 ## Chattogram NCT formulation
 
-**Sets and data.** Vessels $v \in V$ with length $L_v$ (plus a 20 m gap), draught $d_v$, arrival hour $a_v$, moves $m_v$; hours $t \in \{0,\dots,H\}$, $H = 192$; crane counts $q \in \{1,\dots,\bar q_v\}$ ($\bar q_v = 3$ if LOA ≥ 160 m, else 2); predicted tide $h(t)$ in metres above MLLW; quay crane rate $p = 18.5$ moves/h; crane interference $e(q) = q^{0.88}$; transit time $T = 2$ h; pilot/tug sets $K = 2$; quay crane pool $C(t) = 14 - \text{out}(t)$.
+**Sets and data.** Vessels $v \in V$ with length $L_v$ (plus a 20 m gap), draught $d_v$, arrival hour $a_v$, moves $m_v$; hours $t \in \{0,\dots,H\}$, $H = 192$; crane counts $q \in \{1,\dots,\bar q_v\}$ ($\bar q_v = 3$ if LOA â‰¥ 160 m, else 2); predicted tide $h(t)$ in metres above MLLW; quay crane rate $p = 18.5$ moves/h; crane interference $e(q) = q^{0.88}$; transit time $T = 2$ h; pilot/tug sets $K = 2$; quay crane pool $C(t) = 14 - \text{out}(t)$.
 
 **Bar gate.** Hour $t$ is legal for vessel $v$ when
 
@@ -174,7 +174,7 @@ The master is the model above with $\hat\beta_k$ for each crane effect $k = e(q)
 3. **Finite termination.** There are finitely many crane effects (three here), and each iteration either adds a new cut or stops, so the loop ends within $|K| + 1$ iterations.
 4. **Optimality at termination.** When the master's plan uses only simulated modes, its cost is evaluated with true $\beta$ values, so it equals the lower bound and the plan is optimal.
 
-Observed bounds: optimised plan 2,544 → 2,544 (2 iterations); no-relief plan 2,544 → 3,624 → 3,624 (3 iterations).
+Observed bounds: optimised plan 2,544 â†’ 2,544 (2 iterations); no-relief plan 2,544 â†’ 3,624 â†’ 3,624 (3 iterations).
 
 **Scope of the guarantee.** Optimal relative to the simulated response: $\beta$ are sample means with fixed seeds, and the cut assumes a berth's slowdown depends on its own crane mode (each ocean berth has its own yard cluster of seven yard cranes).
 
@@ -201,15 +201,15 @@ What was live on 13 Nov 2026: ship names, IMO and MMSI numbers, dimensions, dead
 
 | Item | Bound in the model | Public source | Effect on this queue |
 |---|---|---|---|
-| Quay | 820 m ocean (4 berths) + 180 m barge | 1,000 m, 5 berths; the operator page names the Pangaon berth NCT-1 | — |
+| Quay | 820 m ocean (4 berths) + 180 m barge | 1,000 m, 5 berths; the operator page names the Pangaon berth NCT-1 | â€” |
 | Day limits | 200 m LOA, 9.5 m draught; 10.0 m on spring highs | 186 m LOA by day | no ship exceeds 185 m |
-| Night (daylight-only rule) | > 170 m or > 9.0 m may not move 17:00–06:00 | 175 m at night; brief says 153–170 m, 18:00 | no ship lies between 153 and 170 m; an 18:00 cut-off gives the same plan |
+| Night (daylight-only rule) | > 170 m or > 9.0 m may not move 17:00â€“06:00 | 175 m at night; brief says 153â€“170 m, 18:00 | no ship lies between 153 and 170 m; an 18:00 cut-off gives the same plan |
 | Quay cranes | 14 at 18.5 moves/h | 10 QGC + 1 mobile harbour crane | rate has no public source |
-| Yard cranes | 28 RTG (7 per ocean berth), 12 straddle carriers | 23 RTG, 12 straddle carriers | — |
-| Yard | 14 blocks × 40 × 6 × 5; 4,200 TEU per berth cluster | 292,287 m² | 14 × 1,200 slots = 16,800, not 28,000 TEU |
-| Reefer plugs | 400 | 700 | — |
-| Off-dock share | 33% | no public source found | — |
-| Assumptions | channel depth 7.5 m, UKC 0.6 m, 2 pilot/tug sets, yard 78% full at start, spring threshold 3.0 m | — | each is a key in `sites/chattogram_nct.py` |
+| Yard cranes | 28 RTG (7 per ocean berth), 12 straddle carriers | 23 RTG, 12 straddle carriers | â€” |
+| Yard | 14 blocks Ã— 40 Ã— 6 Ã— 5; 4,200 TEU per berth cluster | 292,287 mÂ² | 14 Ã— 1,200 slots = 16,800, not 28,000 TEU |
+| Reefer plugs | 400 | 700 | â€” |
+| Off-dock share | 33% | no public source found | â€” |
+| Assumptions | channel depth 7.5 m, UKC 0.6 m, 2 pilot/tug sets, yard 78% full at start, spring threshold 3.0 m | â€” | each is a key in `sites/chattogram_nct.py` |
 
 ---
 
@@ -219,19 +219,19 @@ What was live on 13 Nov 2026: ship names, IMO and MMSI numbers, dimensions, dead
 
 | Case | CP-SAT | In-page | Gap |
 |---|---:|---:|---:|
-| nominal · HR FARHA +6 h · 6 QGC out 48 h · 3 RTG out 24 h · ICD 10% | identical | identical | 0.0% |
-| ICD 0% | 3,624 | 3,462 | −4.5% |
+| nominal Â· HR FARHA +6 h Â· 6 QGC out 48 h Â· 3 RTG out 24 h Â· ICD 10% | identical | identical | 0.0% |
+| ICD 0% | 3,624 | 3,462 | âˆ’4.5% |
 | yard starts 86% | 3,060 | 3,156 | +3.1% |
 | one pilot/tug set | 3,756 | 3,990 | +6.2% |
 
-Gaps in both directions come from the JavaScript DES estimating slightly different β (2.006 against 2.022 with no relief), plus the bounded search. On a combined storm case (three ships 12 h late, a crane out, two yard cranes out, no evacuation) CP-SAT found a plan (2.89 d) that the in-page planner did not. The page says so and points to `nct_simulate_disruption` on the MCP server.
+Gaps in both directions come from the JavaScript DES estimating slightly different Î² (2.006 against 2.022 with no relief), plus the bounded search. On a combined storm case (three ships 12 h late, a crane out, two yard cranes out, no evacuation) CP-SAT found a plan (2.89 d) that the in-page planner did not. The page says so and points to `nct_simulate_disruption` on the MCP server.
 
 ---
 
 ## Install and run
 
 ```bash
-git clone https://github.com/<you>/portflow-simopt-mcp.git
+git clone https://github.com/artahmid03-source/portflow-simopt-mcp.git
 cd portflow-simopt-mcp
 uv sync --extra ais                  # Python 3.10+, OR-Tools, SimPy, FastMCP, websockets
 uv run pytest                        # 48 tests, about 1 minute
@@ -271,8 +271,8 @@ sites/chattogram_nct.py      NCT site model: config, tide curve, bar gates, pilo
 server.py                    MCP entry point (stdio)
 data/live_chattogram_2026-11-13.json   the live queue and tides, with source and basis of every field
 ingest/aisstream_ingest.py   AIS ingestion
-run_nct_pipeline.py          live-queue pipeline → nct_control_tower_data.json
-tests/                       test_invariants.py (19) · test_nct.py (25) · test_ais_ingest.py (4)
+run_nct_pipeline.py          live-queue pipeline â†’ nct_control_tower_data.json
+tests/                       test_invariants.py (19) Â· test_nct.py (25) Â· test_ais_ingest.py (4)
 web/                         HMI: src/engine.js, src/PortFlowControlTower.template.jsx, build.py, validate.mjs, ftest.js
 docs/screenshots/            HMI captures
 ```
@@ -289,7 +289,7 @@ docs/screenshots/            HMI captures
 
 ## References
 
-- J. N. Hooker and G. Ottosson (2003). Logic-based Benders decomposition. *Mathematical Programming* 96(1), 33–60.
-- C. Bierwirth and F. Meisel (2015). A follow-up survey of berth allocation and quay crane scheduling problems in container terminals. *European Journal of Operational Research* 244(3), 675–689.
+- J. N. Hooker and G. Ottosson (2003). Logic-based Benders decomposition. *Mathematical Programming* 96(1), 33â€“60.
+- C. Bierwirth and F. Meisel (2015). A follow-up survey of berth allocation and quay crane scheduling problems in container terminals. *European Journal of Operational Research* 244(3), 675â€“689.
 
 MIT licence.
