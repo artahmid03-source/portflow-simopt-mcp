@@ -1,0 +1,198 @@
+// PortFlow in-browser engine: a JavaScript port of the NCT site model so the HMI can
+// re-plan and re-simulate on the spot. The Python engine (CP-SAT + SimPy) stays the reference;
+// this port is checked against it case by case (see validate.mjs).
+//   - tide and daylight gates on the river transit
+//   - berth planner: serial schedule generation over a bounded set of berthing orders
+//   - yard discrete-event simulation (process-based kernel, same logic as the SimPy model)
+//   - two-way loop: the planner's crane modes are simulated and returned as cuts
+
+// ---------------------------------------------------------------- random numbers
+function rng(seed) {
+  let a = seed >>> 0;
+  const u = () => { a |= 0; a = (a + 0x6D2B79F5) | 0; let t = Math.imul(a ^ (a >>> 15), 1 | a); t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t; return ((t ^ (t >>> 14)) >>> 0) / 4294967296; };
+  return { u, exp: (mean) => -mean * Math.log(1 - u()), uni: (lo, hi) => lo + (hi - lo) * u() };
+}
+
+// ---------------------------------------------------------------- DES kernel
+class Env {
+  constructor() { this.now = 0; this.h = []; this.n = 0; }
+  at(t, fn) { const e = { t, n: this.n++, fn }; const h = this.h; let i = h.push(e) - 1; while (i > 0) { const p = (i - 1) >> 1; if (h[p].t < e.t || (h[p].t === e.t && h[p].n < e.n)) break; h[i] = h[p]; i = p; } h[i] = e; }
+  pop() { const h = this.h, top = h[0], last = h.pop(); if (h.length) { let i = 0; for (;;) { let c = 2 * i + 1; if (c >= h.length) break; if (c + 1 < h.length && (h[c + 1].t < h[c].t || (h[c + 1].t === h[c].t && h[c + 1].n < h[c].n))) c++; if (last.t < h[c].t || (last.t === h[c].t && last.n < h[c].n)) break; h[i] = h[c]; i = c; } h[i] = last; } return top; }
+  timeout(d) { return (cb) => this.at(this.now + d, cb); }
+  process(gen) { const step = () => { const r = gen.next(); if (!r.done) r.value(step); }; step(); }
+  run() { while (this.h.length) { const e = this.pop(); this.now = e.t; e.fn(); } }
+}
+class Resource {
+  constructor(env, cap) { this.env = env; this.cap = cap; this.users = 0; this.q = []; this.n = 0; }
+  request(prio = 0) { return (cb) => { if (this.users < this.cap) { this.users++; cb(); } else this.q.push({ prio, n: this.n++, cb }); }; }
+  release() {
+    this.users--;
+    if (!this.q.length) return;
+    let k = 0; for (let i = 1; i < this.q.length; i++) if (this.q[i].prio < this.q[k].prio || (this.q[i].prio === this.q[k].prio && this.q[i].n < this.q[k].n)) k = i;
+    const w = this.q.splice(k, 1)[0]; this.users++; this.env.at(this.env.now, w.cb);
+  }
+}
+
+export function rtgCycle(occ, blocking) {
+  const o = Math.min(Math.max(occ, 0.15), 0.95), base = 2.6 + blocking * 3.5;
+  return o <= 0.78 ? base * (1 + 0.25 * o) : Math.min(base * (1 + 0.42 * Math.pow(o / (1 - o), 1.32)), 20);
+}
+
+// One night shift and one discharge wave on a berth's yard cluster.
+export function simulateYard(p) {
+  const env = new Env(), R = rng(p.seed);
+  const rtg = new Resource(env, p.rtgFleet), xray = new Resource(env, 2), shuttle = new Resource(env, 3), trucks = new Resource(env, 12);
+  const cap = p.yardCap, NIGHT = 360, N_DIS = 750, N_GATE = 420, qcCycle = 1.25 / Math.max(p.intensity, 0.05);
+  const st = { teu: (p.occ / 100) * cap, peak: 0, waveStart: null, waits: [], gate: [], icdN: 0, icdD: 0, rehandle: 0, nominal: 0, doneAt: null, blocked: 0, trace: [] };
+  const cyc = () => rtgCycle(st.teu / cap, p.blocking);
+  const note = () => { if (env.now >= NIGHT) st.peak = Math.max(st.peak, (st.teu / cap) * 100); };
+  function* outage(start, dur) { yield env.timeout(start); yield rtg.request(-1); yield env.timeout(dur); rtg.release(); }
+  function* premarshal() { yield rtg.request(1); yield env.timeout(cyc()); rtg.release(); }
+  function* nightIcd() { yield rtg.request(1); yield env.timeout(cyc() * 0.85); st.teu -= 1; rtg.release(); yield shuttle.request(); yield env.timeout(1.4); st.icdN++; shuttle.release(); }
+  function* icdDirect() { yield shuttle.request(); yield env.timeout(1.4); st.icdD++; shuttle.release(); }
+  function* stack() {
+    const t0 = env.now; yield rtg.request(0); st.waits.push(env.now - t0);
+    const occ = st.teu / cap, c = rtgCycle(occ, p.blocking); if (occ > 0.8) st.rehandle += c - 2.6;
+    yield env.timeout(c); st.teu += 1; note(); rtg.release();
+    yield env.timeout(1.5); trucks.release();
+    if (R.u() < 0.14) { yield xray.request(); yield env.timeout(R.uni(3.5, 6.5)); xray.release(); }
+  }
+  function* discharge() {
+    yield env.timeout(NIGHT); st.waveStart = (st.teu / cap) * 100; note();
+    for (let i = 0; i < N_DIS; i++) {
+      const c = R.exp(qcCycle); st.nominal += c; yield env.timeout(c);
+      if (R.u() < p.icd) { env.process(icdDirect()); continue; }
+      const tb = env.now;
+      while (st.teu + trucks.users >= cap) yield env.timeout(1);
+      yield trucks.request(); st.blocked += env.now - tb; env.process(stack());
+    }
+    st.doneAt = env.now;
+  }
+  function* pickup(tArr) { yield rtg.request(1); st.gate.push(env.now - tArr); yield env.timeout(cyc() * 0.85); st.teu -= 1; rtg.release(); }
+  function* gate() { yield env.timeout(NIGHT); for (let i = 0; i < N_GATE; i++) { yield env.timeout(R.exp(2.1)); if (st.teu > 1000) env.process(pickup(env.now)); } }
+  function* sampler() { for (let t = 0; t <= 1500; t += 10) { st.trace.push([t, +(st.teu / cap * 100).toFixed(2), rtg.users, rtg.q.length]); yield env.timeout(10); } }
+  for (const [s, d] of p.rtgOutages || []) env.process(outage(s, d));
+  if (p.icd > 0) { for (let i = 0; i < p.premarshalJobs; i++) env.process(premarshal()); const n = Math.round(p.icd * st.teu); for (let i = 0; i < n; i++) env.process(nightIcd()); }
+  env.process(discharge()); env.process(gate()); if (p.trace) env.process(sampler());
+  env.run();
+  const mean = (a) => (a.length ? a.reduce((x, y) => x + y, 0) / a.length : 0);
+  return { beta: Math.max(1, (st.doneAt - NIGHT) / st.nominal), waveStart: st.waveStart, peak: st.peak, gateWait: mean(st.gate), rtgWait: mean(st.waits),
+    rehandleHrs: st.rehandle / 60, icdBoxes: st.icdN + st.icdD, blockedHrs: st.blocked / 60, makespanHrs: (st.doneAt - NIGHT) / 60, trace: st.trace };
+}
+
+export function simulateReplicated(p, reps) {
+  const runs = []; for (let k = 0; k < reps; k++) runs.push(simulateYard({ ...p, seed: 2026 + k, trace: p.trace && k === 0 }));
+  const avg = (f) => runs.reduce((s, r) => s + r[f], 0) / runs.length;
+  return { beta: +avg('beta').toFixed(3), waveStart: +avg('waveStart').toFixed(1), peak: +avg('peak').toFixed(1), gateWait: +avg('gateWait').toFixed(1), rtgWait: +avg('rtgWait').toFixed(2),
+    rehandleHrs: +avg('rehandleHrs').toFixed(1), icdBoxes: Math.round(avg('icdBoxes')), blockedHrs: +avg('blockedHrs').toFixed(2), trace: runs[0].trace, reps };
+}
+
+// ---------------------------------------------------------------- site model
+export const craneEffect = (q) => Math.pow(q, 0.88);
+export const modeKey = (q) => craneEffect(q).toFixed(3);
+
+export function makeSite(data) {
+  const C = data.config, live = data.live, tide = data.tide_hourly, epochHour = Number(live.plan_epoch_local.slice(11, 13));
+  const clock = (h) => (((epochHour + h) % 24) + 24) % 24;
+  const transitOk = (h, loa, draft) => {
+    if (h < 0 || h >= tide.length) return false;
+    if (loa > C.max_loa_m || draft > C.spring_max_draught_m) return false;
+    if (tide[h] < draft + C.ukc_m - C.channel_depth_m) return false;
+    if (draft > C.max_draught_m && tide[h] < C.spring_tide_min_m) return false;
+    const c = clock(h); if (c >= C.daylight_hours[0] && c < C.daylight_hours[1]) return true;
+    return loa <= C.night_max_loa_m && draft <= C.night_max_draught_m;
+  };
+  const vessels = (shift = {}) => live.vessels.map((v) => ({ id: v.name, imo: v.imo, mmsi: v.mmsi, len: Math.ceil(v.loa_m), loa: v.loa_m, draft: v.draught_used_m,
+    eta: v.eta_hr + (shift[v.name] || 0), moves: Math.round(0.85 * v.dwt_t / 14), minQc: 1, maxQc: v.loa_m >= 160 ? 3 : 2 }));
+  return { C, live, tide, clock, transitOk, vessels };
+}
+
+// Serial schedule generation: place vessels one by one in a given order.
+function buildPlan(site, vs, order, o) {
+  const { C } = site, H = C.horizon_hrs, T = C.transit_hrs, Q = C.quay_ocean_m, gap = C.berth_gap_m, K = o.tugSets;
+  const cranes = new Int16Array(H + 4), tugs = new Int16Array(H + 8), placed = [];
+  const pool = (h) => { let d = 0; for (const [a, b, n] of o.qgcOutages) if (a <= h && h < b) d += n; return Math.max(0, C.qgc_total - d); };
+  for (const f of site.live.fixed_occupants || []) { placed.push({ b0: f.berth_start_m, b1: f.berth_start_m + Math.ceil(f.loa_m) + gap, ts: 0, td: f.release_hr }); for (let k = 0; k < T; k++) tugs[f.release_hr + k]++; }
+  const rows = []; let cost = 0;
+  for (const idx of order) {
+    const v = vs[idx]; let best = null;
+    const qs = o.forceMax ? [v.maxQc] : Array.from({ length: v.maxQc - v.minQc + 1 }, (_, i) => v.minQc + i);
+    for (const q of qs) {
+      const beta = o.cuts[modeKey(q)] ?? 1, dur = Math.ceil(v.moves / (C.qgc_gmph / Math.max(beta, 0.5) * craneEffect(q)));
+      let tried = 0;
+      for (let ts = Math.max(v.eta + T, o.minStart); ts < H - 30 && tried < 14; ts++) {
+        let ok = true; for (let k = 1; k <= T; k++) if (!site.transitOk(ts - k, v.loa, v.draft) || tugs[ts - k] >= K) { ok = false; break; }
+        if (!ok) continue;
+        for (let h = ts; h < ts + dur; h++) if (cranes[h] + q > pool(h)) { ok = false; break; }
+        if (!ok) continue;
+        let td = -1; for (let h = ts + dur; h < H - T; h++) { let g = true; for (let k = 0; k < T; k++) if (!site.transitOk(h + k, v.loa, v.draft) || tugs[h + k] >= K) { g = false; break; } if (g) { td = h; break; } }
+        if (td < 0) continue;
+        const busy = placed.filter((p) => p.ts < td && ts < p.td).sort((a, b) => a.b0 - b.b0);
+        let b = -1; const cands = [0, ...busy.map((p) => p.b1)];
+        for (const c of cands) { if (c + v.len > Q) continue; if (busy.every((p) => c + v.len + gap <= p.b0 || p.b1 <= c)) { b = c; break; } }
+        if (b < 0) continue;
+        tried++;
+        const c = 18 * (ts - T - v.eta) + 6 * (td - ts);
+        if (!best || c < best.c) best = { c, q, ts, td, dur, b };
+      }
+    }
+    if (!best) return { fail: v.id };
+    for (let h = best.ts; h < best.ts + best.dur; h++) cranes[h] += best.q;
+    for (let k = 1; k <= T; k++) tugs[best.ts - k]++;
+    for (let k = 0; k < T; k++) tugs[best.td + k]++;
+    placed.push({ b0: best.b, b1: best.b + v.len + gap, ts: best.ts, td: best.td });
+    cost += best.c; o.minStart = o.fcfs ? best.ts : 0;
+    rows.push({ vessel_id: v.id, imo: v.imo, mmsi: v.mmsi, loa_m: v.loa, draft_m: v.draft, moves: v.moves, berth_start_m: best.b, berth_end_m: best.b + v.len, eta_hr: v.eta,
+      transit_in_hr: best.ts - T, berth_start_hr: best.ts, cargo_done_hr: best.ts + best.dur, tidal_depart_hr: best.td, tide_departure_hold_hrs: best.td - best.ts - best.dur,
+      assigned_qcs: best.q, crane_intensity: modeKey(best.q), anchorage_wait_hrs: best.ts - T - v.eta, turnaround_hrs: best.td + T - v.eta,
+      night_restricted: v.loa > C.night_max_loa_m || v.draft > C.night_max_draught_m, tide_needed_m: +Math.max(0, v.draft + C.ukc_m - C.channel_depth_m).toFixed(2) });
+  }
+  return { cost, rows };
+}
+
+function ordersNear(n, maxShift) {              // permutations where no vessel moves more than maxShift places from arrival order
+  const out = [], used = new Array(n).fill(false), cur = [];
+  (function rec(pos) { if (pos === n) { out.push(cur.slice()); return; } for (let i = 0; i < n; i++) { if (used[i] || Math.abs(i - pos) > maxShift) continue; if (i > pos && false) continue; used[i] = true; cur.push(i); rec(pos + 1); cur.pop(); used[i] = false; } })(0);
+  return out;
+}
+
+export function planBerths(site, opt) {
+  const vs = site.vessels(opt.etaShift).sort((a, b) => a.eta - b.eta || (a.id < b.id ? -1 : 1));
+  const base = { cuts: opt.cuts || {}, tugSets: opt.tugSets ?? site.C.pilot_tug_sets, qgcOutages: opt.qgcOutages || [], forceMax: !!opt.forceMax, fcfs: !!opt.fcfs };
+  const orders = opt.fcfs ? [vs.map((_, i) => i)] : ordersNear(vs.length, 2);
+  let best = null;
+  const fails = {};
+  for (const order of orders) { const r = buildPlan(site, vs, order, { ...base, minStart: 0 }); if (r.fail) { fails[r.fail] = (fails[r.fail] || 0) + 1; continue; } if (!best || r.cost < best.cost) best = r; }
+  if (!best) { const blocker = Object.entries(fails).sort((a, b) => b[1] - a[1])[0]; return { feasible: false, ordersTried: orders.length, schedule: [], blocker: blocker && blocker[0] }; }
+  const rows = best.rows.sort((a, b) => a.berth_start_hr - b.berth_start_hr), n = rows.length;
+  return { feasible: true, ordersTried: orders.length, objective: best.cost, avgTurnaroundDays: +(rows.reduce((s, r) => s + r.turnaround_hrs, 0) / n / 24).toFixed(2),
+    totalWaitHrs: rows.reduce((s, r) => s + r.anchorage_wait_hrs, 0), totalHoldHrs: rows.reduce((s, r) => s + r.tide_departure_hold_hrs, 0), schedule: rows };
+}
+
+// Two-way loop: plan -> simulate the crane modes the plan uses -> cut -> re-plan.
+export function solve(data, opt = {}, onLog = () => {}) {
+  const site = makeSite(data), C = site.C;
+  const icd = opt.icd ?? C.icd_ratio, occ = opt.occ ?? C.initial_yard_occupancy_pct, reps = opt.reps ?? 8;
+  const cuts = {}, sims = {}, trace = []; let plan = null, converged = false;
+  onLog(`scenario: ICD ${Math.round(icd * 100)}%, yard ${occ}%, ${opt.tugSets ?? C.pilot_tug_sets} pilot/tug sets, ${(opt.qgcOutages || []).length} QGC outage(s), ${(opt.rtgOutages || []).length} RTG outage(s)`);
+  for (let it = 1; it <= 8; it++) {
+    plan = planBerths(site, { ...opt, cuts });
+    if (!plan.feasible) { onLog(`iteration ${it}: no feasible berth plan inside the ${C.horizon_hrs} h horizon${plan.blocker ? `; ${plan.blocker} cannot finish and sail on a legal tide before it ends` : ''}`); break; }
+    const fresh = [...new Set(plan.schedule.map((r) => r.crane_intensity))].filter((k) => !(k in cuts)).sort();
+    onLog(`iteration ${it}: planner searched ${plan.ordersTried} berthing orders, cost ${plan.objective}, turnaround ${plan.avgTurnaroundDays} d`);
+    for (const k of fresh) {
+      sims[k] = simulateReplicated({ occ, icd, intensity: C.qgc_gmph * Number(k) / C.ref_boxes_per_hr, rtgFleet: C.rtg_per_berth_cluster, yardCap: C.yard_cluster_teu,
+        blocking: data.yard.blocking_ratio, premarshalJobs: data.yard.night_premarshal_relocations_executed, rtgOutages: opt.rtgOutages, trace: true }, reps);
+      cuts[k] = sims[k].beta;
+      onLog(`  yard DES, crane effect ${k}: ${reps} replications, backpressure ${sims[k].beta.toFixed(3)}, peak occupancy ${sims[k].peak}%  -> cut added`);
+    }
+    trace.push({ iteration: it, objective: plan.objective, cuts: { ...cuts } });
+    if (!fresh.length) { converged = true; onLog(`iteration ${it}: plan uses only simulated crane modes, bound attained`); break; }
+  }
+  if (!plan || !plan.feasible) return { feasible: false, trace, blocker: plan && plan.blocker };
+  const worst = plan.schedule.map((r) => r.crane_intensity).sort((a, b) => Number(b) - Number(a))[0], y = sims[worst];
+  return { feasible: true, converged, iterations: trace.length, cuts, trace, schedule: plan.schedule,
+    kpis: { objective: plan.objective, turnaround: plan.avgTurnaroundDays, wait: plan.totalWaitHrs, hold: plan.totalHoldHrs,
+      beta: Math.max(...plan.schedule.map((r) => cuts[r.crane_intensity])), waveStart: y.waveStart, peak: y.peak, gateWait: y.gateWait, rtgWait: y.rtgWait,
+      rehandle: y.rehandleHrs, icdBoxes: y.icdBoxes, hfo: +(plan.totalWaitHrs * 1.85).toFixed(1) }, yardTrace: y.trace };
+}

@@ -1,0 +1,24 @@
+[project]
+name = "portflow-simopt-mcp"
+version = "6.0.0"
+description = "Container-terminal digital twin for Chattogram NCT: CP-SAT berth planning under tide, daylight and pilot/tug limits, coupled to a SimPy yard simulation by Benders cuts, served over MCP."
+readme = "README.md"
+requires-python = ">=3.10"
+license = { text = "MIT" }
+dependencies = [
+    "ortools>=9.10",
+    "simpy>=4.1",
+    "scipy>=1.11",
+    "numpy>=1.26",
+    "fastmcp>=2.0",
+]
+
+[project.optional-dependencies]
+ais = ["websockets>=12"]
+
+[dependency-groups]
+dev = ["pytest>=8"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = [".", "sites"]

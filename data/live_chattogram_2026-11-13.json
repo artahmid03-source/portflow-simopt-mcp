@@ -1,0 +1,74 @@
+{
+  "port": "Chattogram (BDCGP)",
+  "retrieved": "2026-11-13",
+  "plan_epoch_local": "2026-11-13T12:00:00+06:00",
+  "what_is_live": "Vessel names, IMO/MMSI, dimensions, deadweight, reported draught, navigation status and area, last port and departure time, carrier ETA/ETD. Tide and sun times.",
+  "what_is_not_live": "Latitude/longitude, speed and course are paywalled on every source reached and are NOT in this file. Container counts per vessel, berth assignments, yard inventory and crane status are not published and are estimated or assumed (see 'estimates').",
+  "sources": {
+    "carrier_schedule": "CNC / CMA CGM port schedule export for BDCGP, stamped Friday 13 November 2026 10:59",
+    "ais_status": "Maritime Optima public vessel pages and VesselFinder vessel pages, read 13 November 2026",
+    "tides": "tide-forecast.com, Chittagong, datum Mean Lower Low Water, read 13 November 2026",
+    "cpa_tos": "cpatos.gov.bd/tosdashboard snapshots dated June and October 2025 (stale; used only to calibrate boxes per call)"
+  },
+  "estimates": {
+    "teu_capacity": "deadweight / 14 (not published on the pages read)",
+    "moves_per_call": "0.85 x estimated TEU capacity, calibrated on import+export boxes per call in the 2025 CPA TOS snapshots",
+    "draught_used": "reported draught capped at the 9.5 m standard limit; AIS draught is crew-entered and several values read were stale"
+  },
+  "fixed_occupants": [
+    {"name": "SOL MALAYSIA", "imo": 9081019, "mmsi": 352687000, "loa_m": 166.76, "beam_m": 27.4, "dwt_t": 20072, "draught_reported_m": 9.9,
+     "status": "moored at Chittagong since 12 Nov 08:00 UTC", "carrier_etd_local": "2026-11-14T15:00", "release_hr": 27, "berth_start_m": 0,
+     "note": "Its terminal is not published; placed on the first NCT ocean berth as an assumption."}
+  ],
+  "also_in_port_not_modelled": [
+    {"name": "HR AARAI", "imo": 9123594, "mmsi": 405000338, "loa_m": 184.51, "beam_m": 27.6, "dwt_t": 24662, "draught_reported_m": 9.8, "status": "moored at Chittagong, arrived 12 Nov 06:15 UTC"},
+    {"name": "SITC QIUMING", "imo": 9932830, "mmsi": 477846900, "loa_m": 185.99, "beam_m": 35.2, "dwt_t": 37542, "draught_reported_m": 10.0, "status": "moored at Chittagong, arrived 12 Nov 07:06 UTC"}
+  ],
+  "vessels": [
+    {"name": "HAIAN ZETA", "imo": 9354648, "mmsi": 352005215, "flag": "Panama", "built": 2010, "loa_m": 182.52, "beam_m": 25.2, "gt": 18199, "dwt_t": 23978,
+     "draught_reported_m": 8.8, "draught_used_m": 8.8, "status": "at anchor near Chittagong", "area": "ANCHORAGE", "last_port": "Colombo, departed 7 Nov 01:44 UTC",
+     "arrived_anchorage_local": "2026-11-12T07:28", "carrier_eta_local": "2026-11-14T08:00", "carrier_etd_local": "2026-11-17T08:00", "eta_hr": 0, "waited_before_epoch_hr": 28.5,
+     "eta_basis": "already at anchor at the plan epoch"},
+    {"name": "HR HERA", "imo": 9175614, "mmsi": 405000309, "flag": "Bangladesh", "built": 1999, "loa_m": 182.83, "beam_m": 28.0, "gt": 17652, "dwt_t": 23849,
+     "draught_reported_m": 9.7, "draught_used_m": 9.5, "status": "at anchor near Chittagong", "area": "ANCHORAGE", "last_port": "Singapore, departed 6 Nov 11:15 UTC",
+     "arrived_anchorage_local": "2026-11-12T08:50", "carrier_eta_local": "2026-11-14T08:00", "carrier_etd_local": "2026-11-16T10:00", "eta_hr": 0, "waited_before_epoch_hr": 27.2,
+     "eta_basis": "already at anchor at the plan epoch"},
+    {"name": "HR FARHA", "imo": 9123582, "mmsi": 405000337, "flag": "Bangladesh", "built": 1996, "loa_m": 184.51, "beam_m": 27.6, "gt": 16772, "dwt_t": 24657,
+     "draught_reported_m": 9.6, "draught_used_m": 9.5, "status": "under way, Bangladeshi EEZ", "area": "BAY_NEAR", "last_port": "Port Klang, departed 8 Nov 23:43 UTC",
+     "carrier_eta_local": "2026-11-15T08:00", "carrier_etd_local": "2026-11-17T10:00", "eta_hr": 17, "waited_before_epoch_hr": 0,
+     "eta_basis": "ETA broadcast by the ship: 13 Nov 23:00 UTC"},
+    {"name": "KOTA DUNIA", "imo": 9483475, "mmsi": 565417000, "flag": "Singapore", "built": 2010, "loa_m": 115.47, "beam_m": 20.81, "gt": 6245, "dwt_t": 8214,
+     "draught_reported_m": 6.8, "draught_used_m": 6.8, "status": "under way, Myanmar EEZ", "area": "BAY_MID", "last_port": "Singapore, departed 8 Nov 08:40 UTC",
+     "carrier_eta_local": "2026-11-15T11:00", "carrier_etd_local": "2026-11-17T05:00", "eta_hr": 24, "waited_before_epoch_hr": 0,
+     "eta_basis": "ETA broadcast by the ship: 14 Nov 06:00 UTC"},
+    {"name": "CNC NEPTUNE", "imo": 9836658, "mmsi": 563088700, "flag": "Singapore", "built": 2019, "loa_m": 172.0, "beam_m": 28.4, "gt": 18652, "dwt_t": 22081,
+     "draught_reported_m": null, "draught_used_m": 9.0, "status": "under way, Andaman and Nicobar EEZ", "area": "BAY_FAR", "last_port": "Port Klang, departed 11 Nov 05:34 UTC",
+     "carrier_eta_local": "2026-11-15T09:00", "carrier_etd_local": "2026-11-17T09:00", "eta_hr": 45, "waited_before_epoch_hr": 0,
+     "eta_basis": "carrier schedule; arrival draught not reliably reported, planned at 9.0 m"},
+    {"name": "MTT PELEPAS", "imo": 9974228, "mmsi": 533132942, "flag": "Malaysia", "built": 2024, "loa_m": 171.99, "beam_m": 28.4, "gt": 18680, "dwt_t": 24533,
+     "draught_reported_m": 8.7, "draught_used_m": 8.7, "status": "under way, Sri Lankan EEZ", "area": "BAY_FAR", "last_port": "Colombo, departed 13 Nov 03:08 UTC",
+     "carrier_eta_local": "2026-11-17T08:00", "carrier_etd_local": "2026-11-19T08:00", "eta_hr": 92, "waited_before_epoch_hr": 0,
+     "eta_basis": "carrier schedule"},
+    {"name": "SINAR SABA", "imo": 9970454, "mmsi": 636023015, "flag": "Liberia", "built": 2023, "loa_m": 171.99, "beam_m": 28.4, "gt": 19944, "dwt_t": 28665,
+     "draught_reported_m": 9.8, "draught_used_m": 9.5, "status": "under way, Malacca Strait", "area": "BAY_FAR", "last_port": "Singapore, departed 12 Nov 19:12 UTC",
+     "carrier_eta_local": "2026-11-14T12:00", "carrier_etd_local": "2026-11-15T19:00", "eta_hr": 94, "waited_before_epoch_hr": 0,
+     "eta_basis": "ESTIMATE: the carrier ETA of 14 Nov 12:00 is not reachable from a 12 Nov 19:12 UTC Singapore departure; replaced by about 1,570 nm at 15 kn"},
+    {"name": "KOTA RAJIN", "imo": 9296286, "mmsi": 563625000, "flag": "Singapore", "built": 2005, "loa_m": 145.93, "beam_m": 22.6, "gt": 9678, "dwt_t": 13212,
+     "draught_reported_m": 8.3, "draught_used_m": 8.3, "status": "under way, Andaman Sea", "area": "BAY_MID", "last_port": "Singapore, departed 11 Nov 12:06 UTC",
+     "carrier_eta_local": "2026-11-17T18:00", "carrier_etd_local": "2026-11-20T21:00", "eta_hr": 102, "waited_before_epoch_hr": 0,
+     "eta_basis": "carrier schedule"}
+  ],
+  "tides": [
+    ["2026-11-13T02:38", "H", 3.89], ["2026-11-13T09:54", "L", 0.62], ["2026-11-13T14:56", "H", 3.20], ["2026-11-13T21:46", "L", 0.81],
+    ["2026-11-14T03:15", "H", 3.68], ["2026-11-14T10:31", "L", 0.77], ["2026-11-14T15:35", "H", 3.01], ["2026-11-14T22:21", "L", 0.97],
+    ["2026-11-15T03:56", "H", 3.44], ["2026-11-15T11:11", "L", 0.92], ["2026-11-15T16:21", "H", 2.81], ["2026-11-15T23:03", "L", 1.13],
+    ["2026-11-16T04:43", "H", 3.18], ["2026-11-16T11:55", "L", 1.03], ["2026-11-16T17:20", "H", 2.64], ["2026-11-16T23:54", "L", 1.26],
+    ["2026-11-17T05:45", "H", 2.95], ["2026-11-17T12:45", "L", 1.09], ["2026-11-17T18:46", "H", 2.58],
+    ["2026-11-18T00:55", "L", 1.33], ["2026-11-18T07:10", "H", 2.82], ["2026-11-18T13:42", "L", 1.07], ["2026-11-18T20:15", "H", 2.72],
+    ["2026-11-19T02:07", "L", 1.30], ["2026-11-19T08:29", "H", 2.86], ["2026-11-19T14:44", "L", 0.98], ["2026-11-19T21:16", "H", 2.99],
+    ["2026-11-20T03:23", "L", 1.16], ["2026-11-20T09:29", "H", 2.99], ["2026-11-20T15:44", "L", 0.81], ["2026-11-20T22:04", "H", 3.31],
+    ["2026-11-21T04:31", "L", 0.91], ["2026-11-21T10:18", "H", 3.17], ["2026-11-21T16:39", "L", 0.60], ["2026-11-21T22:47", "H", 3.63]
+  ],
+  "sun_local": {"sunrise": "06:05", "sunset": "17:09"},
+  "tide_note": "A second source (TidesAtlas) gives highs about 0.6 m greater for the same dates and states no datum. The tide-forecast series is used because it states its datum."
+}
