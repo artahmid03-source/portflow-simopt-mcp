@@ -294,9 +294,7 @@ Every push runs two jobs. **Engine:** `ruff`, the 64 tests, then the whole pipel
 
 ## Second site: Hamburg (live data, in progress)
 
-**Live page:** https://artahmid03-source.github.io/portflow-simopt-mcp/ (ships on the Elbe, ships in port, tide forecast; reads the file the daily job writes)
-
-![Hamburg live page](docs/screenshots/08_hamburg_live.png)
+**Live page:** https://artahmid03-source.github.io/portflow-simopt-mcp/ (real map with the ships on the Elbe and in port, tide forecast; reads the file the daily job writes; OpenStreetMap base with OpenSeaMap sea marks, Leaflet vendored under `docs/vendor/`)
 
 AISStream hears nothing at Chattogram or anywhere else in South Asia (measured 15 Nov 2026: 0 ships at six South Asian ports, against 266 at Hamburg, 369 at Antwerp and 477 at Rotterdam in the same 3.6 minutes). The live loop therefore runs on the Port of Hamburg, a river port 100 km up the tidal Elbe, while Chattogram stays as the planning case study above.
 

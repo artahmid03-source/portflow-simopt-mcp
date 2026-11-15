@@ -5,6 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>PortFlow · Hamburg live</title>
 <meta name="description" content="Live vessel picture and tide forecast for the Port of Hamburg, from hourly AIS collection and the official Elbe gauges.">
+<link rel="stylesheet" href="vendor/leaflet/leaflet.css">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=Rajdhani:wght@500;600;700&display=swap">
 <style>
@@ -57,6 +58,18 @@ tr.sel td{background:#0e2a2a}tbody tr{cursor:pointer}
 footer{margin-top:14px;color:var(--muted);font-size:11px;max-width:110ch}
 footer li{margin:3px 0}
 #tideread{min-height:18px;color:var(--ink);font-size:11px;margin-top:6px}
+.map{height:500px;border:1px solid var(--line);background:#0a1620}
+#port{height:430px}
+@media(max-width:700px){.map{height:380px}#port{height:340px}}
+.leaflet-container{font-family:var(--mono);font-size:11px;background:#0a1620}
+.leaflet-tile-pane{filter:invert(1) hue-rotate(185deg) brightness(.85) contrast(.92) saturate(.55)}   /* dark control-room rendering of the standard OSM tiles */
+.leaflet-control-attribution{background:rgba(5,9,13,.8)!important;color:var(--muted)}.leaflet-control-attribution a{color:var(--ink)}
+.leaflet-bar a{background:var(--panel);color:var(--ink);border-color:var(--line-hi)}.leaflet-bar a:hover{background:var(--well);color:#fff}
+.ship-marker{cursor:pointer}.ship-marker .halo{fill:transparent;stroke:none}.ship-marker.sel .halo{stroke:#fff;stroke-width:1.4;fill:rgba(255,255,255,.12)}
+.gauge-marker{background:var(--blue);border:1px solid #05090d}
+.leaflet-tooltip.ship-tip,.leaflet-tooltip.gauge-tip{background:rgba(5,9,13,.82);border:1px solid var(--line-hi);color:var(--ink);box-shadow:none;padding:1px 5px;font-size:10.5px;border-radius:0}
+.leaflet-tooltip.gauge-tip{color:var(--blue);border-color:#1d4a70}
+.leaflet-tooltip.ship-tip::before,.leaflet-tooltip.gauge-tip::before{display:none}
 </style>
 </head>
 <body>
@@ -72,16 +85,16 @@ footer li{margin:3px 0}
 
   <section class="s8">
     <div class="tag">German Bight to Hamburg</div><h2>Ships on the Elbe</h2>
-    <div class="chart"><svg id="river" viewBox="0 0 950 500" role="img" aria-label="Positions of cargo ships between the German Bight and Hamburg"></svg></div>
+    <div id="river" class="map" role="application" aria-label="Map of cargo ships between the German Bight and Hamburg"></div>
     <div class="card" id="card">Select a ship on the chart or in a table.</div>
-    <div><span class="key" style="--c:var(--tele)"><i></i>under way</span><span class="key" style="--c:var(--amber)"><i></i>stopped or moored</span><span class="key" style="--c:#fff"><i></i>ring: declared Hamburg as destination</span><span class="key" style="--c:var(--blue)"><i></i>tide gauge</span></div>
-    <p class="note">Ship positions are AIS reports, each as last heard (see the time on its card). The river is drawn as a line through the official gauge positions; it is not a nautical chart. Only cargo ships of 100 m or more with an IMO number are kept.</p>
+    <div><span class="key" style="--c:var(--tele)"><i></i>under way</span><span class="key" style="--c:var(--amber)"><i></i>stopped or moored</span><span class="key" style="--c:#fff"><i></i>ring: declared Hamburg as destination</span><span class="key" style="--c:var(--blue)"><i></i>tide gauge with the level now</span></div>
+    <p class="note">Ship positions are AIS reports, each as last heard (see the time on its card). Only cargo ships of 100 m or more with an IMO number are kept. Click the map once to zoom with the mouse wheel.</p>
   </section>
 
   <section class="s4">
     <div class="tag">Close-up</div><h2>In the port</h2>
-    <div class="chart"><svg id="port" viewBox="0 0 420 356" role="img" aria-label="Positions of cargo ships inside the Port of Hamburg"></svg></div>
-    <p class="note">Moored ships gather at the terminal quays. There is no chart underneath: the line is the Elbe through the gauges at Seemannshöft and St. Pauli. Which group is which terminal will be learned from several days of moorings.</p>
+    <div id="port" class="map" role="application" aria-label="Map of cargo ships inside the Port of Hamburg"></div>
+    <p class="note">Moored ships sit at the terminal quays; zoom in to read the terminal names on the map. Which ship uses which terminal will be learned from several days of moorings.</p>
   </section>
 
   <section>
@@ -107,13 +120,14 @@ footer li{margin:3px 0}
 
 <footer>
   <ul>
-    <li>Sources: AIS messages relayed by <a href="https://aisstream.io">aisstream.io</a>; water levels from <a href="https://www.pegelonline.wsv.de">PEGELONLINE</a>, the open data service of the German Federal Waterways and Shipping Administration (WSV).</li>
+    <li>Map: © OpenStreetMap contributors, with sea marks from OpenSeaMap. Sources: AIS messages relayed by <a href="https://aisstream.io">aisstream.io</a>; water levels from <a href="https://www.pegelonline.wsv.de">PEGELONLINE</a>, the open data service of the German Federal Waterways and Shipping Administration (WSV).</li>
     <li>The tide forecast is a harmonic model fitted to the last 31 days of measurements, with the surge seen over the last tidal day carried forward. It is not an official prediction and must not be used for navigation.</li>
     <li>Gauge zero at these gauges lies about 5.0 m below the German height reference NHN.</li>
     <li>This page reads the file written once a day by the project's scheduled job. Code, tests and the Chattogram planning case study: <a href="https://github.com/artahmid03-source/portflow-simopt-mcp">github.com/artahmid03-source/portflow-simopt-mcp</a>.</li>
   </ul>
 </footer>
 
+<script src="vendor/leaflet/leaflet.js"></script>
 <script>
 'use strict';
 const LIVE = 'https://raw.githubusercontent.com/artahmid03-source/portflow-simopt-mcp/data/hamburg/latest.json';
@@ -127,15 +141,8 @@ const ageHours = (t) => (Date.now() - new Date(t).getTime()) / 3600e3;
 const NAV = { 0: 'under way', 1: 'at anchor', 2: 'not under command', 3: 'restricted manoeuvrability', 5: 'moored', 8: 'under way sailing', 15: 'not reported' };
 const svg = (tag, attrs, text) => { const e = document.createElementNS('http://www.w3.org/2000/svg', tag); for (const k in attrs) e.setAttribute(k, attrs[k]); if (text != null) e.textContent = text; return e; };
 
-// equirectangular projections: main chart and port close-up
-const proj = (box, w, h) => { const kx = w / (box.e - box.w), ky = h / (box.n - box.s); return (lat, lon) => [(lon - box.w) * kx, (box.n - lat) * ky]; };
-const P = proj({ w: 7.90, e: 10.15, s: 53.42, n: 54.12 }, 950, 500);
-const PP = proj({ w: 9.86, e: 10.03, s: 53.475, n: 53.56 }, 420, 356);
-const RIVER = [[54.02, 8.05], [53.97, 8.35], [53.90, 8.62], [53.875, 8.71], [53.845, 8.87], [53.862, 9.03], [53.885, 9.15], [53.865, 9.316], [53.787, 9.405], [53.733, 9.455], [53.68, 9.495], [53.63, 9.53], [53.607, 9.585], [53.572, 9.635], [53.566, 9.703], [53.553, 9.807], [53.542, 9.881], [53.544, 9.968], [53.538, 10.01]];
-const PLACES = [['GERMAN BIGHT', 54.05, 8.0], ['Cuxhaven', 53.84, 8.62], ['Brunsbüttel · Kiel Canal', 53.925, 9.07], ['Glückstadt', 53.80, 9.44], ['Stade', 53.60, 9.42], ['Wedel', 53.60, 9.69], ['HAMBURG', 53.59, 9.93]];
 const GAUGE_POS = { 'CUXHAVEN STEUBENHÖFT': [53.8677, 8.7174], 'BRUNSBÜTTEL MPM': [53.8878, 9.1487], 'GLÜCKSTADT': [53.7844, 9.4094], 'STADERSAND': [53.6297, 9.5266], 'SCHULAU': [53.5679, 9.7029], 'HAMBURG ST. PAULI': [53.5454, 9.97] };
 const title = (s) => s.toLowerCase().replace(/(^|[\s.\-])(\p{L})/gu, (m, a, b) => a + b.toUpperCase()).replace(' Mpm', '').replace('Steubenhöft', '').trim();
-
 let ships = [], selected = null;
 
 function shipKey(v) { return String(v.mmsi); }
@@ -143,7 +150,7 @@ function select(mmsi) {
   selected = mmsi;
   const v = ships.find((s) => shipKey(s) === mmsi);
   document.querySelectorAll('tr[data-mmsi]').forEach((r) => r.classList.toggle('sel', r.dataset.mmsi === mmsi));
-  document.querySelectorAll('.ship').forEach((g) => g.querySelector('.hit').setAttribute('stroke', g.dataset.mmsi === mmsi ? '#fff' : 'none'));
+  for (const [k, list] of Object.entries(markers)) list.forEach((mk) => mk.getElement() && mk.getElement().classList.toggle('sel', k === mmsi));
   if (!v) return;
   $('card').innerHTML = `<b>${esc(v.name || 'Unnamed')}</b> <span style="color:var(--muted)">MMSI ${esc(v.mmsi)}${v.imo ? ' · IMO ' + esc(v.imo) : ''}</span>
     <dl><div><dt>Size</dt><dd class="num">${fmt(v.len_m)} × ${fmt(v.beam_m)} m</dd></div>
@@ -154,48 +161,40 @@ function select(mmsi) {
     <div><dt>Last heard</dt><dd>${v.last_heard ? esc(utc(v.last_heard)) + ' UTC, ' + esc(String(v.zone || '').toLowerCase()) : '—'}</dd></div></dl>`;
 }
 
-function drawShips(el, project, list, labelMin, inset) {
-  let k = 0;
-  for (const v of list) {
+// ---- real maps: OpenStreetMap base (darkened in CSS) with the OpenSeaMap sea-mark overlay
+let markers = {};
+function makeMap(id, bounds) {
+  const m = L.map(id, { scrollWheelZoom: false, zoomSnap: 0.25 }).fitBounds(bounds);
+  L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 18, attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors' }).addTo(m);
+  m.createPane('sea'); m.getPane('sea').style.zIndex = 250; m.getPane('sea').style.pointerEvents = 'none';
+  L.tileLayer('https://tiles.openseamap.org/seamark/{z}/{x}/{y}.png', { pane: 'sea', maxZoom: 18, attribution: 'sea marks &copy; <a href="https://www.openseamap.org">OpenSeaMap</a>' }).addTo(m);
+  m.on('click', () => m.scrollWheelZoom.enable());            // the wheel zooms only after a click, so the page still scrolls
+  return m;
+}
+function shipIcon(v) {
+  const moving = (v.sog_kn || 0) >= 1, color = moving ? '#5ef2c8' : '#ffb224';
+  const shape = moving && v.cog_deg != null ? `<path d="M0,-9 L5,7 L0,3.6 L-5,7 Z" fill="${color}" stroke="#05090d" stroke-width="1" transform="rotate(${Number(v.cog_deg) || 0})"/>` : `<circle r="4.5" fill="${color}" stroke="#05090d" stroke-width="1"/>`;
+  return L.divIcon({ className: 'ship-marker', iconSize: [26, 26], iconAnchor: [13, 13], html: `<svg viewBox="-13 -13 26 26" width="26" height="26"><circle class="halo" r="11.5"/>${v.bound ? '<circle r="8.5" fill="none" stroke="#fff" stroke-opacity=".9"/>' : ''}${shape}</svg>` });
+}
+function addShips(map, labelled) {
+  for (const v of ships) {
     if (v.lat == null) continue;
-    const [x, y] = project(v.lat, v.lon);
-    if (x < 0 || y < 0 || x > el.viewBox.baseVal.width || y > el.viewBox.baseVal.height) continue;
-    const moving = (v.sog_kn || 0) >= 1, color = moving ? '#5ef2c8' : '#ffb224';
-    const g = svg('g', { class: 'ship', tabindex: 0, role: 'button', 'data-mmsi': shipKey(v), transform: `translate(${x.toFixed(1)},${y.toFixed(1)})`, 'aria-label': `${v.name || 'ship'}, ${moving ? 'under way' : 'stopped'}` });
-    g.appendChild(svg('circle', { class: 'hit', r: 11, fill: 'transparent', stroke: 'none', 'stroke-width': 1.2 }));
-    if (v.bound) g.appendChild(svg('circle', { r: 7.5, fill: 'none', stroke: '#fff', 'stroke-opacity': .75 }));
-    if (moving && v.cog_deg != null) g.appendChild(svg('path', { d: 'M0,-8 L4.6,6 L0,3.2 L-4.6,6 Z', fill: color, transform: `rotate(${v.cog_deg})` }));
-    else g.appendChild(svg('circle', { r: 4, fill: color }));
-    const left = inset && x > 250, low = inset && k++ % 2 === 1;      // close-up: keep labels inside the frame and stagger them
-    if ((v.len_m || 0) >= labelMin && (inset || v.zone !== 'PORT')) g.appendChild(svg('text', { x: left ? -9 : 9, y: low ? 14 : -7, 'text-anchor': left ? 'end' : 'start', 'font-size': 10, fill: '#d7e5f0', stroke: '#060b10', 'stroke-width': 2.5, 'paint-order': 'stroke' }, v.name || ''));
-    g.appendChild(svg('title', {}, `${v.name || 'ship'} · ${fmt(v.len_m)} m`));
-    g.addEventListener('click', () => select(shipKey(v)));
-    g.addEventListener('keydown', (e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); select(shipKey(v)); } });
-    el.appendChild(g);
+    const mk = L.marker([v.lat, v.lon], { icon: shipIcon(v), title: `${v.name || 'ship'} · ${fmt(v.len_m)} m`, alt: v.name || 'ship' }).addTo(map);
+    mk.on('click', () => select(shipKey(v)));
+    if (labelled(v)) mk.bindTooltip(esc(v.name || ''), { permanent: true, direction: 'right', offset: [11, 0], className: 'ship-tip' });
+    (markers[shipKey(v)] = markers[shipKey(v)] || []).push(mk);
   }
 }
-
-function drawRiver(doc) {
-  const el = $('river'); el.textContent = '';
-  const pts = RIVER.map(([la, lo]) => P(la, lo).map((n) => n.toFixed(1)).join(','));
-  el.appendChild(svg('polyline', { points: pts.slice(0, 7).join(' '), fill: 'none', stroke: '#12384c', 'stroke-width': 30, 'stroke-linecap': 'round', 'stroke-linejoin': 'round' }));
-  el.appendChild(svg('polyline', { points: pts.slice(6).join(' '), fill: 'none', stroke: '#12384c', 'stroke-width': 13, 'stroke-linecap': 'round', 'stroke-linejoin': 'round' }));
-  for (const [name, la, lo] of PLACES) { const [x, y] = P(la, lo); el.appendChild(svg('text', { x, y, 'font-size': 11, 'font-family': 'Rajdhani, sans-serif', 'letter-spacing': 1.2, fill: '#8097a9' }, name)); }
+function drawMaps(doc) {
+  if (typeof L === 'undefined') { $('river').textContent = 'The map library did not load.'; return; }
+  const river = makeMap('river', [[53.46, 8.25], [54.02, 10.08]]), port = makeMap('port', [[53.485, 9.895], [53.552, 10.005]]);
   for (const [name, g] of Object.entries(doc.tide.gauges)) {
     const pos = GAUGE_POS[name]; if (!pos) continue;
-    const [x, y] = P(pos[0], pos[1]), i = hourIndex(g), lvl = g.hourly_cm[i];
-    el.appendChild(svg('rect', { x: x - 3.5, y: y + 9, width: 7, height: 7, fill: '#4aa3ff' }));
-    el.appendChild(svg('text', { x: x + 7, y: y + 17, 'font-size': 9.5, fill: '#4aa3ff' }, `${fmt(lvl)} cm`));
+    L.marker(pos, { icon: L.divIcon({ className: 'gauge-marker', iconSize: [9, 9], iconAnchor: [4.5, 4.5] }), title: `${title(name)} gauge`, keyboard: false }).addTo(river)
+      .bindTooltip(`${fmt(g.hourly_cm[hourIndex(g)])} cm`, { permanent: true, direction: 'bottom', offset: [0, 5], className: 'gauge-tip' });
   }
-  drawShips(el, P, ships, 250);
-}
-
-function drawPort() {
-  const el = $('port'); el.textContent = '';
-  const line = [[53.553, 9.807], [53.542, 9.881], [53.544, 9.968], [53.538, 10.01]].map(([la, lo]) => PP(la, lo).map((n) => n.toFixed(1)).join(',')).join(' ');
-  el.appendChild(svg('polyline', { points: line, fill: 'none', stroke: '#12384c', 'stroke-width': 26, 'stroke-linecap': 'round', 'stroke-linejoin': 'round' }));
-  el.appendChild(svg('text', { x: 10, y: 20, 'font-size': 11, 'font-family': 'Rajdhani, sans-serif', 'letter-spacing': 1.2, fill: '#8097a9' }, 'NORDERELBE'));
-  drawShips(el, PP, ships, 0, true);
+  addShips(river, (v) => (v.len_m || 0) >= 250 && v.zone !== 'PORT');
+  addShips(port, (v) => v.zone === 'PORT');
 }
 
 function hourIndex(g) { return Math.max(0, Math.min(g.hourly_cm.length - 1, Math.round((Date.now() - new Date(g.hourly_utc_start).getTime()) / 3600e3))); }
@@ -258,7 +257,7 @@ function render(doc, sample) {
   $('kpis').innerHTML = kpi('Bound for Hamburg', fmt(v.bound_for_hamburg.length), 'cargo ships declaring it') + kpi('On the Elbe', fmt(v.on_the_elbe.length), 'river and estuary, last 6 h') +
     kpi('In port', fmt(v.in_port.length), `${fmt(v.moored_in_port)} moored`) + kpi('Ships heard per run', fmt(v.mean_ships_heard_per_run), 'all types, German Bight to port') +
     kpi('Next high water', hw ? new Date(hw[0]).toLocaleTimeString('en-GB', { timeZone: 'Europe/Berlin', hour: '2-digit', minute: '2-digit' }) : '—', hw ? `St. Pauli, ${local(hw[0]).slice(0, 10)}, ${fmt(hw[2])} cm` : 'no forecast');
-  drawRiver(doc); drawPort(); drawTide(doc); tables(doc);
+  drawMaps(doc); drawTide(doc); tables(doc);
   const first = ships.find((s) => s.bound && s.lat != null && (s.sog_kn || 0) >= 1) || ships.find((s) => s.lat != null);
   if (first) select(shipKey(first));
 }
