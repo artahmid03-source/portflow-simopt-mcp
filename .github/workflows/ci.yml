@@ -60,3 +60,7 @@ jobs:
         run: npx playwright install --with-deps chromium
       - name: Browser test
         run: node test_page.cjs
+      - name: Public tower pages (live feed mocked with the committed fixtures)
+        run: |
+          python3 build_pages.py --hamburg-default fixtures/hamburg_tower.json
+          node test_towers.cjs fixtures/chattogram_tower.json fixtures/hamburg_tower.json

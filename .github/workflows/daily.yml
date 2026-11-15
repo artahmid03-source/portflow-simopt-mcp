@@ -1,7 +1,9 @@
-name: Daily Hamburg update
+name: Daily update and control-tower plans
 
-# Once a day: fit the tide model to the official Elbe gauges, summarise the collected AIS,
-# and save the result to the `data` branch (hamburg/latest.json and hamburg/daily/DATE.json).
+# Once a day: fit the tide model to the official Elbe gauges and summarise the collected AIS
+# (hamburg/latest.json, hamburg/daily/DATE.json), then plan both ports on today's data with CP-SAT and
+# the yard simulation (hamburg/tower.json, chattogram/tower.json), check the in-page engine against
+# those plans, and save everything to the `data` branch. The tower pages load the tower files.
 
 on:
   schedule:
@@ -18,7 +20,7 @@ concurrency:
 jobs:
   daily:
     runs-on: ubuntu-latest
-    timeout-minutes: 15
+    timeout-minutes: 45
     steps:
       - uses: actions/checkout@v5
       - uses: actions/checkout@v5
@@ -33,6 +35,21 @@ jobs:
         run: uv sync --locked --no-dev
       - name: Build the daily update
         run: uv run --no-dev python run_daily.py --store store
+      - name: Hamburg control tower
+        continue-on-error: true
+        run: uv run --no-dev python run_tower.py --site hamburg --store store
+      - name: Chattogram control tower
+        continue-on-error: true
+        run: uv run --no-dev python run_tower.py --site chattogram --store store
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 22
+      - name: Check the in-page engine against today's plans
+        continue-on-error: true
+        run: |
+          for s in hamburg chattogram; do
+            if [ -f store/$s/tower.json ]; then node web/validate.mjs --data store/$s/tower.json --write; fi
+          done
       - name: Save to the data branch
         if: always()
         working-directory: store
