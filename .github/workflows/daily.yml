@@ -1,0 +1,49 @@
+name: Daily Hamburg update
+
+# Once a day: fit the tide model to the official Elbe gauges, summarise the collected AIS,
+# and save the result to the `data` branch (hamburg/latest.json and hamburg/daily/DATE.json).
+
+on:
+  schedule:
+    - cron: "40 3 * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: collect
+  cancel-in-progress: false
+
+jobs:
+  daily:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/checkout@v5
+        with:
+          ref: data
+          path: store
+      - uses: astral-sh/setup-uv@v6
+        with:
+          python-version: "3.13"
+          enable-cache: true
+      - name: Install
+        run: uv sync --locked --no-dev
+      - name: Build the daily update
+        run: uv run --no-dev python run_daily.py --store store
+      - name: Save to the data branch
+        if: always()
+        working-directory: store
+        run: |
+          git config user.name "portflow-collector"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -A
+          if git diff --cached --quiet; then
+            echo "Nothing new to save."
+          else
+            git commit -q -m "daily $(date -u +%Y-%m-%d)"
+            git pull -q --rebase
+            git push -q
+          fi
