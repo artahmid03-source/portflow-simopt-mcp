@@ -1,0 +1,62 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  engine:
+    name: Engine (lint, tests, reproducibility)
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v5
+      - uses: astral-sh/setup-uv@v6
+        with:
+          python-version: "3.13"
+          enable-cache: true
+      - name: Install
+        run: uv sync --extra ais --locked
+      - name: Lint
+        run: uv run ruff check .
+      - name: Tests
+        run: uv run pytest -q
+      - name: Re-run the pipeline and compare with the committed results
+        run: |
+          cp nct_control_tower_data.json committed.json
+          uv run python run_nct_pipeline.py
+          uv run python tools/compare_runs.py committed.json nct_control_tower_data.json
+
+  web:
+    name: Control-tower page (build, engine check, browser test)
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    defaults:
+      run:
+        working-directory: web
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: web/package-lock.json
+      - name: Install
+        run: npm ci
+      - name: Build the page
+        run: python3 build.py
+      - name: In-page engine against CP-SAT reference cases
+        run: node validate.mjs --check
+      - name: Install the test browser
+        run: npx playwright install --with-deps chromium
+      - name: Browser test
+        run: node test_page.cjs
