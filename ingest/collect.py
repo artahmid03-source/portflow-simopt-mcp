@@ -141,7 +141,7 @@ async def collect(key: str, minutes: float, tracked: Iterable[int] = (), url: st
         elif name == "near":
             (near_pos if rec["kind"] == "PositionReport" else near_static)[rec["mmsi"]] = rec
         elif rec["kind"] == "ShipStaticData":
-            if DEST_RE.search(rec.get("destination") or "") and is_cargo({"type": rec.get("ship_type"), "len": rec.get("length_m")}):
+            if DEST_RE.search(declared_port(rec.get("destination"))) and is_cargo({"type": rec.get("ship_type"), "len": rec.get("length_m")}):
                 feeder_static[rec["mmsi"]] = rec
         else:
             track_pos[rec["mmsi"]] = rec
@@ -184,6 +184,11 @@ def _append(path: Path, rows: List[Dict[str, Any]]) -> None:
                 f.write(json.dumps(r, separators=(",", ":"), ensure_ascii=False) + "\n")
 
 
+def declared_port(dest: Optional[str]) -> str:
+    """Crews often write "FROM>TO" (also ">>" or "->"): the port a ship is going to is the last part."""
+    return re.split(r"-?>+", dest or "")[-1].strip()
+
+
 def is_cargo(s: Dict[str, Any]) -> bool:
     return 70 <= (s.get("type") or 0) <= 79 and (s.get("len") or 0) >= MIN_LEN_M
 
@@ -206,7 +211,7 @@ def write_store(root: Path, got: Dict[str, Any]) -> Dict[str, Any]:
 
     for recs in (got["near_static"], got["feeder_static"]):                          # ships declaring the port this run count as tracked at once
         for mmsi, s in recs.items():
-            if DEST_RE.search(s.get("destination") or "") and is_cargo(ships[str(mmsi)]):
+            if DEST_RE.search(declared_port(s.get("destination"))) and is_cargo(ships[str(mmsi)]):
                 tracked.setdefault(str(mmsi), {"first_seen": s["rx"], "last_seen": s["rx"]})
 
     pos_rows, skipped = [], 0
@@ -232,7 +237,7 @@ def write_store(root: Path, got: Dict[str, Any]) -> Dict[str, Any]:
     for src, recs in (("near", got["near_static"]), ("feeder", got["feeder_static"])):
         for mmsi, s in recs.items():
             eta = eta_to_datetime(s["eta"], now) if s.get("eta") else None
-            bound = bool(DEST_RE.search(s.get("destination") or "")) and is_cargo(ships[str(mmsi)])
+            bound = bool(DEST_RE.search(declared_port(s.get("destination")))) and is_cargo(ships[str(mmsi)])
             fp = f"{s.get('destination')}|{s.get('eta')}|{s.get('ais_draught_m')}"
             if seen_static.get(str(mmsi)) != fp:
                 static_rows.append({"t": s["rx"], "mmsi": mmsi, "imo": s.get("imo"), "name": s.get("name"), "type": s.get("ship_type"), "len": s.get("length_m"),

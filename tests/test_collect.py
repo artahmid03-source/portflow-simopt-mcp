@@ -89,6 +89,14 @@ def test_destination_patterns():
         assert not ham.search(d), d
 
 
+def test_from_to_destinations_count_only_the_port_the_ship_is_going_to():
+    ham = col.SITES["hamburg"]["dest_re"]
+    for d in ("NLRTM>DEHAM", "NL RTM > DE HAM", "GBFXT>DEHAM", "CA HAL>DE HAM", "DEHAM", "BEANR->DEHAM"):
+        assert ham.search(col.declared_port(d)), d
+    for d in ("DEHAM>CNTA0", "DEHAM>>DEBRV", "DE HAM > NL RTM", None, ""):
+        assert not ham.search(col.declared_port(d)), d
+
+
 def test_hamburg_zones():
     z = col.zone_hamburg
     assert z(53.54, 9.95, 0.0) == "PORT" and z(53.80, 9.40, 12.0) == "ELBE" and z(53.95, 8.60, 12.0) == "ESTUARY"

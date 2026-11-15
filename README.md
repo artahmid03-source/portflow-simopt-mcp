@@ -235,7 +235,7 @@ Gaps in both directions come from the JavaScript DES estimating slightly differe
 git clone https://github.com/artahmid03-source/portflow-simopt-mcp.git
 cd portflow-simopt-mcp
 uv sync --extra ais                  # Python 3.10+, OR-Tools, SimPy, FastMCP, websockets
-uv run ruff check . && uv run pytest # lint, then 63 tests (about 2 minutes)
+uv run ruff check . && uv run pytest # lint, then 64 tests (about 2 minutes)
 uv run python run_nct_pipeline.py    # plans the live queue, writes nct_control_tower_data.json (about 1 minute)
 
 # optional: refresh positions from AIS (free key at https://aisstream.io)
@@ -280,7 +280,7 @@ run_daily.py                 daily Hamburg update: tide forecast for six Elbe ga
 tools/compare_runs.py        compares two pipeline outputs (used by CI)
 .github/workflows/           ci.yml (lint, tests, reproducibility, page build and browser test) · collect.yml (hourly AIS) · daily.yml (daily Hamburg update)
 run_nct_pipeline.py          live-queue pipeline → nct_control_tower_data.json
-tests/                       test_invariants.py (19) · test_nct.py (25) · test_ais_ingest.py (4) · test_collect.py (9) · test_tides.py (6)
+tests/                       test_invariants.py (19) · test_nct.py (25) · test_ais_ingest.py (4) · test_collect.py (10) · test_tides.py (6)
 web/                         HMI: src/engine.js, src/PortFlowControlTower.template.jsx, build.py, validate.mjs, test_page.cjs
 docs/screenshots/            HMI captures
 ```
@@ -289,7 +289,7 @@ docs/screenshots/            HMI captures
 
 ## Continuous integration
 
-Every push runs two jobs. **Engine:** `ruff`, the 63 tests, then the whole pipeline again, with the fresh output compared against the committed `nct_control_tower_data.json` (integers and structure exactly, floats to 1e-6). **Page:** build, the in-page engine against the eight CP-SAT reference cases (the five exact cases must stay exact, no gap above 7%), and a headless-browser test that types a command into the copilot and checks the re-plan lands on the CP-SAT result.
+Every push runs two jobs. **Engine:** `ruff`, the 64 tests, then the whole pipeline again, with the fresh output compared against the committed `nct_control_tower_data.json` (integers and structure exactly, floats to 1e-6). **Page:** build, the in-page engine against the eight CP-SAT reference cases (the five exact cases must stay exact, no gap above 7%), and a headless-browser test that types a command into the copilot and checks the re-plan lands on the CP-SAT result.
 
 ## Second site: Hamburg (live data, in progress)
 
