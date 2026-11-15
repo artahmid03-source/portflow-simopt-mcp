@@ -62,13 +62,13 @@ def vessel_block(site_store: Path, now: datetime) -> Dict[str, Any]:
         s, t = ships.get(str(mmsi), {}), tracked.get(str(mmsi), {})
         return {"mmsi": mmsi, "name": s.get("name") or t.get("name"), "imo": s.get("imo"), "len_m": s.get("len"), "beam_m": s.get("beam"),
                 "draught_m": t.get("draught"), "declared_destination": t.get("dest"), "eta_utc": t.get("eta_utc"),
-                **({"last_heard": row["t"], "zone": row["zone"], "lat": row["lat"], "lon": row["lon"], "sog_kn": row["sog"], "nav_status": row["nav"]} if row else {})}
+                **({"last_heard": row["t"], "zone": row["zone"], "lat": row["lat"], "lon": row["lon"], "sog_kn": row["sog"], "cog_deg": row.get("cog"), "nav_status": row["nav"]} if row else {})}
 
     fresh = (now - timedelta(hours=SEEN_HOURS)).strftime("%Y-%m-%dT%H:%M:%SZ")
     bound = [describe(int(m), latest.get(int(m))) for m in tracked]
     in_port = [describe(m, r) for m, r in latest.items() if r["zone"] == "PORT" and r["t"] >= fresh]
     on_river = [describe(m, r) for m, r in latest.items() if r["zone"] in ("ELBE", "ESTUARY") and r["t"] >= fresh]
-    return {"runs_last_24h": len(day_runs), "runs_with_errors_last_24h": sum(1 for r in day_runs if r["errors"]),
+    return {"last_run_end": runs[-1]["t_end"] if runs else None, "runs_last_24h": len(day_runs), "runs_with_errors_last_24h": sum(1 for r in day_runs if r["errors"]),
             "mean_ships_heard_per_run": round(sum(r["near_ships"] for r in day_runs) / len(day_runs), 1) if day_runs else None,
             "bound_for_hamburg": sorted(bound, key=lambda v: v.get("eta_utc") or "9"), "in_port": in_port, "on_the_elbe": on_river,
             "moored_in_port": sum(1 for v in in_port if v.get("nav_status") == 5)}

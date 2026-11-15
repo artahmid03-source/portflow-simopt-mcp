@@ -141,7 +141,7 @@ async def collect(key: str, minutes: float, tracked: Iterable[int] = (), url: st
         elif name == "near":
             (near_pos if rec["kind"] == "PositionReport" else near_static)[rec["mmsi"]] = rec
         elif rec["kind"] == "ShipStaticData":
-            if DEST_RE.search(declared_port(rec.get("destination"))) and is_cargo({"type": rec.get("ship_type"), "len": rec.get("length_m")}):
+            if DEST_RE.search(declared_port(rec.get("destination"))) and is_cargo({"type": rec.get("ship_type"), "len": rec.get("length_m"), "imo": rec.get("imo")}):
                 feeder_static[rec["mmsi"]] = rec
         else:
             track_pos[rec["mmsi"]] = rec
@@ -190,7 +190,8 @@ def declared_port(dest: Optional[str]) -> str:
 
 
 def is_cargo(s: Dict[str, Any]) -> bool:
-    return 70 <= (s.get("type") or 0) <= 79 and (s.get("len") or 0) >= MIN_LEN_M
+    """Sea-going cargo ship: AIS type 70-79, long enough, and with an IMO number (inland vessels have none)."""
+    return 70 <= (s.get("type") or 0) <= 79 and (s.get("len") or 0) >= MIN_LEN_M and (s.get("imo") or 0) > 0
 
 
 def write_store(root: Path, got: Dict[str, Any]) -> Dict[str, Any]:

@@ -276,6 +276,7 @@ ingest/aisstream_ingest.py   AIS message parsing and one-off merge into the live
 ingest/collect.py            scheduled collector (runs hourly in GitHub Actions, writes to the data branch)
 ingest/build_db.py           loads the collected store into SQLite
 sites/tides.py               tide forecast from official gauge records (harmonic fit, surge carry-over, hold-out skill)
+docs/index.html              public Hamburg live page (GitHub Pages); docs/sample_latest.json is its fallback sample
 run_daily.py                 daily Hamburg update: tide forecast for six Elbe gauges + vessel picture from the collected AIS
 tools/compare_runs.py        compares two pipeline outputs (used by CI)
 .github/workflows/           ci.yml (lint, tests, reproducibility, page build and browser test) · collect.yml (hourly AIS) · daily.yml (daily Hamburg update)
@@ -289,9 +290,13 @@ docs/screenshots/            HMI captures
 
 ## Continuous integration
 
-Every push runs two jobs. **Engine:** `ruff`, the 64 tests, then the whole pipeline again, with the fresh output compared against the committed `nct_control_tower_data.json` (integers and structure exactly, floats to 1e-6). **Page:** build, the in-page engine against the eight CP-SAT reference cases (the five exact cases must stay exact, no gap above 7%), and a headless-browser test that types a command into the copilot and checks the re-plan lands on the CP-SAT result.
+Every push runs two jobs. **Engine:** `ruff`, the 64 tests, then the whole pipeline again, with the fresh output compared against the committed `nct_control_tower_data.json` (integers and structure exactly, floats to 1e-6). **Page:** build, the in-page engine against the eight CP-SAT reference cases (the five exact cases must stay exact, no gap above 7%), and a headless-browser test that types a command into the copilot and checks the re-plan lands on the CP-SAT result, then renders the Hamburg live page from a saved real data file.
 
 ## Second site: Hamburg (live data, in progress)
+
+**Live page:** https://artahmid03-source.github.io/portflow-simopt-mcp/ (ships on the Elbe, ships in port, tide forecast; reads the file the daily job writes)
+
+![Hamburg live page](docs/screenshots/08_hamburg_live.png)
 
 AISStream hears nothing at Chattogram or anywhere else in South Asia (measured 15 Nov 2026: 0 ships at six South Asian ports, against 266 at Hamburg, 369 at Antwerp and 477 at Rotterdam in the same 3.6 minutes). The live loop therefore runs on the Port of Hamburg, a river port 100 km up the tidal Elbe, while Chattogram stays as the planning case study above.
 

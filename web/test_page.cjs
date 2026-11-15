@@ -67,7 +67,36 @@ const fmt = (x, d) => Number(x).toLocaleString('en-US', { minimumFractionDigits:
   await phone.waitForSelector('.pf-kpi');
   assert.strictEqual(await phone.evaluate(() => document.documentElement.scrollWidth - window.innerWidth), 0, 'no horizontal overflow at 390 px');
 
+  // 7. the Hamburg live page renders a saved real data file (clock fixed so the check does not depend on today's date)
+  const http = require('http');
+  const docs = path.join(__dirname, '..', 'docs');
+  const server = http.createServer((req, res) => {
+    const file = path.join(docs, decodeURIComponent(req.url.split('?')[0]).replace(/^\/+/, '') || 'index.html');
+    if (!file.startsWith(docs) || !fs.existsSync(file)) { res.writeHead(404); res.end(); return; }
+    res.writeHead(200, { 'Content-Type': file.endsWith('.json') ? 'application/json' : 'text/html; charset=utf-8' }); res.end(fs.readFileSync(file));
+  }).listen(0);
+  const sample = JSON.parse(fs.readFileSync(path.join(docs, 'sample_latest.json'), 'utf8'));
+  const live = await browser.newPage({ viewport: { width: 1440, height: 1000 } });
+  live.on('pageerror', (e) => errors.push(`live pageerror: ${e.message}`));
+  await live.clock.setFixedTime(new Date(new Date(sample.generated_utc).getTime() + 15 * 60000));
+  await live.goto(`http://127.0.0.1:${server.address().port}/index.html?data=sample_latest.json`);
+  await live.waitForSelector('#bound tbody tr');
+  assert.strictEqual(await live.$$eval('#bound tbody tr', (e) => e.length), sample.vessels.bound_for_hamburg.length, 'one row per ship bound for Hamburg');
+  assert.strictEqual(await live.$$eval('#inport tbody tr', (e) => e.length), sample.vessels.in_port.length, 'one row per ship in port');
+  assert.strictEqual(await live.$$eval('#gauges tbody tr', (e) => e.length), Object.keys(sample.tide.gauges).length, 'one row per gauge');
+  assert.ok((await live.$$eval('#river .ship', (e) => e.length)) >= sample.vessels.on_the_elbe.length, 'ships drawn on the river chart');
+  assert.ok((await live.$$eval('#tide path', (e) => e.length)) >= 2, 'two tide curves');
+  assert.ok((await live.$eval('#lamps', (e) => e.textContent)).includes('DATA CURRENT'), 'data marked current');
+  await live.click('#inport tbody tr');
+  assert.ok((await live.$eval('#card', (e) => e.textContent)).includes(sample.vessels.in_port[0].name), 'selecting a row fills the ship card');
+  const liveNarrow = await browser.newPage({ viewport: { width: 390, height: 800 } });
+  await liveNarrow.goto(`http://127.0.0.1:${server.address().port}/index.html?data=sample_latest.json`);
+  await liveNarrow.waitForSelector('#bound tbody tr');
+  assert.strictEqual(await liveNarrow.evaluate(() => document.documentElement.scrollWidth - window.innerWidth), 0, 'live page: no horizontal overflow at 390 px');
+  if (process.argv.includes('--shots')) { await live.screenshot({ path: path.join(docs, 'screenshots', '08_hamburg_live.png'), fullPage: true }); await liveNarrow.screenshot({ path: path.join(__dirname, 'shots_live_mobile.png'), fullPage: true }); }
+  server.close();
+
   assert.deepStrictEqual(errors, [], 'no script errors');
   await browser.close();
-  console.log('OK: page test passed (6 checks)');
+  console.log('OK: page test passed (7 checks)');
 })().catch((e) => { console.error('FAIL:', e.message); process.exit(1); });

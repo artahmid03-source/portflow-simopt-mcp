@@ -1,0 +1,279 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>PortFlow · Hamburg live</title>
+<meta name="description" content="Live vessel picture and tide forecast for the Port of Hamburg, from hourly AIS collection and the official Elbe gauges.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=Rajdhani:wght@500;600;700&display=swap">
+<style>
+/* One dark control-room surface: status header, river chart beside the port close-up, tide forecast, then the ship tables. */
+:root{color-scheme:dark;--bg:#05090d;--panel:#0a1219;--well:#060b10;--line:#16293a;--line-hi:#2b4a63;--ink:#d7e5f0;--muted:#8097a9;--tele:#5ef2c8;--amber:#ffb224;--red:#ff5a52;--blue:#4aa3ff;--ok:#3ddc84;
+ --mono:'IBM Plex Mono',ui-monospace,Menlo,Consolas,monospace;--disp:'Rajdhani','Segoe UI',system-ui,sans-serif}
+*{box-sizing:border-box}
+html,body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--mono);font-size:12.5px;line-height:1.45}
+body{padding:14px 16px 32px}
+a{color:var(--tele)}
+.num{font-variant-numeric:tabular-nums}
+header{display:flex;flex-wrap:wrap;align-items:flex-end;gap:10px 22px;border-bottom:1px solid var(--line-hi);padding-bottom:10px}
+h1{font-family:var(--disp);font-weight:700;font-size:25px;letter-spacing:.09em;line-height:1;margin:0;text-transform:uppercase}
+h1 small{display:block;font-family:var(--mono);font-weight:400;font-size:11px;letter-spacing:.03em;color:var(--muted);text-transform:none;margin-top:5px}
+.clock{font-family:var(--disp);font-weight:600;font-size:22px;letter-spacing:.05em;color:var(--tele);line-height:1}
+.clock small{display:block;font-family:var(--mono);font-size:11px;color:var(--muted);margin-top:5px}
+.lamps{display:flex;flex-wrap:wrap;gap:6px;margin-left:auto}
+.lamp{border:1px solid var(--line-hi);background:var(--well);padding:4px 9px;font-size:11px;display:flex;align-items:center;gap:7px;white-space:nowrap}
+.lamp i{width:8px;height:8px;border-radius:50%;background:var(--c);box-shadow:0 0 8px var(--c)}
+.banner{margin-top:10px;border:1px solid #6b4c12;background:#1a1408;color:var(--amber);padding:8px 10px}
+.grid{display:grid;grid-template-columns:repeat(12,minmax(0,1fr));gap:10px;margin-top:10px}
+section{background:var(--panel);border:1px solid var(--line);padding:11px 12px;min-width:0;grid-column:span 12}
+.s8{grid-column:span 8}.s4{grid-column:span 4}
+@media(max-width:980px){.s8,.s4{grid-column:span 12}}
+.tag{font-family:var(--disp);font-size:11px;letter-spacing:.16em;color:var(--tele);text-transform:uppercase}
+h2{font-family:var(--disp);font-weight:600;font-size:17px;letter-spacing:.05em;margin:0 0 8px;text-transform:uppercase}
+.note{color:var(--muted);font-size:11px;margin:7px 0 0;max-width:100ch}
+.chart{background:radial-gradient(ellipse at 30% 30%,#0b2030 0,#060b10 75%);border:1px solid var(--line)}
+.chart svg{display:block;width:100%;height:auto}
+.key{display:inline-flex;align-items:center;gap:6px;font-size:11px;margin:6px 12px 0 0}
+.key i{width:10px;height:10px;background:var(--c);display:inline-block}
+.ship{cursor:pointer}
+.ship:focus{outline:none}.ship:focus-visible circle.hit{stroke:#fff}
+.card{background:var(--well);border:1px solid var(--line-hi);border-top:0;padding:8px 10px;font-size:11px;min-height:54px}
+.card b{font-family:var(--disp);font-size:15px;letter-spacing:.06em;color:#fff;font-weight:600}
+.card dl{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:4px 14px;margin:5px 0 0}
+.card dt{color:var(--muted);font-size:10.5px}.card dd{margin:0}
+.kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:8px}
+.kpi{background:var(--well);border:1px solid var(--line);padding:8px 10px}
+.kpi .l{font-family:var(--disp);font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:var(--muted)}
+.kpi .v{font-family:var(--disp);font-weight:600;font-size:27px;line-height:1.1;color:#fff}
+.kpi .d{font-size:11px;color:var(--muted)}
+.scroll{overflow-x:auto}
+table{width:100%;border-collapse:collapse;font-size:11px;min-width:760px}
+th{font-family:var(--disp);font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);text-align:right;padding:5px 7px;border-bottom:1px solid var(--line-hi);white-space:nowrap}
+td{text-align:right;padding:5px 7px;border-bottom:1px solid var(--line);white-space:nowrap}
+th:first-child,td:first-child,.tl{text-align:left}
+tr.sel td{background:#0e2a2a}tbody tr{cursor:pointer}
+.past{color:var(--muted)}
+footer{margin-top:14px;color:var(--muted);font-size:11px;max-width:110ch}
+footer li{margin:3px 0}
+#tideread{min-height:18px;color:var(--ink);font-size:11px;margin-top:6px}
+</style>
+</head>
+<body>
+<header>
+  <h1>PortFlow · Hamburg live<small>Port of Hamburg and the tidal Elbe · AIS collected hourly · tide forecast from the official gauges</small></h1>
+  <div class="clock num" id="clock">loading…<small id="clocksub"></small></div>
+  <div class="lamps" id="lamps"></div>
+</header>
+<div id="banner"></div>
+
+<div class="grid">
+  <section><div class="kpis" id="kpis"></div></section>
+
+  <section class="s8">
+    <div class="tag">German Bight to Hamburg</div><h2>Ships on the Elbe</h2>
+    <div class="chart"><svg id="river" viewBox="0 0 950 500" role="img" aria-label="Positions of cargo ships between the German Bight and Hamburg"></svg></div>
+    <div class="card" id="card">Select a ship on the chart or in a table.</div>
+    <div><span class="key" style="--c:var(--tele)"><i></i>under way</span><span class="key" style="--c:var(--amber)"><i></i>stopped or moored</span><span class="key" style="--c:#fff"><i></i>ring: declared Hamburg as destination</span><span class="key" style="--c:var(--blue)"><i></i>tide gauge</span></div>
+    <p class="note">Ship positions are AIS reports, each as last heard (see the time on its card). The river is drawn as a line through the official gauge positions; it is not a nautical chart. Only cargo ships of 100 m or more with an IMO number are kept.</p>
+  </section>
+
+  <section class="s4">
+    <div class="tag">Close-up</div><h2>In the port</h2>
+    <div class="chart"><svg id="port" viewBox="0 0 420 356" role="img" aria-label="Positions of cargo ships inside the Port of Hamburg"></svg></div>
+    <p class="note">Moored ships gather at the terminal quays. There is no chart underneath: the line is the Elbe through the gauges at Seemannshöft and St. Pauli. Which group is which terminal will be learned from several days of moorings.</p>
+  </section>
+
+  <section>
+    <div class="tag">Water level, centimetres above gauge zero</div><h2>Tide forecast, next 8 days</h2>
+    <div class="chart"><svg id="tide" viewBox="0 0 950 280" role="img" aria-label="Forecast water level at Hamburg St. Pauli and Cuxhaven"></svg></div>
+    <div id="tideread" class="num"></div>
+    <div><span class="key" style="--c:var(--tele)"><i></i>Hamburg St. Pauli</span><span class="key" style="--c:var(--blue)"><i></i>Cuxhaven</span><span class="key" style="--c:var(--amber)"><i></i>mean low water, St. Pauli</span></div>
+    <div class="scroll" style="margin-top:10px"><table id="gauges"></table></div>
+    <p class="note" id="tidenote"></p>
+  </section>
+
+  <section>
+    <div class="tag">Declared destination Hamburg</div><h2>Ships bound for Hamburg</h2>
+    <div class="scroll"><table id="bound"></table></div>
+    <p class="note">Destination, arrival time and draught are what each crew typed into its AIS set, so some are out of date; arrival times already in the past are greyed.</p>
+  </section>
+
+  <section>
+    <div class="tag">Heard in the last 6 hours</div><h2>Ships in port</h2>
+    <div class="scroll"><table id="inport"></table></div>
+  </section>
+</div>
+
+<footer>
+  <ul>
+    <li>Sources: AIS messages relayed by <a href="https://aisstream.io">aisstream.io</a>; water levels from <a href="https://www.pegelonline.wsv.de">PEGELONLINE</a>, the open data service of the German Federal Waterways and Shipping Administration (WSV).</li>
+    <li>The tide forecast is a harmonic model fitted to the last 31 days of measurements, with the surge seen over the last tidal day carried forward. It is not an official prediction and must not be used for navigation.</li>
+    <li>Gauge zero at these gauges lies about 5.0 m below the German height reference NHN.</li>
+    <li>This page reads the file written once a day by the project's scheduled job. Code, tests and the Chattogram planning case study: <a href="https://github.com/artahmid03-source/portflow-simopt-mcp">github.com/artahmid03-source/portflow-simopt-mcp</a>.</li>
+  </ul>
+</footer>
+
+<script>
+'use strict';
+const LIVE = 'https://raw.githubusercontent.com/artahmid03-source/portflow-simopt-mcp/data/hamburg/latest.json';
+const SRC = new URLSearchParams(location.search).get('data') || LIVE;
+const $ = (id) => document.getElementById(id);
+const esc = (s) => String(s ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+const fmt = (x, d = 0) => (x == null || x === '' || isNaN(x) ? '—' : Number(x).toLocaleString('en-US', { minimumFractionDigits: d, maximumFractionDigits: d }));
+const utc = (t) => new Date(t).toLocaleString('en-GB', { timeZone: 'UTC', day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' });
+const local = (t) => new Date(t).toLocaleString('en-GB', { timeZone: 'Europe/Berlin', weekday: 'short', day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' });
+const ageHours = (t) => (Date.now() - new Date(t).getTime()) / 3600e3;
+const NAV = { 0: 'under way', 1: 'at anchor', 2: 'not under command', 3: 'restricted manoeuvrability', 5: 'moored', 8: 'under way sailing', 15: 'not reported' };
+const svg = (tag, attrs, text) => { const e = document.createElementNS('http://www.w3.org/2000/svg', tag); for (const k in attrs) e.setAttribute(k, attrs[k]); if (text != null) e.textContent = text; return e; };
+
+// equirectangular projections: main chart and port close-up
+const proj = (box, w, h) => { const kx = w / (box.e - box.w), ky = h / (box.n - box.s); return (lat, lon) => [(lon - box.w) * kx, (box.n - lat) * ky]; };
+const P = proj({ w: 7.90, e: 10.15, s: 53.42, n: 54.12 }, 950, 500);
+const PP = proj({ w: 9.86, e: 10.03, s: 53.475, n: 53.56 }, 420, 356);
+const RIVER = [[54.02, 8.05], [53.97, 8.35], [53.90, 8.62], [53.875, 8.71], [53.845, 8.87], [53.862, 9.03], [53.885, 9.15], [53.865, 9.316], [53.787, 9.405], [53.733, 9.455], [53.68, 9.495], [53.63, 9.53], [53.607, 9.585], [53.572, 9.635], [53.566, 9.703], [53.553, 9.807], [53.542, 9.881], [53.544, 9.968], [53.538, 10.01]];
+const PLACES = [['GERMAN BIGHT', 54.05, 8.0], ['Cuxhaven', 53.84, 8.62], ['Brunsbüttel · Kiel Canal', 53.925, 9.07], ['Glückstadt', 53.80, 9.44], ['Stade', 53.60, 9.42], ['Wedel', 53.60, 9.69], ['HAMBURG', 53.59, 9.93]];
+const GAUGE_POS = { 'CUXHAVEN STEUBENHÖFT': [53.8677, 8.7174], 'BRUNSBÜTTEL MPM': [53.8878, 9.1487], 'GLÜCKSTADT': [53.7844, 9.4094], 'STADERSAND': [53.6297, 9.5266], 'SCHULAU': [53.5679, 9.7029], 'HAMBURG ST. PAULI': [53.5454, 9.97] };
+const title = (s) => s.toLowerCase().replace(/(^|[\s.\-])(\p{L})/gu, (m, a, b) => a + b.toUpperCase()).replace(' Mpm', '').replace('Steubenhöft', '').trim();
+
+let ships = [], selected = null;
+
+function shipKey(v) { return String(v.mmsi); }
+function select(mmsi) {
+  selected = mmsi;
+  const v = ships.find((s) => shipKey(s) === mmsi);
+  document.querySelectorAll('tr[data-mmsi]').forEach((r) => r.classList.toggle('sel', r.dataset.mmsi === mmsi));
+  document.querySelectorAll('.ship').forEach((g) => g.querySelector('.hit').setAttribute('stroke', g.dataset.mmsi === mmsi ? '#fff' : 'none'));
+  if (!v) return;
+  $('card').innerHTML = `<b>${esc(v.name || 'Unnamed')}</b> <span style="color:var(--muted)">MMSI ${esc(v.mmsi)}${v.imo ? ' · IMO ' + esc(v.imo) : ''}</span>
+    <dl><div><dt>Size</dt><dd class="num">${fmt(v.len_m)} × ${fmt(v.beam_m)} m</dd></div>
+    <div><dt>Draught (as declared)</dt><dd class="num">${v.draught_m ? fmt(v.draught_m, 1) + ' m' : '—'}</dd></div>
+    <div><dt>Declared destination</dt><dd>${esc(v.declared_destination || '—')}</dd></div>
+    <div><dt>Declared arrival</dt><dd>${v.eta_utc ? esc(local(v.eta_utc)) + ' Hamburg time' : '—'}</dd></div>
+    <div><dt>Status</dt><dd>${v.lat == null ? 'position not heard yet' : esc(NAV[v.nav_status] || 'status ' + v.nav_status) + ', ' + fmt(v.sog_kn, 1) + ' kn'}</dd></div>
+    <div><dt>Last heard</dt><dd>${v.last_heard ? esc(utc(v.last_heard)) + ' UTC, ' + esc(String(v.zone || '').toLowerCase()) : '—'}</dd></div></dl>`;
+}
+
+function drawShips(el, project, list, labelMin, inset) {
+  let k = 0;
+  for (const v of list) {
+    if (v.lat == null) continue;
+    const [x, y] = project(v.lat, v.lon);
+    if (x < 0 || y < 0 || x > el.viewBox.baseVal.width || y > el.viewBox.baseVal.height) continue;
+    const moving = (v.sog_kn || 0) >= 1, color = moving ? '#5ef2c8' : '#ffb224';
+    const g = svg('g', { class: 'ship', tabindex: 0, role: 'button', 'data-mmsi': shipKey(v), transform: `translate(${x.toFixed(1)},${y.toFixed(1)})`, 'aria-label': `${v.name || 'ship'}, ${moving ? 'under way' : 'stopped'}` });
+    g.appendChild(svg('circle', { class: 'hit', r: 11, fill: 'transparent', stroke: 'none', 'stroke-width': 1.2 }));
+    if (v.bound) g.appendChild(svg('circle', { r: 7.5, fill: 'none', stroke: '#fff', 'stroke-opacity': .75 }));
+    if (moving && v.cog_deg != null) g.appendChild(svg('path', { d: 'M0,-8 L4.6,6 L0,3.2 L-4.6,6 Z', fill: color, transform: `rotate(${v.cog_deg})` }));
+    else g.appendChild(svg('circle', { r: 4, fill: color }));
+    const left = inset && x > 250, low = inset && k++ % 2 === 1;      // close-up: keep labels inside the frame and stagger them
+    if ((v.len_m || 0) >= labelMin && (inset || v.zone !== 'PORT')) g.appendChild(svg('text', { x: left ? -9 : 9, y: low ? 14 : -7, 'text-anchor': left ? 'end' : 'start', 'font-size': 10, fill: '#d7e5f0', stroke: '#060b10', 'stroke-width': 2.5, 'paint-order': 'stroke' }, v.name || ''));
+    g.appendChild(svg('title', {}, `${v.name || 'ship'} · ${fmt(v.len_m)} m`));
+    g.addEventListener('click', () => select(shipKey(v)));
+    g.addEventListener('keydown', (e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); select(shipKey(v)); } });
+    el.appendChild(g);
+  }
+}
+
+function drawRiver(doc) {
+  const el = $('river'); el.textContent = '';
+  const pts = RIVER.map(([la, lo]) => P(la, lo).map((n) => n.toFixed(1)).join(','));
+  el.appendChild(svg('polyline', { points: pts.slice(0, 7).join(' '), fill: 'none', stroke: '#12384c', 'stroke-width': 30, 'stroke-linecap': 'round', 'stroke-linejoin': 'round' }));
+  el.appendChild(svg('polyline', { points: pts.slice(6).join(' '), fill: 'none', stroke: '#12384c', 'stroke-width': 13, 'stroke-linecap': 'round', 'stroke-linejoin': 'round' }));
+  for (const [name, la, lo] of PLACES) { const [x, y] = P(la, lo); el.appendChild(svg('text', { x, y, 'font-size': 11, 'font-family': 'Rajdhani, sans-serif', 'letter-spacing': 1.2, fill: '#8097a9' }, name)); }
+  for (const [name, g] of Object.entries(doc.tide.gauges)) {
+    const pos = GAUGE_POS[name]; if (!pos) continue;
+    const [x, y] = P(pos[0], pos[1]), i = hourIndex(g), lvl = g.hourly_cm[i];
+    el.appendChild(svg('rect', { x: x - 3.5, y: y + 9, width: 7, height: 7, fill: '#4aa3ff' }));
+    el.appendChild(svg('text', { x: x + 7, y: y + 17, 'font-size': 9.5, fill: '#4aa3ff' }, `${fmt(lvl)} cm`));
+  }
+  drawShips(el, P, ships, 250);
+}
+
+function drawPort() {
+  const el = $('port'); el.textContent = '';
+  const line = [[53.553, 9.807], [53.542, 9.881], [53.544, 9.968], [53.538, 10.01]].map(([la, lo]) => PP(la, lo).map((n) => n.toFixed(1)).join(',')).join(' ');
+  el.appendChild(svg('polyline', { points: line, fill: 'none', stroke: '#12384c', 'stroke-width': 26, 'stroke-linecap': 'round', 'stroke-linejoin': 'round' }));
+  el.appendChild(svg('text', { x: 10, y: 20, 'font-size': 11, 'font-family': 'Rajdhani, sans-serif', 'letter-spacing': 1.2, fill: '#8097a9' }, 'NORDERELBE'));
+  drawShips(el, PP, ships, 0, true);
+}
+
+function hourIndex(g) { return Math.max(0, Math.min(g.hourly_cm.length - 1, Math.round((Date.now() - new Date(g.hourly_utc_start).getTime()) / 3600e3))); }
+
+function drawTide(doc) {
+  const el = $('tide'); el.textContent = '';
+  const a = doc.tide.gauges['HAMBURG ST. PAULI'], b = doc.tide.gauges['CUXHAVEN STEUBENHÖFT'];
+  if (!a) { el.appendChild(svg('text', { x: 20, y: 40, fill: '#8097a9', 'font-size': 12 }, 'No tide data in the latest file.')); return; }
+  const series = [[a, '#5ef2c8', 'Hamburg St. Pauli'], [b, '#4aa3ff', 'Cuxhaven']].filter((s) => s[0]);
+  const all = series.flatMap((s) => s[0].hourly_cm), lo = Math.min(...all) - 25, hi = Math.max(...all) + 25, n = a.hourly_cm.length;
+  const L = 50, R = 132, T = 12, B = 250, X = (h) => L + (h / (n - 1)) * (950 - L - R), Y = (v) => B - ((v - lo) / (hi - lo)) * (B - T), t0 = new Date(a.hourly_utc_start).getTime();
+  for (let v = Math.ceil(lo / 100) * 100; v <= hi; v += 100) { el.appendChild(svg('line', { x1: L, x2: 950 - R, y1: Y(v), y2: Y(v), stroke: '#16293a' })); el.appendChild(svg('text', { x: L - 6, y: Y(v) + 3, 'font-size': 10, fill: '#8097a9', 'text-anchor': 'end' }, v)); }
+  for (let h = 0; h < n; h++) { const d = new Date(t0 + h * 3600e3); if (d.getUTCHours() === 0) { el.appendChild(svg('line', { x1: X(h), x2: X(h), y1: T, y2: B, stroke: '#16293a' })); el.appendChild(svg('text', { x: X(h) + 4, y: B + 16, 'font-size': 10, fill: '#8097a9' }, d.toLocaleDateString('en-GB', { timeZone: 'UTC', weekday: 'short', day: '2-digit', month: 'short' }))); } }
+  el.appendChild(svg('line', { x1: L, x2: 950 - R, y1: Y(a.mean_low_water_cm), y2: Y(a.mean_low_water_cm), stroke: '#ffb224', 'stroke-dasharray': '4 3' }));
+  for (const [g, color, name] of series) {
+    el.appendChild(svg('path', { d: g.hourly_cm.map((v, h) => `${h ? 'L' : 'M'}${X(h).toFixed(1)},${Y(v).toFixed(1)}`).join(' '), fill: 'none', stroke: color, 'stroke-width': 1.6 }));
+    el.appendChild(svg('text', { x: 950 - R + 6, y: Y(g.hourly_cm[n - 1]) + 3, 'font-size': 10.5, fill: color }, name));
+  }
+  const nowH = (Date.now() - t0) / 3600e3;
+  if (nowH >= 0 && nowH <= n - 1) { el.appendChild(svg('line', { x1: X(nowH), x2: X(nowH), y1: T, y2: B, stroke: '#fff', 'stroke-opacity': .7 })); el.appendChild(svg('text', { x: X(nowH) + 4, y: T + 9, 'font-size': 10, fill: '#fff' }, 'now')); }
+  const cursor = svg('line', { y1: T, y2: B, stroke: '#8097a9', 'stroke-dasharray': '2 3', visibility: 'hidden' }); el.appendChild(cursor);
+  const read = (evt) => {
+    const r = el.getBoundingClientRect(), px = ((evt.touches ? evt.touches[0].clientX : evt.clientX) - r.left) * (950 / r.width), h = Math.round(((px - L) / (950 - L - R)) * (n - 1));
+    if (h < 0 || h > n - 1) return;
+    cursor.setAttribute('x1', X(h)); cursor.setAttribute('x2', X(h)); cursor.setAttribute('visibility', 'visible');
+    $('tideread').textContent = `${local(t0 + h * 3600e3)} Hamburg time: ` + series.map(([g, , name]) => `${name} ${fmt(g.hourly_cm[h])} cm`).join(' · ');
+  };
+  el.addEventListener('mousemove', read); el.addEventListener('touchstart', read, { passive: true }); el.addEventListener('touchmove', read, { passive: true });
+
+  const next = (g, kind, k) => g.turning_points.filter((p) => p[1] === kind && new Date(p[0]).getTime() > Date.now()).slice(0, k);
+  $('gauges').innerHTML = '<thead><tr><th>Gauge</th><th>Elbe km</th><th>Level now (forecast)</th><th>Mean low water</th><th class="tl">Next high waters, Hamburg time</th><th class="tl">Next low water</th><th>Forecast error 6 h / 24 h / 4 d</th></tr></thead><tbody>' +
+    Object.entries(doc.tide.gauges).map(([name, g]) => { const e = g.forecast_rmse_cm_by_lead || {}, lw = next(g, 'L', 1)[0];
+      return `<tr><td>${esc(title(name))}</td><td>${fmt(g.elbe_km, 1)}</td><td>${fmt(g.hourly_cm[hourIndex(g)])} cm</td><td>${fmt(g.mean_low_water_cm)} cm</td><td class="tl">${next(g, 'H', 2).map((p) => `${esc(local(p[0]))} (${fmt(p[2])} cm)`).join(' · ') || '—'}</td><td class="tl">${lw ? `${esc(local(lw[0]))} (${fmt(lw[2])} cm)` : '—'}</td><td>${fmt(e['6h'])} / ${fmt(e['24h'])} / ${fmt(e['96h'])} cm</td></tr>`; }).join('') + '</tbody>';
+  $('tidenote').textContent = `High-water times are the reliable part of this forecast; heights are less so, because wind moves the water level by tens of centimetres. The error columns are measured on the last 10 days of the record. Tidal range at St. Pauli is about ${fmt((Math.max(...a.hourly_cm) - Math.min(...a.hourly_cm)) / 100, 1)} m.` + (doc.tide.errors.length ? ` Gauges that failed today: ${doc.tide.errors.join('; ')}.` : '');
+}
+
+function tables(doc) {
+  const row = (v, cols) => `<tr data-mmsi="${esc(shipKey(v))}">${cols.map((c) => `<td${c[1] ? ' class="' + c[1] + '"' : ''}>${c[0]}</td>`).join('')}</tr>`;
+  const eta = (v) => (v.eta_utc ? `<span class="${new Date(v.eta_utc).getTime() < Date.now() ? 'past' : ''}">${esc(local(v.eta_utc))}</span>` : '—');
+  $('bound').innerHTML = '<thead><tr><th>Ship</th><th>Length × beam m</th><th>Draught m</th><th class="tl">Declared destination</th><th class="tl">Declared arrival, Hamburg time</th><th class="tl">Where</th><th>Speed kn</th><th class="tl">Last heard UTC</th></tr></thead><tbody>' +
+    (doc.vessels.bound_for_hamburg.map((v) => row(v, [[esc(v.name || '—')], [`${fmt(v.len_m)} × ${fmt(v.beam_m)}`], [v.draught_m ? fmt(v.draught_m, 1) : '—'], [esc(v.declared_destination || '—'), 'tl'], [eta(v), 'tl'], [v.zone ? esc(v.zone.toLowerCase()) : 'not heard yet', 'tl'], [fmt(v.sog_kn, 1)], [v.last_heard ? esc(utc(v.last_heard)) : '—', 'tl']])).join('') || '<tr><td colspan="8" class="tl">No ship has declared Hamburg yet.</td></tr>') + '</tbody>';
+  $('inport').innerHTML = '<thead><tr><th>Ship</th><th>Length × beam m</th><th class="tl">Status</th><th>Latitude</th><th>Longitude</th><th class="tl">Last heard UTC</th></tr></thead><tbody>' +
+    (doc.vessels.in_port.map((v) => row(v, [[esc(v.name || '—')], [`${fmt(v.len_m)} × ${fmt(v.beam_m)}`], [esc(NAV[v.nav_status] || 'status ' + v.nav_status), 'tl'], [fmt(v.lat, 4)], [fmt(v.lon, 4)], [esc(utc(v.last_heard)), 'tl']])).join('') || '<tr><td colspan="6" class="tl">No cargo ship heard in port in the last 6 hours.</td></tr>') + '</tbody>';
+  document.querySelectorAll('tr[data-mmsi]').forEach((r) => r.addEventListener('click', () => select(r.dataset.mmsi)));
+}
+
+function render(doc, sample) {
+  const v = doc.vessels, age = ageHours(doc.generated_utc), bound = new Set(v.bound_for_hamburg.map(shipKey));
+  const byKey = new Map();
+  for (const s of [...v.on_the_elbe, ...v.in_port, ...v.bound_for_hamburg]) byKey.set(shipKey(s), { ...byKey.get(shipKey(s)), ...s, bound: bound.has(shipKey(s)) });
+  ships = [...byKey.values()];
+  $('clock').firstChild.textContent = `${local(doc.generated_utc)}`;
+  $('clocksub').textContent = `data generated, Hamburg time · ${age < 1 ? 'under an hour' : fmt(age) + ' h'} ago`;
+  const lamp = (text, c) => `<span class="lamp" style="--c:${c}"><i></i>${esc(text)}</span>`;
+  $('lamps').innerHTML = lamp(sample ? 'SAMPLE DATA' : age <= 30 ? 'DATA CURRENT' : 'DATA STALE', sample || age > 30 ? 'var(--amber)' : 'var(--ok)') +
+    lamp(`${v.runs_last_24h} COLLECTION RUNS / 24 H`, v.runs_last_24h >= 12 ? 'var(--ok)' : 'var(--amber)') + lamp(`${Object.keys(doc.tide.gauges).length} OF 6 GAUGES`, doc.tide.errors.length ? 'var(--amber)' : 'var(--ok)');
+  $('banner').innerHTML = sample ? `<div class="banner">The live data file could not be loaded, so this is a saved sample from ${esc(utc(doc.generated_utc))} UTC.</div>` : age > 30 ? `<div class="banner">The latest data file is ${fmt(age)} hours old; the daily job may not have run.</div>` : '';
+  const sp = doc.tide.gauges['HAMBURG ST. PAULI'], hw = sp && sp.turning_points.find((p) => p[1] === 'H' && new Date(p[0]).getTime() > Date.now());
+  const kpi = (l, val, d) => `<div class="kpi"><div class="l">${esc(l)}</div><div class="v num">${val}</div><div class="d">${esc(d)}</div></div>`;
+  $('kpis').innerHTML = kpi('Bound for Hamburg', fmt(v.bound_for_hamburg.length), 'cargo ships declaring it') + kpi('On the Elbe', fmt(v.on_the_elbe.length), 'river and estuary, last 6 h') +
+    kpi('In port', fmt(v.in_port.length), `${fmt(v.moored_in_port)} moored`) + kpi('Ships heard per run', fmt(v.mean_ships_heard_per_run), 'all types, German Bight to port') +
+    kpi('Next high water', hw ? new Date(hw[0]).toLocaleTimeString('en-GB', { timeZone: 'Europe/Berlin', hour: '2-digit', minute: '2-digit' }) : '—', hw ? `St. Pauli, ${local(hw[0]).slice(0, 10)}, ${fmt(hw[2])} cm` : 'no forecast');
+  drawRiver(doc); drawPort(); drawTide(doc); tables(doc);
+  const first = ships.find((s) => s.bound && s.lat != null && (s.sog_kn || 0) >= 1) || ships.find((s) => s.lat != null);
+  if (first) select(shipKey(first));
+}
+
+async function load() {
+  try {
+    const r = await fetch(SRC + (SRC.includes('?') ? '&' : '?') + 't=' + Math.floor(Date.now() / 600000), { cache: 'no-store' });
+    if (!r.ok) throw new Error('HTTP ' + r.status);
+    render(await r.json(), false);
+  } catch (e) {
+    try { render(await (await fetch('sample_latest.json')).json(), true); }
+    catch (e2) { $('banner').innerHTML = '<div class="banner">No data could be loaded. Try again in a few minutes.</div>'; $('clock').firstChild.textContent = 'no data'; }
+  }
+}
+load();
+</script>
+</body>
+</html>

@@ -169,6 +169,7 @@ def test_small_craft_and_unidentified_ships_are_not_logged(tmp_path):
     got["near_pos"][6] = dict(got["near_pos"][5])                          # a ship whose static data has not been heard yet
     run = col.write_store(tmp_path, got)
     assert run["rows_positions"] == 0 and run["not_cargo_or_unknown"] == 2
+    assert col.is_cargo({"type": 70, "len": 173, "imo": 9321483}) and not col.is_cargo({"type": 70, "len": 173, "imo": 0})   # inland vessels carry no IMO number
 
 
 def test_tracked_ships_are_forgotten_after_two_weeks(tmp_path):
