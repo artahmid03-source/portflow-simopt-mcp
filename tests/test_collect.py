@@ -74,14 +74,25 @@ async def fake_aisstream(ws):
 async def run_against_fake(key, minutes=0.07, tracked=(), probe_ports=None):
     async with websockets.serve(fake_aisstream, "127.0.0.1", 0) as server:
         port = server.sockets[0].getsockname()[1]
-        return await col.collect(key, minutes, tracked, url=f"ws://127.0.0.1:{port}", discover_frac=0.4, probe_ports=probe_ports)
+        return await col.collect(key, minutes, tracked, url=f"ws://127.0.0.1:{port}", discover_frac=0.4, probe_ports=probe_ports, site="chattogram")
 
 
-def test_destination_pattern():
+def test_destination_patterns():
+    ctg, ham = col.SITES["chattogram"]["dest_re"], col.SITES["hamburg"]["dest_re"]
     for d in ("CHITTAGONG", "Chattogram", "BD CGP", "BDCGP", "CTG ANCH", "CGP"):
-        assert col.DEST_RE.search(d), d
+        assert ctg.search(d), d
     for d in ("SINGAPORE", "COLOMBO", "CGPORT", ""):
-        assert not col.DEST_RE.search(d), d
+        assert not ctg.search(d), d
+    for d in ("HAMBURG", "DEHAM", "DE HAM", "NLRTM>DEHAM", "Hamburg CTA"):
+        assert ham.search(d), d
+    for d in ("BREMERHAVEN", "DEBRV", "HAMINA", "SOUTHAMPTON", ""):
+        assert not ham.search(d), d
+
+
+def test_hamburg_zones():
+    z = col.zone_hamburg
+    assert z(53.54, 9.95, 0.0) == "PORT" and z(53.80, 9.40, 12.0) == "ELBE" and z(53.95, 8.60, 12.0) == "ESTUARY"
+    assert z(53.56, 8.56, 0.0) == "WESER" and z(54.10, 7.90, 10.0) == "BIGHT" and z(51.0, 2.0, 15.0) == "SEA"
 
 
 def test_collects_near_ships_discovers_bound_ships_then_follows_them(tmp_path):
@@ -93,12 +104,14 @@ def test_collects_near_ships_discovers_bound_ships_then_follows_them(tmp_path):
 
     run = col.write_store(tmp_path, got)
     assert run["rows_positions"] == 2 and run["rows_static"] == 2 and run["tracked_total"] == 2
-    pos = [json.loads(x) for x in next((tmp_path / "positions").glob("*.jsonl")).read_text().splitlines()]
+    site = tmp_path / "chattogram"
+    pos = [json.loads(x) for x in next((site / "positions").glob("*.jsonl")).read_text().splitlines()]
     assert {(p["mmsi"], p["zone"], p["src"]) for p in pos} == {(111000111, "ANCHORAGE", "near"), (222000222, "BAY_FAR", "track")}
-    tracked = json.loads((tmp_path / "tracked.json").read_text())
+    tracked = json.loads((site / "tracked.json").read_text())
+    assert json.loads((site / "ships.json").read_text())["111000111"] == {"name": "FIXTURE ANCHORED", "imo": 1, "type": 71, "len": 140, "beam": 20}
     assert tracked["222000222"]["dest"] == "BD CGP" and tracked["222000222"]["eta_utc"].endswith("-11-22T03:30Z")
 
-    counts = build_db.build(tmp_path, tmp_path / "t.sqlite")
+    counts = build_db.build(site, tmp_path / "t.sqlite")
     assert counts == {"positions": 2, "static": 2, "runs": 1}
     con = sqlite3.connect(tmp_path / "t.sqlite")
     assert con.execute("SELECT name, draught FROM vessels WHERE mmsi = 222000222").fetchone() == ("FIXTURE BOUND", 9.1)
@@ -127,7 +140,8 @@ def test_a_wrong_key_is_reported_not_retried():
 def _got(t, lat, nav=1):
     rx = col.iso(t)
     return {"near_pos": {5: {"rx": rx, "lat": lat, "lon": 91.75, "sog_kn": 0.0, "cog_deg": 0.0, "heading_deg": None, "nav_status": nav}},
-            "near_static": {}, "feeder_static": {}, "track_pos": {}, "stats": {}, "started": t, "ended": t}
+            "near_static": {5: {"rx": rx, "name": "FIXTURE", "imo": 5, "ship_type": 70, "length_m": 150, "beam_m": 25, "destination": "ELSEWHERE", "eta": None}},
+            "feeder_static": {}, "track_pos": {}, "stats": {}, "started": t, "ended": t, "site": "hamburg"}
 
 
 def test_a_ship_that_has_not_moved_is_logged_once_until_the_heartbeat(tmp_path):
@@ -137,13 +151,22 @@ def test_a_ship_that_has_not_moved_is_logged_once_until_the_heartbeat(tmp_path):
     assert col.write_store(tmp_path, _got(t0 + timedelta(hours=2), 22.05, nav=0))["rows_positions"] == 1    # status changed
     assert col.write_store(tmp_path, _got(t0 + timedelta(hours=3), 22.20, nav=0))["rows_positions"] == 1    # moved
     assert col.write_store(tmp_path, _got(t0 + timedelta(hours=10), 22.20, nav=0))["rows_positions"] == 1   # heartbeat
-    assert len((tmp_path / "runs.jsonl").read_text().splitlines()) == 5
+    assert len((tmp_path / "hamburg" / "runs.jsonl").read_text().splitlines()) == 5
+
+
+def test_small_craft_and_unidentified_ships_are_not_logged(tmp_path):
+    t0 = datetime(2026, 11, 15, 0, 0, tzinfo=timezone.utc)
+    got = _got(t0, 53.54)
+    got["near_static"][5]["ship_type"] = 52                                # a tug
+    got["near_pos"][6] = dict(got["near_pos"][5])                          # a ship whose static data has not been heard yet
+    run = col.write_store(tmp_path, got)
+    assert run["rows_positions"] == 0 and run["not_cargo_or_unknown"] == 2
 
 
 def test_tracked_ships_are_forgotten_after_two_weeks(tmp_path):
     t0 = datetime(2026, 11, 1, 0, 0, tzinfo=timezone.utc)
     got = _got(t0, 22.05)
-    got["feeder_static"] = {9: {"rx": col.iso(t0), "destination": "CHATTOGRAM", "eta": None, "name": "X", "imo": 9, "ais_draught_m": 8.0, "length_m": 150, "beam_m": 25, "ship_type": 71}}
+    got["feeder_static"] = {9: {"rx": col.iso(t0), "destination": "HAMBURG", "eta": None, "name": "X", "imo": 9, "ais_draught_m": 8.0, "length_m": 150, "beam_m": 25, "ship_type": 71}}
     assert col.write_store(tmp_path, got)["tracked_total"] == 1
     assert col.write_store(tmp_path, _got(t0 + timedelta(days=15), 22.05))["tracked_total"] == 0
 

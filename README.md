@@ -235,7 +235,7 @@ Gaps in both directions come from the JavaScript DES estimating slightly differe
 git clone https://github.com/artahmid03-source/portflow-simopt-mcp.git
 cd portflow-simopt-mcp
 uv sync --extra ais                  # Python 3.10+, OR-Tools, SimPy, FastMCP, websockets
-uv run ruff check . && uv run pytest # lint, then 55 tests (about 1.5 minutes)
+uv run ruff check . && uv run pytest # lint, then 63 tests (about 2 minutes)
 uv run python run_nct_pipeline.py    # plans the live queue, writes nct_control_tower_data.json (about 1 minute)
 
 # optional: refresh positions from AIS (free key at https://aisstream.io)
@@ -275,10 +275,12 @@ data/live_chattogram_2026-11-13.json   the live queue and tides, with source and
 ingest/aisstream_ingest.py   AIS message parsing and one-off merge into the live file
 ingest/collect.py            scheduled collector (runs hourly in GitHub Actions, writes to the data branch)
 ingest/build_db.py           loads the collected store into SQLite
+sites/tides.py               tide forecast from official gauge records (harmonic fit, surge carry-over, hold-out skill)
+run_daily.py                 daily Hamburg update: tide forecast for six Elbe gauges + vessel picture from the collected AIS
 tools/compare_runs.py        compares two pipeline outputs (used by CI)
-.github/workflows/           ci.yml (lint, tests, reproducibility, page build and browser test) · collect.yml (hourly AIS)
+.github/workflows/           ci.yml (lint, tests, reproducibility, page build and browser test) · collect.yml (hourly AIS) · daily.yml (daily Hamburg update)
 run_nct_pipeline.py          live-queue pipeline → nct_control_tower_data.json
-tests/                       test_invariants.py (19) · test_nct.py (25) · test_ais_ingest.py (4) · test_collect.py (7)
+tests/                       test_invariants.py (19) · test_nct.py (25) · test_ais_ingest.py (4) · test_collect.py (9) · test_tides.py (6)
 web/                         HMI: src/engine.js, src/PortFlowControlTower.template.jsx, build.py, validate.mjs, test_page.cjs
 docs/screenshots/            HMI captures
 ```
@@ -287,7 +289,31 @@ docs/screenshots/            HMI captures
 
 ## Continuous integration
 
-Every push runs two jobs. **Engine:** `ruff`, the 55 tests, then the whole pipeline again, with the fresh output compared against the committed `nct_control_tower_data.json` (integers and structure exactly, floats to 1e-6). **Page:** build, the in-page engine against the eight CP-SAT reference cases (the five exact cases must stay exact, no gap above 7%), and a headless-browser test that types a command into the copilot and checks the re-plan lands on the CP-SAT result.
+Every push runs two jobs. **Engine:** `ruff`, the 63 tests, then the whole pipeline again, with the fresh output compared against the committed `nct_control_tower_data.json` (integers and structure exactly, floats to 1e-6). **Page:** build, the in-page engine against the eight CP-SAT reference cases (the five exact cases must stay exact, no gap above 7%), and a headless-browser test that types a command into the copilot and checks the re-plan lands on the CP-SAT result.
+
+## Second site: Hamburg (live data, in progress)
+
+AISStream hears nothing at Chattogram or anywhere else in South Asia (measured 15 Nov 2026: 0 ships at six South Asian ports, against 266 at Hamburg, 369 at Antwerp and 477 at Rotterdam in the same 3.6 minutes). The live loop therefore runs on the Port of Hamburg, a river port 100 km up the tidal Elbe, while Chattogram stays as the planning case study above.
+
+What runs today:
+
+- **Hourly AIS collection** for the German Bight, the Elbe and the port: cargo ships of 100 m or more, plus every such ship in the Channel and North Sea that declares Hamburg as destination.
+- **Daily tide forecast** (`run_daily.py`, `sites/tides.py`) from 31 days of measured water levels at six official Elbe gauges (PEGELONLINE, the German waterway authority's open service). A 16-constituent harmonic model is fitted by robust least squares, and the surge observed over the last tidal day is carried forward with a 48-hour decay.
+
+Forecast skill on the record of 15 Oct to 15 Nov 2026 (RMSE by lead time, forecasts started every 12 hours over the last 10 days):
+
+| Gauge | Elbe km | 6 h | 24 h | 96 h |
+|---|---:|---:|---:|---:|
+| Cuxhaven | 724 | 13 cm | 19 cm | 47 cm |
+| Brunsbüttel | 695 | 16 cm | 22 cm | 50 cm |
+| Glückstadt | 674 | 18 cm | 23 cm | 51 cm |
+| Stadersand | 655 | 21 cm | 24 cm | 52 cm |
+| Schulau | 641 | 22 cm | 25 cm | 52 cm |
+| Hamburg St. Pauli | 623 | 24 cm | 26 cm | 55 cm |
+
+High-water times are predicted to within 6 to 9 minutes on a 7-day hold-out; heights are off by about 40 cm without the surge term, because autumn wind set-up on the German Bight is not tidal. The tidal range is 3.8 m at Cuxhaven and 4.7 m at St. Pauli, so a berth plan must carry a height margin that grows with lead time.
+
+Not built yet: the Hamburg berth plan. It needs (1) the Elbe draught rules from an official source and (2) a few days of collected moorings to learn which ships use which container terminal, since AIS does not say.
 
 ## Continuous AIS collection
 
@@ -301,7 +327,7 @@ AIS is the one input that cannot be fetched after the fact, so it is collected o
 | `runs.jsonl` | messages heard, ships seen and errors for every run: the coverage log |
 | `coverage.jsonl` | ships heard per run at each candidate port in `ingest/probe_ports.json` (a third connection, active while that file exists) |
 
-Two connections run side by side. One listens to every ship in the northern Bay of Bengal, the outer anchorage and the river. The other first reads static data across the Colombo–Malacca–Singapore feeder region to find ships declaring Chattogram as destination, then re-subscribes with an MMSI filter to follow only those. Tide predictions are not collected because they can be looked up for any past date.
+Files live under `hamburg/` on the `data` branch. Two connections run side by side. One listens to the port and its approaches. The other first reads static data across the wider sea region to find cargo ships declaring the port as destination, then re-subscribes with an MMSI filter to follow only those. The site (boxes, destination pattern, zones) is one entry in `ingest/collect.py`. Tide predictions are not collected because they can be looked up for any past date.
 
 Setup: create a free key at aisstream.io and add it as the repository secret `AISSTREAM_API_KEY`. Without the secret the job skips with a warning. To analyse:
 

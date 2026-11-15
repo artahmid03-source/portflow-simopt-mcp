@@ -1,5 +1,12 @@
 # Changelog
 
+## 6.2.0 · 15 Nov 2026 · Hamburg as the live-data site
+
+- Collector is site-aware; default site Hamburg (German Bight, Elbe, port; discovery across the Channel and North Sea). Positions are kept for cargo ships of 100 m or more; data is stored under `<site>/` on the `data` branch.
+- `sites/tides.py`: PEGELONLINE client, robust 16-constituent harmonic fit, surge carry-over, hold-out and lead-time skill.
+- `run_daily.py` + `daily.yml`: daily tide forecast for six Elbe gauges and the vessel picture (bound for Hamburg, on the Elbe, in port), written to `hamburg/latest.json`.
+- 63 tests.
+
 ## 6.1.0 · 15 Nov 2026 · CI and continuous AIS collection
 
 - **CI** (`.github/workflows/ci.yml`): ruff, 54 tests, a full pipeline re-run compared with the committed results, page build, in-page engine drift check and an asserted browser test.

@@ -1,17 +1,17 @@
-"""Scheduled AIS collector for Chattogram.
+"""Scheduled AIS collector (default site: Hamburg; Chattogram is kept as a site, but AISStream hears nothing there).
 
 Listens to AISStream for a few minutes and appends what it heard to a plain-text store:
 
-    store/positions/YYYY-MM-DD.jsonl   one row per ship per run, skipped while a ship has not moved
-    store/static/YYYY-MM-DD.jsonl      destination, ETA and draught each time a ship changes them
-    store/tracked.json                 ships that have declared Chattogram as their destination
-    store/runs.jsonl                   one row per run: messages heard, ships seen, errors
+    store/<site>/positions/YYYY-MM-DD.jsonl   one row per ship per run, skipped while a ship has not moved
+    store/<site>/static/YYYY-MM-DD.jsonl    destination, ETA and draught each time a ship changes them
+    store/<site>/tracked.json          ships that have declared the port as their destination
+    store/<site>/runs.jsonl            one row per run: messages heard, ships seen, errors
     store/coverage.jsonl               ships heard at each port listed in ingest/probe_ports.json (only while that file exists)
 
 Up to three connections run side by side (AISStream allows three per account):
 
-    near    northern Bay of Bengal, outer anchorage and the river: positions and static data of every ship
-    feeder  Colombo-Malacca-Singapore: first static data only, to find ships bound for Chattogram,
+    near    the port and its approaches: positions of cargo ships 100 m or longer, static data of every ship
+    feeder  the wider sea region: first static data only, to find ships declaring the port as destination,
             then positions of just those ships (MMSI filter)
     probe   optional: counts the ships heard in the box of each candidate port, to measure where AISStream has coverage
 
@@ -34,9 +34,29 @@ from typing import Any, Callable, Dict, Iterable, List, Optional
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 from aisstream_ingest import URL, area_of, eta_to_datetime, nm_between, parse_frame  # noqa: E402
 
-NEAR_BOX = [[19.5, 89.5], [22.7, 92.4]]          # [[lat_south, lon_west], [lat_north, lon_east]]
-FEEDER_BOX = [[0.5, 78.0], [19.5, 105.0]]
-DEST_RE = re.compile(r"CHITT?AGON|CHATT?OGRA|\bBD\s?CGP\b|\bCGP\b|\bCTG\b", re.I)   # AIS destinations are free text
+def zone_hamburg(lat: float, lon: float, sog: Optional[float]) -> str:
+    """Coarse position classes along the route German Bight -> Elbe -> Port of Hamburg."""
+    if lon >= 9.78 and 53.45 <= lat <= 53.58:
+        return "PORT"
+    if lon >= 8.95 and 53.50 <= lat <= 53.95:
+        return "ELBE"
+    if 8.20 <= lon < 8.95 and 53.80 <= lat <= 54.10:
+        return "ESTUARY"
+    if 8.30 <= lon <= 8.70 and 53.45 <= lat <= 53.75:
+        return "WESER"
+    return "BIGHT" if 53.40 <= lat <= 54.30 and 7.60 <= lon <= 10.15 else "SEA"
+
+
+# One entry per port. Boxes are [[lat_south, lon_west], [lat_north, lon_east]]; AIS destinations are free text.
+SITES: Dict[str, Dict[str, Any]] = {
+    "hamburg": {"near_box": [[53.40, 7.60], [54.30, 10.15]],            # German Bight, Elbe and Weser approaches, Port of Hamburg
+                "feeder_box": [[48.0, -6.0], [58.5, 9.0]],             # Channel and North Sea
+                "dest_re": re.compile(r"HAMBURG|\bDE\s?HAM\b", re.I), "zone": zone_hamburg},
+    "chattogram": {"near_box": [[19.5, 89.5], [22.7, 92.4]], "feeder_box": [[0.5, 78.0], [19.5, 105.0]],
+                   "dest_re": re.compile(r"CHITT?AGON|CHATT?OGRA|\bBD\s?CGP\b|\bCGP\b|\bCTG\b", re.I), "zone": area_of},
+}
+DEFAULT_SITE = os.environ.get("PORTFLOW_SITE", "hamburg")                # AISStream hears nothing at Chattogram (measured 15 Nov 2026)
+MIN_LEN_M = 100.0                                # positions are kept for cargo ships (AIS type 70-79) at least this long
 TRACK_DAYS = 14                                  # forget a ship this long after it last declared Chattogram
 STILL_NM, HEARTBEAT_HRS = 0.05, 6.0              # a ship that has not moved is re-logged only every 6 h
 MAX_MMSI_FILTER = 200                            # AISStream limit per subscription
@@ -97,7 +117,8 @@ def port_of(lat: Optional[float], lon: Optional[float], ports: List[Dict[str, An
 
 
 async def collect(key: str, minutes: float, tracked: Iterable[int] = (), url: str = URL, discover_frac: float = 0.55,
-                  probe_ports: Optional[List[Dict[str, Any]]] = None, probe_frac: float = 0.45) -> Dict[str, Any]:
+                  probe_ports: Optional[List[Dict[str, Any]]] = None, probe_frac: float = 0.45, site: str = DEFAULT_SITE) -> Dict[str, Any]:
+    NEAR_BOX, FEEDER_BOX, DEST_RE = SITES[site]["near_box"], SITES[site]["feeder_box"], SITES[site]["dest_re"]
     near_pos, near_static, feeder_static, track_pos = {}, {}, {}, {}
     probe = {p["name"]: {"msgs": 0, "ships": set(), "moving": set(), "cargo": set()} for p in probe_ports or []}
     stats: Dict[str, Any] = Counter()
@@ -120,7 +141,7 @@ async def collect(key: str, minutes: float, tracked: Iterable[int] = (), url: st
         elif name == "near":
             (near_pos if rec["kind"] == "PositionReport" else near_static)[rec["mmsi"]] = rec
         elif rec["kind"] == "ShipStaticData":
-            if DEST_RE.search(rec.get("destination") or ""):
+            if DEST_RE.search(rec.get("destination") or "") and is_cargo({"type": rec.get("ship_type"), "len": rec.get("length_m")}):
                 feeder_static[rec["mmsi"]] = rec
         else:
             track_pos[rec["mmsi"]] = rec
@@ -146,7 +167,7 @@ async def collect(key: str, minutes: float, tracked: Iterable[int] = (), url: st
                                     (t0 + discover_frac * minutes * 60.0, track_subscription)], t_end, on_record, stats),
     )
     coverage = {n: {"msgs": c["msgs"], "ships": len(c["ships"]), "moving": len(c["moving"]), "cargo": len(c["cargo"])} for n, c in probe.items()}
-    return {"near_pos": near_pos, "near_static": near_static, "feeder_static": feeder_static, "track_pos": track_pos, "coverage": coverage,
+    return {"near_pos": near_pos, "near_static": near_static, "feeder_static": feeder_static, "track_pos": track_pos, "coverage": coverage, "site": site,
             "probe_seconds": round(probe_frac * minutes * 60.0) if probe_ports else 0, "stats": dict(stats), "started": started, "ended": datetime.now(timezone.utc)}
 
 
@@ -163,19 +184,38 @@ def _append(path: Path, rows: List[Dict[str, Any]]) -> None:
                 f.write(json.dumps(r, separators=(",", ":"), ensure_ascii=False) + "\n")
 
 
-def write_store(store: Path, got: Dict[str, Any]) -> Dict[str, Any]:
-    """Append this run to the store and return the run summary row."""
+def is_cargo(s: Dict[str, Any]) -> bool:
+    return 70 <= (s.get("type") or 0) <= 79 and (s.get("len") or 0) >= MIN_LEN_M
+
+
+def write_store(root: Path, got: Dict[str, Any]) -> Dict[str, Any]:
+    """Append this run to <root>/<site>/ and return the run summary row. The coverage log stays at the root."""
+    site = got.get("site", DEFAULT_SITE)
+    DEST_RE, zone_of = SITES[site]["dest_re"], SITES[site]["zone"]
+    store = root / site
     store.mkdir(parents=True, exist_ok=True)
     now: datetime = got["ended"]
     day = now.astimezone(timezone.utc).strftime("%Y-%m-%d")
     last = _load(store / "last.json", {})                 # mmsi -> [time, lat, lon, nav] of the last row written
     seen_static = _load(store / "static_seen.json", {})   # mmsi -> fingerprint of the last static row written
     tracked = _load(store / "tracked.json", {})
+    ships = _load(store / "ships.json", {})               # mmsi -> name, imo, type, len, beam: what kind of ship each MMSI is
+    for recs in (got["near_static"], got["feeder_static"]):
+        for mmsi, s in recs.items():
+            ships[str(mmsi)] = {"name": s.get("name"), "imo": s.get("imo"), "type": s.get("ship_type"), "len": s.get("length_m"), "beam": s.get("beam_m")}
 
-    pos_rows = []
+    for recs in (got["near_static"], got["feeder_static"]):                          # ships declaring the port this run count as tracked at once
+        for mmsi, s in recs.items():
+            if DEST_RE.search(s.get("destination") or "") and is_cargo(ships[str(mmsi)]):
+                tracked.setdefault(str(mmsi), {"first_seen": s["rx"], "last_seen": s["rx"]})
+
+    pos_rows, skipped = [], 0
     for src, recs in (("track", got["track_pos"]), ("near", got["near_pos"])):      # a ship heard on both is logged as near
         for mmsi, p in recs.items():
             if src == "track" and mmsi in got["near_pos"]:
+                continue
+            if src == "near" and str(mmsi) not in tracked and not is_cargo(ships.get(str(mmsi), {})):
+                skipped += 1                                      # tugs, barges, ferries, and ships not yet identified
                 continue
             prev = last.get(str(mmsi))
             if prev:
@@ -185,14 +225,14 @@ def write_store(store: Path, got: Dict[str, Any]) -> Dict[str, Any]:
             sog = p["sog_kn"]
             pos_rows.append({"t": p["rx"], "mmsi": mmsi, "lat": round(p["lat"], 5), "lon": round(p["lon"], 5), "sog": None if sog is None else round(sog, 1),
                              "cog": None if p["cog_deg"] is None else round(p["cog_deg"], 1), "hdg": p["heading_deg"], "nav": p["nav_status"],
-                             "zone": area_of(p["lat"], p["lon"], sog), "src": src})
+                             "zone": zone_of(p["lat"], p["lon"], sog), "src": src})
             last[str(mmsi)] = [p["rx"], round(p["lat"], 5), round(p["lon"], 5), p["nav_status"]]
 
     static_rows = []
     for src, recs in (("near", got["near_static"]), ("feeder", got["feeder_static"])):
         for mmsi, s in recs.items():
             eta = eta_to_datetime(s["eta"], now) if s.get("eta") else None
-            bound = bool(DEST_RE.search(s.get("destination") or ""))
+            bound = bool(DEST_RE.search(s.get("destination") or "")) and is_cargo(ships[str(mmsi)])
             fp = f"{s.get('destination')}|{s.get('eta')}|{s.get('ais_draught_m')}"
             if seen_static.get(str(mmsi)) != fp:
                 static_rows.append({"t": s["rx"], "mmsi": mmsi, "imo": s.get("imo"), "name": s.get("name"), "type": s.get("ship_type"), "len": s.get("length_m"),
@@ -211,12 +251,13 @@ def write_store(store: Path, got: Dict[str, Any]) -> Dict[str, Any]:
     run = {"t_start": iso(got["started"]), "t_end": iso(now), "near_msgs": st.get("near_msgs", 0), "feeder_msgs": st.get("feeder_msgs", 0),
            "near_ships": len(got["near_pos"]), "near_static": len(got["near_static"]), "bound_static": len(got["feeder_static"]),
            "tracked_heard": len(got["track_pos"]), "tracked_total": len(tracked), "rows_positions": len(pos_rows), "rows_static": len(static_rows),
-           "errors": st.get("errors", [])}
+           "not_cargo_or_unknown": skipped, "errors": st.get("errors", [])}
     _append(store / "positions" / f"{day}.jsonl", pos_rows)
     _append(store / "static" / f"{day}.jsonl", static_rows)
     _append(store / "runs.jsonl", [run])
+    (store / "ships.json").write_text(json.dumps(ships, separators=(",", ":"), ensure_ascii=False))
     if got.get("coverage"):
-        _append(store / "coverage.jsonl", [{"t": iso(got["started"]), "listen_s": got["probe_seconds"], "ports": got["coverage"]}])
+        _append(root / "coverage.jsonl", [{"t": iso(got["started"]), "listen_s": got["probe_seconds"], "ports": got["coverage"]}])
     (store / "last.json").write_text(json.dumps(last, separators=(",", ":")))
     (store / "static_seen.json").write_text(json.dumps(seen_static, separators=(",", ":"), ensure_ascii=False))
     (store / "tracked.json").write_text(json.dumps(dict(sorted(tracked.items())), indent=1, ensure_ascii=False))
@@ -224,7 +265,7 @@ def write_store(store: Path, got: Dict[str, Any]) -> Dict[str, Any]:
 
 
 def summary_markdown(run: Dict[str, Any], tracked: Dict[str, Any], coverage: Optional[Dict[str, Any]] = None) -> str:
-    lines = ["### AIS collection", "", "| Messages (near / feeder) | Ships heard near Chattogram | Ships bound for Chattogram | Rows written |", "|---|---|---|---|",
+    lines = ["### AIS collection", "", "| Messages (near / feeder) | Ships heard near the port | Ships bound for the port | Rows written |", "|---|---|---|---|",
              f"| {run['near_msgs']} / {run['feeder_msgs']} | {run['near_ships']} | {run['tracked_total']} ({run['tracked_heard']} positions this run) | {run['rows_positions']} positions, {run['rows_static']} static |"]
     if run["errors"]:
         lines += ["", "Errors: " + "; ".join(run["errors"])]
@@ -242,6 +283,7 @@ def main() -> int:
     ap.add_argument("--store", default="store")
     ap.add_argument("--minutes", type=float, default=8.0)
     ap.add_argument("--url", default=os.environ.get("AISSTREAM_URL", URL))
+    ap.add_argument("--site", default=DEFAULT_SITE, choices=sorted(SITES))
     ap.add_argument("--require-key", action="store_true", help="fail instead of skipping when AISSTREAM_API_KEY is not set")
     a = ap.parse_args()
     key = os.environ.get("AISSTREAM_API_KEY", "").strip()
@@ -249,9 +291,9 @@ def main() -> int:
         print("::warning::AISSTREAM_API_KEY is not set, so nothing was collected. Add it as a repository secret.")
         return 2 if a.require_key else 0
     store = Path(a.store)
-    got = asyncio.run(collect(key, a.minutes, _load(store / "tracked.json", {}).keys(), a.url, probe_ports=_load(PROBE_FILE, None)))
+    got = asyncio.run(collect(key, a.minutes, _load(store / a.site / "tracked.json", {}).keys(), a.url, probe_ports=_load(PROBE_FILE, None), site=a.site))
     run = write_store(store, got)
-    md = summary_markdown(run, _load(store / "tracked.json", {}), got.get("coverage"))
+    md = f"Site: {a.site}\n\n" + summary_markdown(run, _load(store / a.site / "tracked.json", {}), got.get("coverage"))
     print(md)
     if os.environ.get("GITHUB_STEP_SUMMARY"):
         with open(os.environ["GITHUB_STEP_SUMMARY"], "a", encoding="utf-8") as f:
