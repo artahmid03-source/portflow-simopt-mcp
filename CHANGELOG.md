@@ -6,6 +6,7 @@
 - **Scheduled collector** (`ingest/collect.py`, `.github/workflows/collect.yml`): hourly AISStream listening on two connections (all ships near Chattogram; ships bound for Chattogram across the feeder region), stored as JSONL on the `data` branch; `ingest/build_db.py` loads it into SQLite.
 - `web/test_page.cjs` replaces the print-only browser script with assertions; `validate.mjs --check` fails on drift from CP-SAT.
 - Lint clean under ruff (E, F, W).
+- Coverage probe: a third connection counts ships heard at 19 candidate ports (`ingest/probe_ports.json`) and logs them to `coverage.jsonl`, after the first run heard nothing at Chattogram.
 
 ## 6.0.0 · 13 Nov 2026 · Chattogram NCT, live queue
 

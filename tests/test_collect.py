@@ -53,6 +53,12 @@ async def fake_aisstream(ws):
             assert all(len(m) == 9 for m in mmsi_filter)
             if "222000222" in mmsi_filter and "PositionReport" in types:
                 await ws.send(POS_BOUND)
+        elif len(sub["BoundingBoxes"]) >= 3:                       # coverage probe over candidate ports
+            await ws.send(frame("PositionReport", 444000444, {"Latitude": 53.54, "Longitude": 9.95, "Sog": 6.0, "Cog": 100.0, "TrueHeading": 100, "NavigationalStatus": 0}))
+            await ws.send(frame("PositionReport", 555000555, {"Latitude": 53.53, "Longitude": 9.90, "Sog": 0.0, "Cog": 0.0, "TrueHeading": 511, "NavigationalStatus": 5}))
+            await ws.send(json.dumps({"MessageType": "ShipStaticData", "MetaData": {"MMSI": 555000555, "latitude": 53.53, "longitude": 9.90},
+                                      "Message": {"ShipStaticData": {"Type": 71, "Dimension": {"A": 200, "B": 100, "C": 20, "D": 20}, "Destination": "HAMBURG"}}}).encode())
+            await ws.send(frame("PositionReport", 666000666, {"Latitude": 10.0, "Longitude": 10.0, "Sog": 9.0, "Cog": 0.0, "TrueHeading": 0}))   # outside every box
         elif types == ["ShipStaticData"]:                          # discovery phase
             await ws.send(STATIC_BOUND)
             await ws.send(STATIC_OTHER)
@@ -65,10 +71,10 @@ async def fake_aisstream(ws):
             return
 
 
-async def run_against_fake(key, minutes=0.07, tracked=()):
+async def run_against_fake(key, minutes=0.07, tracked=(), probe_ports=None):
     async with websockets.serve(fake_aisstream, "127.0.0.1", 0) as server:
         port = server.sockets[0].getsockname()[1]
-        return await col.collect(key, minutes, tracked, url=f"ws://127.0.0.1:{port}", discover_frac=0.4)
+        return await col.collect(key, minutes, tracked, url=f"ws://127.0.0.1:{port}", discover_frac=0.4, probe_ports=probe_ports)
 
 
 def test_destination_pattern():
@@ -96,6 +102,20 @@ def test_collects_near_ships_discovers_bound_ships_then_follows_them(tmp_path):
     assert counts == {"positions": 2, "static": 2, "runs": 1}
     con = sqlite3.connect(tmp_path / "t.sqlite")
     assert con.execute("SELECT name, draught FROM vessels WHERE mmsi = 222000222").fetchone() == ("FIXTURE BOUND", 9.1)
+
+
+def test_coverage_probe_counts_ships_per_port(tmp_path):
+    ports = json.loads(col.PROBE_FILE.read_text())
+    assert len(ports) >= 3 and all(p["box"][0][0] < p["box"][1][0] and p["box"][0][1] < p["box"][1][1] for p in ports)   # south < north, west < east
+    got = asyncio.run(run_against_fake(KEY, probe_ports=ports))
+    assert got["coverage"]["Hamburg"] == {"msgs": 3, "ships": 2, "moving": 1, "cargo": 1}
+    assert all(c["ships"] == 0 for n, c in got["coverage"].items() if n != "Hamburg")
+    assert set(got["near_pos"]) == {111000111}                       # the probe does not leak into the Chattogram store
+    col.write_store(tmp_path, got)
+    row = json.loads((tmp_path / "coverage.jsonl").read_text())
+    assert row["ports"]["Hamburg"]["ships"] == 2 and row["listen_s"] > 0
+    assert "Coverage probe" in col.summary_markdown({"near_msgs": 0, "feeder_msgs": 0, "near_ships": 0, "tracked_total": 0, "tracked_heard": 0,
+                                                      "rows_positions": 0, "rows_static": 0, "errors": []}, {}, got["coverage"])
 
 
 def test_a_wrong_key_is_reported_not_retried():

@@ -6,12 +6,14 @@ Listens to AISStream for a few minutes and appends what it heard to a plain-text
     store/static/YYYY-MM-DD.jsonl      destination, ETA and draught each time a ship changes them
     store/tracked.json                 ships that have declared Chattogram as their destination
     store/runs.jsonl                   one row per run: messages heard, ships seen, errors
+    store/coverage.jsonl               ships heard at each port listed in ingest/probe_ports.json (only while that file exists)
 
-Two connections run side by side (AISStream allows three per account):
+Up to three connections run side by side (AISStream allows three per account):
 
     near    northern Bay of Bengal, outer anchorage and the river: positions and static data of every ship
     feeder  Colombo-Malacca-Singapore: first static data only, to find ships bound for Chattogram,
             then positions of just those ships (MMSI filter)
+    probe   optional: counts the ships heard in the box of each candidate port, to measure where AISStream has coverage
 
     export AISSTREAM_API_KEY=...        # never commit the key; in GitHub Actions it is a repository secret
     uv run python ingest/collect.py --store store --minutes 8
@@ -38,6 +40,7 @@ DEST_RE = re.compile(r"CHITT?AGON|CHATT?OGRA|\bBD\s?CGP\b|\bCGP\b|\bCTG\b", re.I
 TRACK_DAYS = 14                                  # forget a ship this long after it last declared Chattogram
 STILL_NM, HEARTBEAT_HRS = 0.05, 6.0              # a ship that has not moved is re-logged only every 6 h
 MAX_MMSI_FILTER = 200                            # AISStream limit per subscription
+PROBE_FILE = Path(__file__).resolve().parent / "probe_ports.json"
 
 
 def iso(t: datetime) -> str:
@@ -72,9 +75,9 @@ async def stream(name: str, url: str, key: str, phases: List, t_end: float, on_r
                         stats["errors"].append(f"{name}: server said: {str(msg['error'])[:120]}")
                         stats["fatal"] = True
                         return
-                    stats[f"{name}_msgs"] += 1
                     rec = parse_frame(msg)
-                    if rec:
+                    if rec:                                          # counts AIS messages only, not the server's subscription confirmation
+                        stats[f"{name}_msgs"] += 1
                         on_record(name, idx, rec)
         except (OSError, asyncio.TimeoutError, websockets.WebSocketException) as e:
             if len(stats["errors"]) < 10:
@@ -83,15 +86,38 @@ async def stream(name: str, url: str, key: str, phases: List, t_end: float, on_r
             backoff = min(backoff * 2, 30.0)
 
 
-async def collect(key: str, minutes: float, tracked: Iterable[int] = (), url: str = URL, discover_frac: float = 0.55) -> Dict[str, Any]:
+def port_of(lat: Optional[float], lon: Optional[float], ports: List[Dict[str, Any]]) -> Optional[str]:
+    if lat is None or lon is None:
+        return None
+    for p in ports:
+        (s, w), (n, e) = p["box"]
+        if s <= lat <= n and w <= lon <= e:
+            return p["name"]
+    return None
+
+
+async def collect(key: str, minutes: float, tracked: Iterable[int] = (), url: str = URL, discover_frac: float = 0.55,
+                  probe_ports: Optional[List[Dict[str, Any]]] = None, probe_frac: float = 0.45) -> Dict[str, Any]:
     near_pos, near_static, feeder_static, track_pos = {}, {}, {}, {}
+    probe = {p["name"]: {"msgs": 0, "ships": set(), "moving": set(), "cargo": set()} for p in probe_ports or []}
     stats: Dict[str, Any] = Counter()
     stats["errors"] = []
     known = {int(m) for m in tracked}
 
     def on_record(name: str, phase: int, rec: Dict[str, Any]) -> None:
         rec["rx"] = iso(datetime.now(timezone.utc))
-        if name == "near":
+        if name == "probe":
+            is_pos = rec["kind"] == "PositionReport"
+            port = port_of(rec["lat"] if is_pos else rec.get("meta_lat"), rec["lon"] if is_pos else rec.get("meta_lon"), probe_ports)
+            if port:
+                c = probe[port]
+                c["msgs"] += 1
+                c["ships"].add(rec["mmsi"])
+                if is_pos and (rec["sog_kn"] or 0) >= 0.5:
+                    c["moving"].add(rec["mmsi"])
+                if not is_pos and 70 <= (rec.get("ship_type") or 0) <= 79 and (rec.get("length_m") or 0) >= 120:
+                    c["cargo"].add(rec["mmsi"])                     # AIS type 70-79 = cargo ship; 120 m or longer
+        elif name == "near":
             (near_pos if rec["kind"] == "PositionReport" else near_static)[rec["mmsi"]] = rec
         elif rec["kind"] == "ShipStaticData":
             if DEST_RE.search(rec.get("destination") or ""):
@@ -109,13 +135,19 @@ async def collect(key: str, minutes: float, tracked: Iterable[int] = (), url: st
     t0 = loop.time()
     t_end = t0 + minutes * 60.0
     started = datetime.now(timezone.utc)
+    jobs = []
+    if probe_ports:
+        jobs.append(stream("probe", url, key, [(t0, lambda: {"BoundingBoxes": [p["box"] for p in probe_ports], "FilterMessageTypes": ["PositionReport", "ShipStaticData"]})],
+                           t0 + probe_frac * minutes * 60.0, on_record, stats))
     await asyncio.gather(
+        *jobs,
         stream("near", url, key, [(t0, lambda: {"BoundingBoxes": [NEAR_BOX], "FilterMessageTypes": ["PositionReport", "ShipStaticData"]})], t_end, on_record, stats),
         stream("feeder", url, key, [(t0, lambda: {"BoundingBoxes": [FEEDER_BOX], "FilterMessageTypes": ["ShipStaticData"]}),
                                     (t0 + discover_frac * minutes * 60.0, track_subscription)], t_end, on_record, stats),
     )
-    return {"near_pos": near_pos, "near_static": near_static, "feeder_static": feeder_static, "track_pos": track_pos,
-            "stats": dict(stats), "started": started, "ended": datetime.now(timezone.utc)}
+    coverage = {n: {"msgs": c["msgs"], "ships": len(c["ships"]), "moving": len(c["moving"]), "cargo": len(c["cargo"])} for n, c in probe.items()}
+    return {"near_pos": near_pos, "near_static": near_static, "feeder_static": feeder_static, "track_pos": track_pos, "coverage": coverage,
+            "probe_seconds": round(probe_frac * minutes * 60.0) if probe_ports else 0, "stats": dict(stats), "started": started, "ended": datetime.now(timezone.utc)}
 
 
 # ----------------------------------------------------------------------------- storing
@@ -183,13 +215,15 @@ def write_store(store: Path, got: Dict[str, Any]) -> Dict[str, Any]:
     _append(store / "positions" / f"{day}.jsonl", pos_rows)
     _append(store / "static" / f"{day}.jsonl", static_rows)
     _append(store / "runs.jsonl", [run])
+    if got.get("coverage"):
+        _append(store / "coverage.jsonl", [{"t": iso(got["started"]), "listen_s": got["probe_seconds"], "ports": got["coverage"]}])
     (store / "last.json").write_text(json.dumps(last, separators=(",", ":")))
     (store / "static_seen.json").write_text(json.dumps(seen_static, separators=(",", ":"), ensure_ascii=False))
     (store / "tracked.json").write_text(json.dumps(dict(sorted(tracked.items())), indent=1, ensure_ascii=False))
     return run
 
 
-def summary_markdown(run: Dict[str, Any], tracked: Dict[str, Any]) -> str:
+def summary_markdown(run: Dict[str, Any], tracked: Dict[str, Any], coverage: Optional[Dict[str, Any]] = None) -> str:
     lines = ["### AIS collection", "", "| Messages (near / feeder) | Ships heard near Chattogram | Ships bound for Chattogram | Rows written |", "|---|---|---|---|",
              f"| {run['near_msgs']} / {run['feeder_msgs']} | {run['near_ships']} | {run['tracked_total']} ({run['tracked_heard']} positions this run) | {run['rows_positions']} positions, {run['rows_static']} static |"]
     if run["errors"]:
@@ -197,6 +231,9 @@ def summary_markdown(run: Dict[str, Any], tracked: Dict[str, Any]) -> str:
     if tracked:
         lines += ["", "| Ship | MMSI | Declared destination | ETA (UTC) | Draught m |", "|---|---|---|---|---|"]
         lines += [f"| {t.get('name') or ''} | {m} | {t.get('dest') or ''} | {t.get('eta_utc') or ''} | {t.get('draught') or ''} |" for m, t in list(tracked.items())[:40]]
+    if coverage:
+        lines += ["", "### Coverage probe", "", "| Port | Ships heard | Moving | Cargo ships 120 m+ (static data) | Messages |", "|---|---|---|---|---|"]
+        lines += [f"| {n} | {c['ships']} | {c['moving']} | {c['cargo']} | {c['msgs']} |" for n, c in sorted(coverage.items(), key=lambda kv: -kv[1]["ships"])]
     return "\n".join(lines) + "\n"
 
 
@@ -212,9 +249,9 @@ def main() -> int:
         print("::warning::AISSTREAM_API_KEY is not set, so nothing was collected. Add it as a repository secret.")
         return 2 if a.require_key else 0
     store = Path(a.store)
-    got = asyncio.run(collect(key, a.minutes, _load(store / "tracked.json", {}).keys(), a.url))
+    got = asyncio.run(collect(key, a.minutes, _load(store / "tracked.json", {}).keys(), a.url, probe_ports=_load(PROBE_FILE, None)))
     run = write_store(store, got)
-    md = summary_markdown(run, _load(store / "tracked.json", {}))
+    md = summary_markdown(run, _load(store / "tracked.json", {}), got.get("coverage"))
     print(md)
     if os.environ.get("GITHUB_STEP_SUMMARY"):
         with open(os.environ["GITHUB_STEP_SUMMARY"], "a", encoding="utf-8") as f:

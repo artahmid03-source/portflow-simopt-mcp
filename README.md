@@ -235,7 +235,7 @@ Gaps in both directions come from the JavaScript DES estimating slightly differe
 git clone https://github.com/artahmid03-source/portflow-simopt-mcp.git
 cd portflow-simopt-mcp
 uv sync --extra ais                  # Python 3.10+, OR-Tools, SimPy, FastMCP, websockets
-uv run ruff check . && uv run pytest # lint, then 54 tests (about 1.5 minutes)
+uv run ruff check . && uv run pytest # lint, then 55 tests (about 1.5 minutes)
 uv run python run_nct_pipeline.py    # plans the live queue, writes nct_control_tower_data.json (about 1 minute)
 
 # optional: refresh positions from AIS (free key at https://aisstream.io)
@@ -278,7 +278,7 @@ ingest/build_db.py           loads the collected store into SQLite
 tools/compare_runs.py        compares two pipeline outputs (used by CI)
 .github/workflows/           ci.yml (lint, tests, reproducibility, page build and browser test) · collect.yml (hourly AIS)
 run_nct_pipeline.py          live-queue pipeline → nct_control_tower_data.json
-tests/                       test_invariants.py (19) · test_nct.py (25) · test_ais_ingest.py (4) · test_collect.py (6)
+tests/                       test_invariants.py (19) · test_nct.py (25) · test_ais_ingest.py (4) · test_collect.py (7)
 web/                         HMI: src/engine.js, src/PortFlowControlTower.template.jsx, build.py, validate.mjs, test_page.cjs
 docs/screenshots/            HMI captures
 ```
@@ -287,7 +287,7 @@ docs/screenshots/            HMI captures
 
 ## Continuous integration
 
-Every push runs two jobs. **Engine:** `ruff`, the 54 tests, then the whole pipeline again, with the fresh output compared against the committed `nct_control_tower_data.json` (integers and structure exactly, floats to 1e-6). **Page:** build, the in-page engine against the eight CP-SAT reference cases (the five exact cases must stay exact, no gap above 7%), and a headless-browser test that types a command into the copilot and checks the re-plan lands on the CP-SAT result.
+Every push runs two jobs. **Engine:** `ruff`, the 55 tests, then the whole pipeline again, with the fresh output compared against the committed `nct_control_tower_data.json` (integers and structure exactly, floats to 1e-6). **Page:** build, the in-page engine against the eight CP-SAT reference cases (the five exact cases must stay exact, no gap above 7%), and a headless-browser test that types a command into the copilot and checks the re-plan lands on the CP-SAT result.
 
 ## Continuous AIS collection
 
@@ -299,6 +299,7 @@ AIS is the one input that cannot be fetched after the fact, so it is collected o
 | `static/YYYY-MM-DD.jsonl` | name, IMO, type, size, draught, declared destination and ETA, written when a ship changes them |
 | `tracked.json` | ships that have declared Chattogram as their destination in the last 14 days |
 | `runs.jsonl` | messages heard, ships seen and errors for every run: the coverage log |
+| `coverage.jsonl` | ships heard per run at each candidate port in `ingest/probe_ports.json` (a third connection, active while that file exists) |
 
 Two connections run side by side. One listens to every ship in the northern Bay of Bengal, the outer anchorage and the river. The other first reads static data across the Colombo–Malacca–Singapore feeder region to find ships declaring Chattogram as destination, then re-subscribes with an MMSI filter to follow only those. Tide predictions are not collected because they can be looked up for any past date.
 
@@ -309,7 +310,7 @@ git clone -b data --single-branch https://github.com/artahmid03-source/portflow-
 uv run python ingest/build_db.py --store store --db portflow.sqlite
 ```
 
-The collector is tested offline against a stand-in server that follows the AISStream documentation. How much AISStream actually hears around Chattogram is recorded in `runs.jsonl` from the first run onward.
+The collector is tested offline against a stand-in server that follows the AISStream documentation. The first run (15 Nov 2026) heard no ships in the Chattogram box, so the collector now also measures coverage at a list of candidate ports; the live loop and the backtest will run on a port where AIS is actually received.
 
 ## Limitations
 

@@ -87,6 +87,7 @@ def parse_frame(raw: bytes | str | Dict[str, Any]) -> Optional[Dict[str, Any]]:
         draught = body.get("MaximumStaticDraught")
         if draught is not None and draught > 25:          # guard: raw AIS units are 0.1 m
             draught = draught / 10.0
+        rec.update(meta_lat=_first(meta, "latitude", "Latitude"), meta_lon=_first(meta, "longitude", "Longitude"))
         rec.update(imo=body.get("ImoNumber"), ship_type=body.get("Type"), name=(body.get("Name") or "").strip(), destination=(body.get("Destination") or "").strip(),
                    length_m=(dim.get("A", 0) + dim.get("B", 0)) or None, beam_m=(dim.get("C", 0) + dim.get("D", 0)) or None,
                    ais_draught_m=draught, eta=eta if eta.get("Month") else None)
