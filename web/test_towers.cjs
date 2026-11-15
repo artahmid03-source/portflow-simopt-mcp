@@ -1,0 +1,75 @@
+// Browser test of the public tower pages (docs/tower/*.html) with the live feed mocked.
+//   node test_towers.cjs <chattogram tower.json> <hamburg tower.json>
+const { chromium } = require('playwright');
+const fs = require('fs');
+const path = require('path');
+const assert = require('assert');
+
+const [ctgFile, hamFile] = process.argv.slice(2);
+const docs = path.join(__dirname, '..', 'docs', 'tower');
+const fmt = (x, d) => Number(x).toLocaleString('en-US', { minimumFractionDigits: d, maximumFractionDigits: d });
+
+async function open(browser, file, feed) {
+  const page = await browser.newPage({ viewport: { width: 1440, height: 1000 } });
+  const errors = [];
+  page.on('pageerror', (e) => errors.push(`pageerror: ${e.message}`));
+  page.on('console', (m) => { if (m.type() === 'error' && !/Failed to load resource|ERR_|net::/.test(m.text())) errors.push(`console: ${m.text()}`); });
+  await page.route(/tile\.openstreetmap|openseamap|fonts\.g/, (r) => r.abort());
+  await page.route(/raw\.githubusercontent\.com/, (r) => (feed ? r.fulfill({ status: 200, contentType: 'application/json', headers: { 'access-control-allow-origin': '*' }, body: fs.readFileSync(feed) }) : r.fulfill({ status: 404, headers: { 'access-control-allow-origin': '*' }, body: 'no' })));
+  await page.goto('file://' + path.join(docs, file));
+  await page.waitForSelector('.pf-kpi', { timeout: 20000 });
+  await page.waitForTimeout(1300);
+  return { page, errors };
+}
+const kpis = (page) => page.$$eval('.pf-kpi .v', (els) => els.map((e) => e.textContent));
+const send = async (page, text) => {
+  await page.fill('.pf-in input', text); await page.click('.pf-in button');
+  await page.waitForFunction(() => !document.querySelector('.pf-in input').disabled, null, { timeout: 60000 });
+  await page.waitForTimeout(1300);
+};
+
+(async () => {
+  const browser = await chromium.launch();
+  let n = 0;
+  // Hamburg: live feed, real map, terminal bands, a terminal crane outage re-plans to the CP-SAT reference
+  {
+    const d = JSON.parse(fs.readFileSync(hamFile, 'utf8'));
+    const { page, errors } = await open(browser, 'hamburg.html', hamFile);
+    assert.ok((await page.textContent('.pf-lamps')).includes('LIVE DATA'), 'live lamp'); n++;
+    assert.strictEqual((await kpis(page))[0], `${fmt(d.optimised.kpis.avg_turnaround_days, 2)}days`, 'turnaround tile'); n++;
+    assert.strictEqual(await page.$$eval('.pf-gbar', (e) => e.length), d.optimised.schedule.length, 'one Gantt bar per ship'); n++;
+    assert.ok(await page.$('.pf-map.leaflet-container'), 'Leaflet map'); n++;
+    const mk = await page.$$eval('.pf-mk', (e) => e.length);
+    assert.ok(mk >= d.live.fixed_occupants.length && mk <= d.optimised.schedule.length + d.live.fixed_occupants.length, `ship markers ${mk}`); n++;
+    for (const q of Object.keys(d.live.quays)) assert.ok((await page.textContent('.pf-scroll')).includes(q), `quay band ${q}`);
+    n++;
+    const ref = d.reference_cases.find((c) => c.case === '6 quay cranes out 48 h');
+    await send(page, 'Take 6 quay cranes at Burchardkai offline for 48 hours');
+    assert.deepStrictEqual(await page.$$eval('.pf-chip.act', (e) => e.map((x) => x.textContent)), ['6 CTB STS out h0–48'], 'terminal outage chip'); n++;
+    assert.strictEqual((await kpis(page))[0], `${fmt(ref.kpis.avg_turnaround_days, 2)}days`, 'outage re-plan matches CP-SAT'); n++;
+    await page.click('.pf-btn:has-text("Play")'); await page.waitForTimeout(1500);
+    await page.click('.pf-btn:has-text("Terminals")'); await page.waitForTimeout(900);
+    assert.deepStrictEqual(errors, [], 'no errors on the Hamburg page'); n++;
+    await page.close();
+  }
+  // Chattogram: live feed replaces the snapshot
+  {
+    const d = JSON.parse(fs.readFileSync(ctgFile, 'utf8'));
+    const { page, errors } = await open(browser, 'chattogram.html', ctgFile);
+    assert.ok((await page.textContent('.pf-lamps')).includes('LIVE DATA'), 'live lamp'); n++;
+    assert.strictEqual((await kpis(page))[0], `${fmt(d.optimised.kpis.avg_turnaround_days, 2)}days`, 'live turnaround tile'); n++;
+    assert.strictEqual(await page.$$eval('.pf-gbar', (e) => e.length), d.optimised.schedule.length, 'Gantt bars'); n++;
+    assert.deepStrictEqual(errors, [], 'no errors on the Chattogram page'); n++;
+    await page.close();
+  }
+  // Chattogram: feed missing -> embedded snapshot with a banner
+  {
+    const { page, errors } = await open(browser, 'chattogram.html', null);
+    assert.ok((await page.textContent('.pf-banner')).includes('could not be loaded'), 'fallback banner'); n++;
+    assert.ok((await page.textContent('.pf-lamps')).includes('SNAPSHOT'), 'snapshot lamp'); n++;
+    assert.deepStrictEqual(errors, [], 'no errors on fallback'); n++;
+    await page.close();
+  }
+  await browser.close();
+  console.log(`OK: tower pages passed (${n} checks)`);
+})().catch((e) => { console.error(e); process.exit(1); });

@@ -15,6 +15,7 @@ public source read on 13 Nov 2026 disagrees, the source value is in the comment.
 import json
 import math
 import os
+import sys
 from datetime import datetime, timedelta
 from pathlib import Path
 from typing import Any, Dict, List, Optional
@@ -64,7 +65,11 @@ def load_live(path: Path = LIVE_FILE) -> Dict[str, Any]:
 
 def tide_curve(live: Dict[str, Any], horizon_hrs: int) -> List[float]:
     """Hourly tide height (m above datum) from the predicted highs and lows,
-    joined by half-cosine segments, the standard harmonic interpolation."""
+    joined by half-cosine segments, the standard harmonic interpolation.
+    A live file may instead carry an hourly series from the plan epoch ("tide_hourly_m"), which is used as is."""
+    if live.get("tide_hourly_m"):
+        hz = [float(x) for x in live["tide_hourly_m"]]
+        return (hz + [hz[-1]] * (horizon_hrs + 3))[:horizon_hrs + 3]
     epoch = datetime.fromisoformat(live["plan_epoch_local"][:19])
     pts = [((datetime.fromisoformat(t) - epoch).total_seconds() / 3600.0, h) for t, _, h in live["tides"]]
     out = []
@@ -91,12 +96,12 @@ def transit_ok(live: Dict[str, Any], tide: List[float], hr: int, loa: float, dra
         return False
     if loa > NCT["max_loa_m"] or draught > NCT["spring_max_draught_m"]:
         return False
-    need = draught + NCT["ukc_m"] - NCT["channel_depth_m"]
+    need = draught + NCT["ukc_m"] - NCT["channel_depth_m"] + float(live.get("tide_margin_m", 0.0))   # margin: tide forecast error
     if tide[hr] < need:
         return False
     if draught > NCT["max_draught_m"] and tide[hr] < NCT["spring_tide_min_m"]:
         return False                                   # 9.5-10.0 m only on a spring high
-    d0, d1 = NCT["daylight_hours"]
+    d0, d1 = live.get("daylight_hours") or NCT["daylight_hours"]    # a live file may carry the day's sunrise and sunset hours
     if d0 <= clock_hour(live, hr) < d1:
         return True
     return loa <= NCT["night_max_loa_m"] and draught <= NCT["night_max_draught_m"]
@@ -105,14 +110,29 @@ def transit_ok(live: Dict[str, Any], tide: List[float], hr: int, loa: float, dra
 def planning_vessels(live: Dict[str, Any], eta_shift_hrs: Optional[Dict[str, int]] = None) -> List[Dict[str, Any]]:
     out = []
     for v in live["vessels"]:
-        teu = v["dwt_t"] / 14.0
+        teu = float(v["teu_est"]) if v.get("teu_est") else v["dwt_t"] / 14.0
         out.append({
             "id": v["name"], "imo": v["imo"], "len": int(math.ceil(v["loa_m"])), "loa": v["loa_m"],
             "draft": v["draught_used_m"], "eta": int(v["eta_hr"]) + int((eta_shift_hrs or {}).get(v["name"], 0)),
-            "moves": int(round(0.85 * teu)), "teu_est": int(round(teu)),
-            "min_qc": 1, "max_qc": 3 if v["loa_m"] >= 160 else 2, "geared": False,
+            "moves": int(v["moves_est"]) if v.get("moves_est") else int(round(0.85 * teu)), "teu_est": int(round(teu)),
+            "min_qc": 1, "max_qc": int(v.get("max_qc") or (3 if v["loa_m"] >= 160 else 2)), "geared": False,
         })
     return out
+
+
+def gate_windows(live: Dict[str, Any], tide: List[float], v: Dict[str, Any], H: int, T: int) -> Any:
+    """Hours a ship may come alongside (its inbound transit ends then) and hours it may cast off (outbound transit starts)."""
+    ok_in = [h for h in range(v["eta"] + T, H - 30) if all(transit_ok(live, tide, h - k, v["loa"], v["draft"]) for k in range(1, T + 1))]
+    ok_out = [h for h in range(v["eta"] + T + 1, H - T) if all(transit_ok(live, tide, h + k, v["loa"], v["draft"]) for k in range(T))]
+    return ok_in, ok_out
+
+
+def tide_needed(v: Dict[str, Any]) -> float:
+    return round(max(0.0, v["draft"] + NCT["ukc_m"] - NCT["channel_depth_m"]), 2)
+
+
+def night_restricted(v: Dict[str, Any]) -> bool:
+    return bool(v["loa"] > NCT["night_max_loa_m"] or v["draft"] > NCT["night_max_draught_m"])
 
 
 # ----------------------------------------------------------------------------
@@ -122,12 +142,19 @@ def solve_nct_plan(
     live: Dict[str, Any], mode_beta: Optional[Dict[str, float]] = None,
     force_qcs: Optional[Dict[str, int]] = None, fcfs: bool = False,
     qgc_outages: Optional[List[List[int]]] = None, eta_shift_hrs: Optional[Dict[str, int]] = None,
-    pilot_tug_sets: Optional[int] = None, scalar_beta: float = 1.0
+    pilot_tug_sets: Optional[int] = None, scalar_beta: float = 1.0,
+    cfg: Optional[Dict[str, Any]] = None, rules: Any = None
 ) -> Dict[str, Any]:
-    H, Q, gap, T = NCT["horizon_hrs"], NCT["quay_ocean_m"], NCT["berth_gap_m"], NCT["transit_hrs"]
-    K = NCT["pilot_tug_sets"] if pilot_tug_sets is None else int(pilot_tug_sets)
+    """cfg and rules default to NCT and this module. Another site passes its own configuration and a module with
+    planning_vessels, gate_windows, tide_needed and night_restricted (see sites/hamburg.py). Vessels may carry
+    quay_ranges (the quay segments, on one axis, they may lie on) and pool (the crane pool they draw from)."""
+    cfg = cfg or NCT
+    rules = rules or sys.modules[__name__]
+    H, Q, gap, T = cfg["horizon_hrs"], cfg["quay_ocean_m"], cfg["berth_gap_m"], cfg["transit_hrs"]
+    K = cfg["pilot_tug_sets"] if pilot_tug_sets is None else int(pilot_tug_sets)
+    pools = cfg.get("crane_pools") or {"all": cfg["qgc_total"]}
     tide = tide_curve(live, H)
-    vessels = planning_vessels(live, eta_shift_hrs)
+    vessels = rules.planning_vessels(live, eta_shift_hrs)
     model = cp_model.CpModel()
     xs, ys, transits, vv, obj = [], [], [], {}, []
 
@@ -143,13 +170,15 @@ def solve_nct_plan(
 
     for v in vessels:
         vid = v["id"].replace(" ", "_")
-        ok_in = [h for h in range(v["eta"] + T, H - 30) if all(transit_ok(live, tide, h - k, v["loa"], v["draft"]) for k in range(1, T + 1))]
-        ok_out = [h for h in range(v["eta"] + T + 1, H - T) if all(transit_ok(live, tide, h + k, v["loa"], v["draft"]) for k in range(T))]
+        ok_in, ok_out = rules.gate_windows(live, tide, v, H, T)
         if not ok_in or not ok_out:
             return {"feasible": False, "solver_status": "NO_TIDAL_WINDOW", "blocked_vessel": v["id"], "schedule": []}
         t_start = model.NewIntVarFromDomain(cp_model.Domain.FromValues(ok_in), f"ts_{vid}")
         t_depart = model.NewIntVarFromDomain(cp_model.Domain.FromValues(ok_out), f"td_{vid}")
-        b_start = model.NewIntVar(0, Q - v["len"], f"b_{vid}")
+        spans = [[int(a), int(b) - v["len"]] for a, b in (v.get("quay_ranges") or [[0, Q]]) if int(b) - int(a) >= v["len"]]
+        if not spans:
+            return {"feasible": False, "solver_status": "QUAY_TOO_SHORT", "blocked_vessel": v["id"], "schedule": []}
+        b_start = model.NewIntVarFromDomain(cp_model.Domain.FromIntervals(spans), f"b_{vid}")
         size = v["len"] + gap
         b_end = model.NewIntVar(0, Q + gap, f"be_{vid}")
         model.Add(b_end == b_start + size)
@@ -163,7 +192,7 @@ def solve_nct_plan(
         modes = []
         for q in range(v["min_qc"], v["max_qc"] + 1):
             z = model.NewBoolVar(f"z_{vid}_{q}")
-            rate = NCT["qgc_gmph"] / max(beta_for(q), 0.5) * eng.crane_effect(q, False)
+            rate = cfg["qgc_gmph"] / max(beta_for(q), 0.5) * eng.crane_effect(q, False)
             model.Add(dur == int(math.ceil(v["moves"] / rate))).OnlyEnforceIf(z)
             model.Add(qc == q).OnlyEnforceIf(z)
             modes.append(z)
@@ -193,7 +222,7 @@ def solve_nct_plan(
         for a, b in zip(order, order[1:]):
             model.Add(vv[a["id"]]["ts"] <= vv[b["id"]]["ts"])
     for h in range(H):
-        terms = []
+        terms: Dict[str, List[Any]] = {p: [] for p in pools}
         for vid, d in vv.items():
             act = model.NewBoolVar(f"a_{vid}_{h}".replace(" ", "_"))
             st = model.NewBoolVar(f"s_{vid}_{h}".replace(" ", "_"))
@@ -207,9 +236,11 @@ def solve_nct_plan(
             qh = model.NewIntVar(0, d["v"]["max_qc"], f"q_{vid}_{h}".replace(" ", "_"))
             model.Add(qh == d["qc"]).OnlyEnforceIf(act)
             model.Add(qh == 0).OnlyEnforceIf(act.Not())
-            terms.append(qh)
-        down = sum(int(n) for (a, b, n) in (qgc_outages or []) if a <= h < b)
-        model.Add(sum(terms) <= max(0, NCT["qgc_total"] - down))
+            terms[d["v"].get("pool", next(iter(pools)))].append(qh)
+        for p, cap in pools.items():               # an outage [start, end, count] hits the first pool unless it names one: [start, end, count, pool]
+            down = sum(int(o[2]) for o in (qgc_outages or []) if o[0] <= h < o[1] and (o[3] if len(o) > 3 else next(iter(pools))) == p)
+            if terms[p]:
+                model.Add(sum(terms[p]) <= max(0, int(cap) - down))
 
     model.Minimize(sum(obj))
     solver = cp_model.CpSolver()
@@ -230,8 +261,8 @@ def solve_nct_plan(
                 "tide_departure_hold_hrs": solver.Value(d["hold"]), "assigned_qcs": q,
                 "crane_intensity": eng.mode_key(q, False), "anchorage_wait_hrs": solver.Value(d["wait"]),
                 "turnaround_hrs": dp + T - v["eta"],
-                "night_restricted": bool(v["loa"] > NCT["night_max_loa_m"] or v["draft"] > NCT["night_max_draught_m"]),
-                "tide_needed_m": round(max(0.0, v["draft"] + NCT["ukc_m"] - NCT["channel_depth_m"]), 2),
+                "night_restricted": rules.night_restricted(v), "tide_needed_m": rules.tide_needed(v),
+                **({"quay": v["quay"], "pool": v.get("pool")} if v.get("quay") else {}),
                 "virtual_arrival_hfo_saved_tonnes": round(solver.Value(d["wait"]) * 1.85, 1)
             })
         sched.sort(key=lambda r: r["berth_start_hr"])
@@ -249,13 +280,15 @@ def solve_nct_plan(
 # ----------------------------------------------------------------------------
 # Two-way Benders loop for NCT
 # ----------------------------------------------------------------------------
-def _intensity(key: str) -> float:
-    return NCT["qgc_gmph"] * float(key) / NCT["ref_boxes_per_hr"]
+def _intensity(key: str, cfg: Optional[Dict[str, Any]] = None) -> float:
+    cfg = cfg or NCT
+    return cfg["qgc_gmph"] * float(key) / cfg["ref_boxes_per_hr"]
 
 
-def _yard_sim(key: str, occ: float, icd: float, reps: int, rtg_out: Optional[List[List[float]]] = None) -> Dict[str, Any]:
-    return eng._simulate_replicated(reps, occ, icd, 0.14, rtg_outages=rtg_out, qc_intensity=_intensity(key),
-                                    rtg_fleet=NCT["rtg_per_berth_cluster"], yard_cap_teu=NCT["yard_cluster_teu"])
+def _yard_sim(key: str, occ: float, icd: float, reps: int, rtg_out: Optional[List[List[float]]] = None, cfg: Optional[Dict[str, Any]] = None) -> Dict[str, Any]:
+    cfg = cfg or NCT
+    return eng._simulate_replicated(reps, occ, icd, 0.14, rtg_outages=rtg_out, qc_intensity=_intensity(key, cfg),
+                                    rtg_fleet=cfg["rtg_per_berth_cluster"], yard_cap_teu=cfg["yard_cluster_teu"])
 
 
 def run_nct_benders(
@@ -263,26 +296,29 @@ def run_nct_benders(
     initial_yard_occupancy_pct: Optional[float] = None, sim_replications: int = 20, fcfs: bool = False,
     force_max_cranes: bool = False, rtg_outages: Optional[List[List[float]]] = None,
     qgc_outages: Optional[List[List[int]]] = None, eta_shift_hrs: Optional[Dict[str, int]] = None,
-    pilot_tug_sets: Optional[int] = None, max_iterations: int = 8
+    pilot_tug_sets: Optional[int] = None, max_iterations: int = 8,
+    cfg: Optional[Dict[str, Any]] = None, rules: Any = None
 ) -> Dict[str, Any]:
     live = live or load_live()
-    icd = NCT["icd_ratio"] if icd_ratio is None else float(icd_ratio)
-    occ = NCT["initial_yard_occupancy_pct"] if initial_yard_occupancy_pct is None else float(initial_yard_occupancy_pct)
+    cfg = cfg or NCT
+    rules = rules or sys.modules[__name__]
+    icd = cfg["icd_ratio"] if icd_ratio is None else float(icd_ratio)
+    occ = cfg["initial_yard_occupancy_pct"] if initial_yard_occupancy_pct is None else float(initial_yard_occupancy_pct)
     saved = (eng.PORT_STATE["last_simpy_metrics"], eng.PORT_STATE["last_seaside_schedule"])
     cuts: Dict[str, float] = {}
     sims: Dict[str, Dict[str, Any]] = {}
-    force = {v["id"]: v["max_qc"] for v in planning_vessels(live)} if force_max_cranes else None
+    force = {v["id"]: v["max_qc"] for v in rules.planning_vessels(live)} if force_max_cranes else None
     trace, sea, converged = [], None, False
     for it in range(1, max_iterations + 1):
         sea = solve_nct_plan(live, mode_beta=cuts, force_qcs=force, fcfs=fcfs, qgc_outages=qgc_outages,
-                             eta_shift_hrs=eta_shift_hrs, pilot_tug_sets=pilot_tug_sets)
+                             eta_shift_hrs=eta_shift_hrs, pilot_tug_sets=pilot_tug_sets, cfg=cfg, rules=rules)
         if not sea["feasible"]:
             break
         new = sorted({r["crane_intensity"] for r in sea["schedule"]} - set(cuts))
         row = {"iteration": it, "master_objective": sea["objective_value"], "avg_turnaround_days": sea["avg_turnaround_days"],
                "cranes": {r["vessel_id"]: r["assigned_qcs"] for r in sea["schedule"]}, "cuts_added": {}}
         for k in new:
-            sims[k] = _yard_sim(k, occ, icd, sim_replications, rtg_outages)
+            sims[k] = _yard_sim(k, occ, icd, sim_replications, rtg_outages, cfg)
             cuts[k] = sims[k]["computed_cpsat_backpressure_beta"]
             row["cuts_added"][k] = cuts[k]
         trace.append(row)
@@ -293,7 +329,7 @@ def run_nct_benders(
     out: Dict[str, Any] = {
         "inputs": {"icd_ratio": icd, "initial_yard_occupancy_pct": occ, "fcfs": fcfs, "force_max_cranes": force_max_cranes,
                    "rtg_outages": rtg_outages or [], "qgc_outages": qgc_outages or [], "eta_shift_hrs": eta_shift_hrs or {},
-                   "pilot_tug_sets": NCT["pilot_tug_sets"] if pilot_tug_sets is None else pilot_tug_sets},
+                   "pilot_tug_sets": cfg["pilot_tug_sets"] if pilot_tug_sets is None else pilot_tug_sets},
         "convergence_status": "CONVERGED" if converged else (sea.get("solver_status", "INFEASIBLE") if sea and not sea["feasible"] else "MAX_ITERATIONS"),
         "iterations_run": len(trace), "cuts": dict(sorted(cuts.items())), "trace": trace
     }

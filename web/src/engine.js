@@ -97,21 +97,28 @@ export function makeSite(data) {
   const transitOk = (h, loa, draft) => {
     if (h < 0 || h >= tide.length) return false;
     if (loa > C.max_loa_m || draft > C.spring_max_draught_m) return false;
-    if (tide[h] < draft + C.ukc_m - C.channel_depth_m) return false;
+    if (tide[h] < draft + C.ukc_m - C.channel_depth_m + (live.tide_margin_m || 0)) return false;   // margin: tide forecast error (live runs)
     if (draft > C.max_draught_m && tide[h] < C.spring_tide_min_m) return false;
     const c = clock(h); if (c >= C.daylight_hours[0] && c < C.daylight_hours[1]) return true;
     return loa <= C.night_max_loa_m && draft <= C.night_max_draught_m;
   };
+  const pools = C.crane_pools || { all: C.qgc_total }, firstPool = Object.keys(pools)[0];
   const vessels = (shift = {}) => live.vessels.map((v) => ({ id: v.name, imo: v.imo, mmsi: v.mmsi, len: Math.ceil(v.loa_m), loa: v.loa_m, draft: v.draught_used_m,
-    eta: v.eta_hr + (shift[v.name] || 0), moves: Math.round(0.85 * v.dwt_t / 14), minQc: 1, maxQc: v.loa_m >= 160 ? 3 : 2 }));
-  return { C, live, tide, clock, transitOk, vessels };
+    eta: v.eta_hr + (shift[v.name] || 0), moves: v.moves_est ?? Math.round(0.85 * (v.teu_est ?? v.dwt_t / 14)), minQc: 1, maxQc: v.max_qc ?? (v.loa_m >= 160 ? 3 : 2),
+    ranges: v.quay_ranges || [[0, C.quay_ocean_m]], pool: v.terminal || firstPool, quay: v.terminal }));
+  // Gates: a site may ship precomputed hour masks (Hamburg: the Elbe tide rule over six gauges); otherwise the Karnaphuli rule above.
+  const G = data.gates;
+  const inOk = (v, ts) => (G && G[v.id] ? G[v.id].in[ts] === '1' : (() => { for (let k = 1; k <= C.transit_hrs; k++) if (!transitOk(ts - k, v.loa, v.draft)) return false; return true; })());
+  const outOk = (v, td) => (G && G[v.id] ? G[v.id].out[td] === '1' : (() => { for (let k = 0; k < C.transit_hrs; k++) if (!transitOk(td + k, v.loa, v.draft)) return false; return true; })());
+  const gateNow = (id, h) => { const v = vessels().find((x) => x.id === id); return v ? inOk(v, h) : false; };
+  return { C, live, tide, clock, transitOk, vessels, pools, firstPool, inOk, outOk, gateNow };
 }
 
 // Serial schedule generation: place vessels one by one in a given order.
 function buildPlan(site, vs, order, o) {
-  const { C } = site, H = C.horizon_hrs, T = C.transit_hrs, Q = C.quay_ocean_m, gap = C.berth_gap_m, K = o.tugSets;
-  const cranes = new Int16Array(H + 4), tugs = new Int16Array(H + 8), placed = [];
-  const pool = (h) => { let d = 0; for (const [a, b, n] of o.qgcOutages) if (a <= h && h < b) d += n; return Math.max(0, C.qgc_total - d); };
+  const { C } = site, H = C.horizon_hrs, T = C.transit_hrs, gap = C.berth_gap_m, K = o.tugSets;
+  const cranes = Object.fromEntries(Object.keys(site.pools).map((p) => [p, new Int16Array(H + 4)])), tugs = new Int16Array(H + 8), placed = [];
+  const pool = (h, p) => { let d = 0; for (const [a, b, n, q] of o.qgcOutages) if (a <= h && h < b && (q ?? site.firstPool) === p) d += n; return Math.max(0, site.pools[p] - d); };
   for (const f of site.live.fixed_occupants || []) { placed.push({ b0: f.berth_start_m, b1: f.berth_start_m + Math.ceil(f.loa_m) + gap, ts: 0, td: f.release_hr }); for (let k = 0; k < T; k++) tugs[f.release_hr + k]++; }
   const rows = []; let cost = 0;
   for (const idx of order) {
@@ -120,16 +127,22 @@ function buildPlan(site, vs, order, o) {
     for (const q of qs) {
       const beta = o.cuts[modeKey(q)] ?? 1, dur = Math.ceil(v.moves / (C.qgc_gmph / Math.max(beta, 0.5) * craneEffect(q)));
       let tried = 0;
-      for (let ts = Math.max(v.eta + T, o.minStart); ts < H - 30 && tried < 14; ts++) {
-        let ok = true; for (let k = 1; k <= T; k++) if (!site.transitOk(ts - k, v.loa, v.draft) || tugs[ts - k] >= K) { ok = false; break; }
+      for (let ts = Math.max(v.eta + T, o.minStart); ts < H - (C.berth_tail_hrs ?? 30) && tried < 14; ts++) {
+        if (!site.inOk(v, ts)) continue;
+        let ok = true; for (let k = 1; k <= T; k++) if (tugs[ts - k] >= K) { ok = false; break; }
         if (!ok) continue;
-        for (let h = ts; h < ts + dur; h++) if (cranes[h] + q > pool(h)) { ok = false; break; }
+        const cr = cranes[v.pool];
+        for (let h = ts; h < ts + dur; h++) if (cr[h] + q > pool(h, v.pool)) { ok = false; break; }
         if (!ok) continue;
-        let td = -1; for (let h = ts + dur; h < H - T; h++) { let g = true; for (let k = 0; k < T; k++) if (!site.transitOk(h + k, v.loa, v.draft) || tugs[h + k] >= K) { g = false; break; } if (g) { td = h; break; } }
+        let td = -1; for (let h = ts + dur; h < H - T; h++) { if (!site.outOk(v, h)) continue; let g = true; for (let k = 0; k < T; k++) if (tugs[h + k] >= K) { g = false; break; } if (g) { td = h; break; } }
         if (td < 0) continue;
         const busy = placed.filter((p) => p.ts < td && ts < p.td).sort((a, b) => a.b0 - b.b0);
-        let b = -1; const cands = [0, ...busy.map((p) => p.b1)];
-        for (const c of cands) { if (c + v.len > Q) continue; if (busy.every((p) => c + v.len + gap <= p.b0 || p.b1 <= c)) { b = c; break; } }
+        let b = -1;
+        for (const [lo, hi] of v.ranges) {
+          const cands = [lo, ...busy.map((p) => p.b1).filter((x) => x > lo && x < hi)];
+          for (const c of cands) { if (c + v.len > hi) continue; if (busy.every((p) => c + v.len + gap <= p.b0 || p.b1 <= c)) { b = c; break; } }
+          if (b >= 0) break;
+        }
         if (b < 0) continue;
         tried++;
         const c = 18 * (ts - T - v.eta) + 6 * (td - ts);
@@ -137,7 +150,7 @@ function buildPlan(site, vs, order, o) {
       }
     }
     if (!best) return { fail: v.id };
-    for (let h = best.ts; h < best.ts + best.dur; h++) cranes[h] += best.q;
+    for (let h = best.ts; h < best.ts + best.dur; h++) cranes[v.pool][h] += best.q;
     for (let k = 1; k <= T; k++) tugs[best.ts - k]++;
     for (let k = 0; k < T; k++) tugs[best.td + k]++;
     placed.push({ b0: best.b, b1: best.b + v.len + gap, ts: best.ts, td: best.td });
@@ -145,9 +158,17 @@ function buildPlan(site, vs, order, o) {
     rows.push({ vessel_id: v.id, imo: v.imo, mmsi: v.mmsi, loa_m: v.loa, draft_m: v.draft, moves: v.moves, berth_start_m: best.b, berth_end_m: best.b + v.len, eta_hr: v.eta,
       transit_in_hr: best.ts - T, berth_start_hr: best.ts, cargo_done_hr: best.ts + best.dur, tidal_depart_hr: best.td, tide_departure_hold_hrs: best.td - best.ts - best.dur,
       assigned_qcs: best.q, crane_intensity: modeKey(best.q), anchorage_wait_hrs: best.ts - T - v.eta, turnaround_hrs: best.td + T - v.eta,
-      night_restricted: v.loa > C.night_max_loa_m || v.draft > C.night_max_draught_m, tide_needed_m: +Math.max(0, v.draft + C.ukc_m - C.channel_depth_m).toFixed(2) });
+      night_restricted: v.loa > C.night_max_loa_m || v.draft > C.night_max_draught_m, tide_needed_m: tideNeeded(site, v), ...(v.quay ? { quay: v.quay, pool: v.pool } : {}) });
   }
   return { cost, rows };
+}
+
+function tideNeeded(site, v) {
+  const C = site.C;
+  if (!site.live.vessels.some((x) => x.terminal)) return +Math.max(0, v.draft + C.ukc_m - C.channel_depth_m).toFixed(2);
+  const mega = v.loa > C.mega_loa_m || (site.live.vessels.find((x) => x.name === v.id)?.beam_m || 0) > C.mega_beam_m;
+  const indep = mega ? C.draught_indep_mega_m : C.draught_indep_m, maxIn = (mega ? C.draught_max_in_mega_m : C.draught_max_in_m) - C.deepening_shortfall_m;
+  return +Math.max(0, Math.min(v.draft, maxIn) - indep).toFixed(2);
 }
 
 function ordersNear(n, maxShift) {              // permutations where no vessel moves more than maxShift places from arrival order
@@ -159,7 +180,7 @@ function ordersNear(n, maxShift) {              // permutations where no vessel 
 export function planBerths(site, opt) {
   const vs = site.vessels(opt.etaShift).sort((a, b) => a.eta - b.eta || (a.id < b.id ? -1 : 1));
   const base = { cuts: opt.cuts || {}, tugSets: opt.tugSets ?? site.C.pilot_tug_sets, qgcOutages: opt.qgcOutages || [], forceMax: !!opt.forceMax, fcfs: !!opt.fcfs };
-  const orders = opt.fcfs ? [vs.map((_, i) => i)] : ordersNear(vs.length, 2);
+  const orders = opt.fcfs ? [vs.map((_, i) => i)] : ordersNear(vs.length, vs.length > 9 ? 1 : 2);
   let best = null;
   const fails = {};
   for (const order of orders) { const r = buildPlan(site, vs, order, { ...base, minStart: 0 }); if (r.fail) { fails[r.fail] = (fails[r.fail] || 0) + 1; continue; } if (!best || r.cost < best.cost) best = r; }
@@ -174,7 +195,7 @@ export function solve(data, opt = {}, onLog = () => {}) {
   const site = makeSite(data), C = site.C;
   const icd = opt.icd ?? C.icd_ratio, occ = opt.occ ?? C.initial_yard_occupancy_pct, reps = opt.reps ?? 8;
   const cuts = {}, sims = {}, trace = []; let plan = null, converged = false;
-  onLog(`scenario: ICD ${Math.round(icd * 100)}%, yard ${occ}%, ${opt.tugSets ?? C.pilot_tug_sets} pilot/tug sets, ${(opt.qgcOutages || []).length} QGC outage(s), ${(opt.rtgOutages || []).length} RTG outage(s)`);
+  onLog(`scenario: off-dock evacuation ${Math.round(icd * 100)}%, yard ${occ}%, ${opt.tugSets ?? C.pilot_tug_sets} pilot/tug sets, ${(opt.qgcOutages || []).length} quay-crane outage(s), ${(opt.rtgOutages || []).length} yard-crane outage(s)`);
   for (let it = 1; it <= 8; it++) {
     plan = planBerths(site, { ...opt, cuts });
     if (!plan.feasible) { onLog(`iteration ${it}: no feasible berth plan inside the ${C.horizon_hrs} h horizon${plan.blocker ? `; ${plan.blocker} cannot finish and sail on a legal tide before it ends` : ''}`); break; }

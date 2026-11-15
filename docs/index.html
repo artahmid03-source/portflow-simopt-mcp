@@ -70,6 +70,9 @@ footer li{margin:3px 0}
 .leaflet-tooltip.ship-tip,.leaflet-tooltip.gauge-tip{background:rgba(5,9,13,.82);border:1px solid var(--line-hi);color:var(--ink);box-shadow:none;padding:1px 5px;font-size:10.5px;border-radius:0}
 .leaflet-tooltip.gauge-tip{color:var(--blue);border-color:#1d4a70}
 .leaflet-tooltip.ship-tip::before,.leaflet-tooltip.gauge-tip::before{display:none}
+.towers{display:flex;gap:6px;flex-wrap:wrap;margin:10px 0 0;font-size:11px}
+.towers a{color:var(--muted);text-decoration:none;border:1px solid var(--line-hi);padding:4px 9px}.towers a:hover{color:#5ef2c8;border-color:#5ef2c8}
+.towers a.go{color:#5ef2c8;border-color:#1d4a42;background:#0a1a18}
 </style>
 </head>
 <body>
@@ -78,6 +81,7 @@ footer li{margin:3px 0}
   <div class="clock num" id="clock">loading…<small id="clocksub"></small></div>
   <div class="lamps" id="lamps"></div>
 </header>
+<nav class="towers" aria-label="Control towers"><a class="go" href="tower/hamburg.html">Hamburg control tower: today's berth plan →</a><a class="go" href="tower/chattogram.html">Chattogram control tower →</a><a href="https://github.com/artahmid03-source/portflow-simopt-mcp">Source on GitHub</a></nav>
 <div id="banner"></div>
 
 <div class="grid">

@@ -117,13 +117,17 @@ def port_of(lat: Optional[float], lon: Optional[float], ports: List[Dict[str, An
 
 
 async def collect(key: str, minutes: float, tracked: Iterable[int] = (), url: str = URL, discover_frac: float = 0.55,
-                  probe_ports: Optional[List[Dict[str, Any]]] = None, probe_frac: float = 0.45, site: str = DEFAULT_SITE) -> Dict[str, Any]:
+                  probe_ports: Optional[List[Dict[str, Any]]] = None, probe_frac: float = 0.45, site: str = DEFAULT_SITE,
+                  extra_sites: Optional[Dict[str, Iterable[int]]] = None) -> Dict[str, Any]:
+    """Main site: `near` + `feeder` connections. Each extra site gets one connection that discovers ships declaring that port
+    across its feeder region and then follows them (AISStream allows three connections per account)."""
     NEAR_BOX, FEEDER_BOX, DEST_RE = SITES[site]["near_box"], SITES[site]["feeder_box"], SITES[site]["dest_re"]
     near_pos, near_static, feeder_static, track_pos = {}, {}, {}, {}
     probe = {p["name"]: {"msgs": 0, "ships": set(), "moving": set(), "cargo": set()} for p in probe_ports or []}
     stats: Dict[str, Any] = Counter()
     stats["errors"] = []
     known = {int(m) for m in tracked}
+    extra = {s: {"known": {int(m) for m in ms}, "feeder_static": {}, "track_pos": {}} for s, ms in (extra_sites or {}).items()}
 
     def on_record(name: str, phase: int, rec: Dict[str, Any]) -> None:
         rec["rx"] = iso(datetime.now(timezone.utc))
@@ -138,6 +142,12 @@ async def collect(key: str, minutes: float, tracked: Iterable[int] = (), url: st
                     c["moving"].add(rec["mmsi"])
                 if not is_pos and 70 <= (rec.get("ship_type") or 0) <= 79 and (rec.get("length_m") or 0) >= 120:
                     c["cargo"].add(rec["mmsi"])                     # AIS type 70-79 = cargo ship; 120 m or longer
+        elif name.startswith("x:"):
+            x, re_x = extra[name[2:]], SITES[name[2:]]["dest_re"]
+            if rec["kind"] == "PositionReport":
+                x["track_pos"][rec["mmsi"]] = rec
+            elif re_x.search(declared_port(rec.get("destination"))) and is_cargo({"type": rec.get("ship_type"), "len": rec.get("length_m"), "imo": rec.get("imo")}):
+                x["feeder_static"][rec["mmsi"]] = rec
         elif name == "near":
             (near_pos if rec["kind"] == "PositionReport" else near_static)[rec["mmsi"]] = rec
         elif rec["kind"] == "ShipStaticData":
@@ -152,11 +162,21 @@ async def collect(key: str, minutes: float, tracked: Iterable[int] = (), url: st
             return None                                             # nobody to follow yet: keep discovering
         return {"BoundingBoxes": [FEEDER_BOX, NEAR_BOX], "FiltersShipMMSI": [str(m).zfill(9) for m in mmsis], "FilterMessageTypes": ["PositionReport"]}
 
+    def extra_track(xs: str):
+        def sub() -> Optional[Dict[str, Any]]:
+            x = extra[xs]
+            mmsis = sorted(x["known"] | set(x["feeder_static"]))[:MAX_MMSI_FILTER]
+            if not mmsis:
+                return None
+            return {"BoundingBoxes": [SITES[xs]["feeder_box"], SITES[xs]["near_box"]], "FiltersShipMMSI": [str(m).zfill(9) for m in mmsis], "FilterMessageTypes": ["PositionReport"]}
+        return sub
+
     loop = asyncio.get_running_loop()
     t0 = loop.time()
     t_end = t0 + minutes * 60.0
     started = datetime.now(timezone.utc)
-    jobs = []
+    jobs = [stream(f"x:{xs}", url, key, [(t0, (lambda xs=xs: {"BoundingBoxes": [SITES[xs]["feeder_box"], SITES[xs]["near_box"]], "FilterMessageTypes": ["ShipStaticData"]})),
+                                         (t0 + discover_frac * minutes * 60.0, extra_track(xs))], t_end, on_record, stats) for xs in extra]
     if probe_ports:
         jobs.append(stream("probe", url, key, [(t0, lambda: {"BoundingBoxes": [p["box"] for p in probe_ports], "FilterMessageTypes": ["PositionReport", "ShipStaticData"]})],
                            t0 + probe_frac * minutes * 60.0, on_record, stats))
@@ -168,7 +188,10 @@ async def collect(key: str, minutes: float, tracked: Iterable[int] = (), url: st
     )
     coverage = {n: {"msgs": c["msgs"], "ships": len(c["ships"]), "moving": len(c["moving"]), "cargo": len(c["cargo"])} for n, c in probe.items()}
     return {"near_pos": near_pos, "near_static": near_static, "feeder_static": feeder_static, "track_pos": track_pos, "coverage": coverage, "site": site,
-            "probe_seconds": round(probe_frac * minutes * 60.0) if probe_ports else 0, "stats": dict(stats), "started": started, "ended": datetime.now(timezone.utc)}
+            "probe_seconds": round(probe_frac * minutes * 60.0) if probe_ports else 0, "stats": dict(stats), "started": started, "ended": datetime.now(timezone.utc),
+            "extra": {xs: {"near_pos": {}, "near_static": {}, "feeder_static": x["feeder_static"], "track_pos": x["track_pos"], "site": xs,
+                           "stats": {"near_msgs": 0, "feeder_msgs": stats.get(f"x:{xs}_msgs", 0), "errors": [e for e in stats["errors"] if e.startswith(f"x:{xs}")]},
+                           "started": started} for xs, x in extra.items()}}
 
 
 # ----------------------------------------------------------------------------- storing
@@ -290,6 +313,7 @@ def main() -> int:
     ap.add_argument("--minutes", type=float, default=8.0)
     ap.add_argument("--url", default=os.environ.get("AISSTREAM_URL", URL))
     ap.add_argument("--site", default=DEFAULT_SITE, choices=sorted(SITES))
+    ap.add_argument("--also", default="chattogram", help="comma-separated extra sites followed on the third connection ('' for none)")
     ap.add_argument("--require-key", action="store_true", help="fail instead of skipping when AISSTREAM_API_KEY is not set")
     a = ap.parse_args()
     key = os.environ.get("AISSTREAM_API_KEY", "").strip()
@@ -297,9 +321,14 @@ def main() -> int:
         print("::warning::AISSTREAM_API_KEY is not set, so nothing was collected. Add it as a repository secret.")
         return 2 if a.require_key else 0
     store = Path(a.store)
-    got = asyncio.run(collect(key, a.minutes, _load(store / a.site / "tracked.json", {}).keys(), a.url, probe_ports=_load(PROBE_FILE, None), site=a.site))
+    extras = [s for s in a.also.split(",") if s and s != a.site]
+    got = asyncio.run(collect(key, a.minutes, _load(store / a.site / "tracked.json", {}).keys(), a.url, probe_ports=_load(PROBE_FILE, None), site=a.site,
+                              extra_sites={s: _load(store / s / "tracked.json", {}).keys() for s in extras}))
     run = write_store(store, got)
     md = f"Site: {a.site}\n\n" + summary_markdown(run, _load(store / a.site / "tracked.json", {}), got.get("coverage"))
+    for s, g in got["extra"].items():
+        g["ended"] = got["ended"]
+        md += f"\n\nSite: {s} (bound ships followed across the feeder region)\n\n" + summary_markdown(write_store(store, g), _load(store / s / "tracked.json", {}))
     print(md)
     if os.environ.get("GITHUB_STEP_SUMMARY"):
         with open(os.environ["GITHUB_STEP_SUMMARY"], "a", encoding="utf-8") as f:

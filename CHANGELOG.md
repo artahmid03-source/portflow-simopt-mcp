@@ -1,5 +1,16 @@
 # Changelog
 
+## 6.3.0 · 16 Nov 2026 · Control towers for Hamburg and Chattogram on live data
+
+- **Hamburg control tower** (`sites/hamburg.py`): five quay segments on four terminals from the OpenStreetMap outlines, one crane pool per terminal, ships alongside placed from their AIS positions, inbound ships assigned by past moorings or a carrier-to-terminal map, and the Elbe tide rule (tide-independent and tide-dependent draughts for the two ship classes) checked against the six-gauge forecast plus its lead-time error.
+- **Chattogram on live data** (`sites/chattogram_live.py`): ships declaring Chattogram heard by AIS in Singapore, the Malacca Strait and Colombo (third collector connection), dead-reckoned along the sea route when the ETA is missing; ships from the carrier schedule still to come; Open-Meteo sea level calibrated to the Chittagong table (0.11 m RMSE) with a harmonic fallback and a daily cross-check; sunrise and sunset per day.
+- Planner generalised: rules module per site (gate windows, vessels), quay segments as unions of intervals, crane pools, hourly tide series, tide margin. The NCT results are unchanged (the reproducibility check passes).
+- `run_tower.py`: the daily plan for one site → `<site>/tower.json` on the data branch; FCFS baseline falls back when it does not fit the horizon.
+- In-page engine: gate masks, quay segments and crane pools; matches CP-SAT on the Hamburg cases.
+- HMI: one page for both ports. Hamburg gets a real Leaflet map with the plan animated along the Elbe and terminal bands in the berth chart; the page loads the daily plan at runtime and falls back to the embedded plan with a banner. Public pages `docs/tower/hamburg.html` and `docs/tower/chattogram.html`.
+- Coverage probe removed (its finding stands: no AIS at Chattogram); the third connection now follows Chattogram-bound ships.
+- 79 tests; a second browser test for the public pages.
+
 ## 6.2.0 · 15 Nov 2026 · Hamburg as the live-data site
 
 - Collector is site-aware; default site Hamburg (German Bight, Elbe, port; discovery across the Channel and North Sea). Positions are kept for cargo ships of 100 m or more; data is stored under `<site>/` on the `data` branch.

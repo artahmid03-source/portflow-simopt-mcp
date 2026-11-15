@@ -1,0 +1,332 @@
+{
+ "210017000": {
+  "first_seen": "2026-11-15T14:12:47Z",
+  "last_seen": "2026-11-15T17:05:29Z",
+  "name": "ELBWIND",
+  "imo": 9483334,
+  "dest": "DEHAM",
+  "draught": 8.6,
+  "len": 151,
+  "eta_utc": "2026-11-15T05:00Z"
+ },
+ "211191500": {
+  "first_seen": "2026-11-15T14:11:19Z",
+  "last_seen": "2026-11-15T14:11:19Z",
+  "name": "KOELN I",
+  "imo": 0,
+  "dest": "SANDAUHAFEN HAMBURG/",
+  "draught": 1.6,
+  "len": 173,
+  "eta_utc": "2026-11-15T14:52Z"
+ },
+ "212006000": {
+  "first_seen": "2026-11-15T14:14:35Z",
+  "last_seen": "2026-11-15T14:14:35Z",
+  "name": "JUDITH",
+  "imo": 9359260,
+  "dest": "DEHAM",
+  "draught": 9,
+  "len": 170,
+  "eta_utc": "2026-11-14T05:00Z"
+ },
+ "215751000": {
+  "first_seen": "2026-11-15T14:12:48Z",
+  "last_seen": "2026-11-15T17:06:49Z",
+  "name": "GRANDE AFRICA",
+  "imo": 9130949,
+  "dest": "GMBJL>DEHAM",
+  "draught": 7.8,
+  "len": 214,
+  "eta_utc": "2026-11-14T22:30Z"
+ },
+ "215797000": {
+  "first_seen": "2026-11-15T14:12:32Z",
+  "last_seen": "2026-11-15T17:02:59Z",
+  "name": "ATLANTIC STAR",
+  "imo": 9670573,
+  "dest": "CA HAL>DE HAM",
+  "draught": 9,
+  "len": 296,
+  "eta_utc": null
+ },
+ "218098000": {
+  "first_seen": "2026-11-15T14:18:18Z",
+  "last_seen": "2026-11-15T17:06:28Z",
+  "name": "IDA RAMBOW",
+  "imo": 9354478,
+  "dest": "DEHAM",
+  "draught": 7.2,
+  "len": 149,
+  "eta_utc": "2026-11-15T00:00Z"
+ },
+ "219107000": {
+  "first_seen": "2026-11-15T14:13:05Z",
+  "last_seen": "2026-11-15T14:13:05Z",
+  "name": "SAN RAPHAEL MAERSK",
+  "imo": 9622253,
+  "dest": "NLRTM>DEHAM",
+  "draught": 11,
+  "len": 333,
+  "eta_utc": "2026-11-17T06:30Z"
+ },
+ "219578000": {
+  "first_seen": "2026-11-15T17:01:42Z",
+  "last_seen": "2026-11-15T17:01:42Z",
+  "name": "MAYVIEW MAERSK",
+  "imo": 9619995,
+  "dest": "DEBRV>DEHAM",
+  "draught": 14.5,
+  "len": 399,
+  "eta_utc": "2026-11-16T12:30Z"
+ },
+ "228397600": {
+  "first_seen": "2026-11-15T17:03:00Z",
+  "last_seen": "2026-11-15T17:03:00Z",
+  "name": "CMA CGM RIVOLI",
+  "imo": 9839193,
+  "dest": "DEHAM",
+  "draught": 13.9,
+  "len": 400,
+  "eta_utc": null
+ },
+ "229842000": {
+  "first_seen": "2026-11-15T14:12:01Z",
+  "last_seen": "2026-11-15T17:05:59Z",
+  "name": "CMA CGM BARRACUDA",
+  "imo": 9322475,
+  "dest": "DEHAM",
+  "draught": 12.6,
+  "len": 294,
+  "eta_utc": "2026-11-15T09:00Z"
+ },
+ "242410400": {
+  "first_seen": "2026-11-15T14:14:04Z",
+  "last_seen": "2026-11-15T17:02:19Z",
+  "name": "CMA CGM NADOR",
+  "imo": 9396696,
+  "dest": "DEHAM",
+  "draught": 8.7,
+  "len": 152,
+  "eta_utc": null
+ },
+ "244122000": {
+  "first_seen": "2026-11-15T14:16:49Z",
+  "last_seen": "2026-11-15T14:16:49Z",
+  "name": "PALEISGRACHT",
+  "imo": 9448346,
+  "dest": "DEHAM",
+  "draught": 8.4,
+  "len": 168,
+  "eta_utc": "2026-11-13T22:00Z"
+ },
+ "246191000": {
+  "first_seen": "2026-11-15T14:17:05Z",
+  "last_seen": "2026-11-15T17:05:19Z",
+  "name": "FENJA",
+  "imo": 9287716,
+  "dest": "DEHAM",
+  "draught": 5.4,
+  "len": 137,
+  "eta_utc": "2026-11-14T09:00Z"
+ },
+ "246539000": {
+  "first_seen": "2026-11-15T14:16:08Z",
+  "last_seen": "2026-11-15T17:01:50Z",
+  "name": "MAXIMA",
+  "imo": 9882061,
+  "dest": "DEHAM",
+  "draught": 4.8,
+  "len": 150,
+  "eta_utc": "2026-11-15T08:00Z"
+ },
+ "255805884": {
+  "first_seen": "2026-11-15T17:07:00Z",
+  "last_seen": "2026-11-15T17:07:00Z",
+  "name": "ELBSUMMER",
+  "imo": 9386718,
+  "dest": "DEHAM",
+  "draught": 8.5,
+  "len": 168,
+  "eta_utc": "2026-11-13T17:30Z"
+ },
+ "255805899": {
+  "first_seen": "2026-11-15T14:15:35Z",
+  "last_seen": "2026-11-15T17:03:49Z",
+  "name": "ANINA",
+  "imo": 9354351,
+  "dest": "DEHAM",
+  "draught": 7.8,
+  "len": 149,
+  "eta_utc": null
+ },
+ "255805979": {
+  "first_seen": "2026-11-15T14:17:23Z",
+  "last_seen": "2026-11-15T17:05:22Z",
+  "name": "INDUSTRIAL SONG",
+  "imo": 9750464,
+  "dest": "DEHAM",
+  "draught": 7.4,
+  "len": 147,
+  "eta_utc": "2026-11-13T21:00Z"
+ },
+ "305295000": {
+  "first_seen": "2026-11-15T14:14:41Z",
+  "last_seen": "2026-11-15T17:02:42Z",
+  "name": "NUNALIK",
+  "imo": 9466996,
+  "dest": "DEHAM",
+  "draught": 7,
+  "len": 138,
+  "eta_utc": "2026-11-15T00:01Z"
+ },
+ "305543000": {
+  "first_seen": "2026-11-15T17:02:58Z",
+  "last_seen": "2026-11-15T17:02:58Z",
+  "name": "CHARLIE",
+  "imo": 9736236,
+  "dest": "DEHAM",
+  "draught": 6.6,
+  "len": 147,
+  "eta_utc": null
+ },
+ "310760000": {
+  "first_seen": "2026-11-15T17:06:39Z",
+  "last_seen": "2026-11-15T17:06:39Z",
+  "name": "QUEBEC EXPRESS",
+  "imo": 9294836,
+  "dest": "DEHAM",
+  "draught": 10.2,
+  "len": 269,
+  "eta_utc": "2026-11-15T14:00Z"
+ },
+ "405000421": {
+  "first_seen": "2026-11-15T17:07:03Z",
+  "last_seen": "2026-11-15T17:07:03Z",
+  "name": "MEGHNA PIONEER",
+  "imo": 9894466,
+  "dest": "DEHAM",
+  "draught": 6.8,
+  "len": 199,
+  "eta_utc": "2026-11-14T11:57Z"
+ },
+ "440488000": {
+  "first_seen": "2026-11-15T14:17:08Z",
+  "last_seen": "2026-11-15T14:17:08Z",
+  "name": "HMM LE HAVRE",
+  "imo": 9868314,
+  "dest": "DEHAM>CNTA0",
+  "draught": 11.3,
+  "len": 400,
+  "eta_utc": "2026-11-10T08:00Z"
+ },
+ "477157800": {
+  "first_seen": "2026-11-15T14:16:02Z",
+  "last_seen": "2026-11-15T17:04:01Z",
+  "name": "COSCO SHIPPING LEO",
+  "imo": 9783502,
+  "dest": "DE HAM",
+  "draught": 12.8,
+  "len": 400,
+  "eta_utc": null
+ },
+ "538006652": {
+  "first_seen": "2026-11-15T17:01:49Z",
+  "last_seen": "2026-11-15T17:01:49Z",
+  "name": "ETTY DREAM",
+  "imo": 9460916,
+  "dest": "DE HAM",
+  "draught": 14.4,
+  "len": 229,
+  "eta_utc": "2026-11-15T03:00Z"
+ },
+ "563051200": {
+  "first_seen": "2026-11-15T14:18:25Z",
+  "last_seen": "2026-11-15T14:18:25Z",
+  "name": "MAERSK MONTE LINZOR",
+  "imo": 9283186,
+  "dest": "DEHAM>>DEBRV",
+  "draught": 10.9,
+  "len": 272,
+  "eta_utc": "2026-11-17T23:30Z"
+ },
+ "563155500": {
+  "first_seen": "2026-11-15T14:18:08Z",
+  "last_seen": "2026-11-15T17:06:05Z",
+  "name": "EVER APEX",
+  "imo": 9893979,
+  "dest": "GBFXT>DEHAM",
+  "draught": 12,
+  "len": 399,
+  "eta_utc": "2026-11-14T22:00Z"
+ },
+ "563285900": {
+  "first_seen": "2026-11-15T14:14:05Z",
+  "last_seen": "2026-11-15T14:14:05Z",
+  "name": "LAEM CHABANG EXPRESS",
+  "imo": 9768007,
+  "dest": "DEHAM",
+  "draught": 13.5,
+  "len": 336,
+  "eta_utc": "2026-11-14T08:30Z"
+ },
+ "636019097": {
+  "first_seen": "2026-11-15T14:13:26Z",
+  "last_seen": "2026-11-15T17:07:26Z",
+  "name": "BERGE ORIZABA",
+  "imo": 9567087,
+  "dest": "DEHAM",
+  "draught": 14.6,
+  "len": 292,
+  "eta_utc": "2026-11-12T10:00Z"
+ },
+ "636021403": {
+  "first_seen": "2026-11-15T14:14:41Z",
+  "last_seen": "2026-11-15T17:02:39Z",
+  "name": "THETIS",
+  "imo": 9738208,
+  "dest": "DE HAM",
+  "draught": 7.1,
+  "len": 199,
+  "eta_utc": "2026-11-12T20:00Z"
+ },
+ "636023412": {
+  "first_seen": "2026-11-15T14:12:57Z",
+  "last_seen": "2026-11-15T17:06:57Z",
+  "name": "SEATRADE CHILE",
+  "imo": 9976202,
+  "dest": "DEHAM",
+  "draught": 7.5,
+  "len": 172,
+  "eta_utc": "2026-11-13T21:30Z"
+ },
+ "636024513": {
+  "first_seen": "2026-11-15T17:01:38Z",
+  "last_seen": "2026-11-15T17:01:38Z",
+  "name": "MSC VIOLA",
+  "imo": 9947172,
+  "dest": "DEHAM",
+  "draught": 12.1,
+  "len": 366,
+  "eta_utc": "2026-11-16T07:00Z"
+ },
+ "636024775": {
+  "first_seen": "2026-11-15T16:59:49Z",
+  "last_seen": "2026-11-15T16:59:49Z",
+  "name": "ISTANBUL EXPRESS",
+  "imo": 9723277,
+  "dest": "DEHAM",
+  "draught": 10.9,
+  "len": 300,
+  "eta_utc": "2026-11-16T20:30Z"
+ },
+ "636025449": {
+  "first_seen": "2026-11-15T14:15:02Z",
+  "last_seen": "2026-11-15T17:03:05Z",
+  "name": "MSC ANNABELLA",
+  "imo": 9963592,
+  "dest": "NL RTM > DE HAM",
+  "draught": 11.1,
+  "len": 368,
+  "eta_utc": null
+ }
+}

@@ -1,0 +1,13 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Port of Hamburg · PortFlow Control Tower</title>
+<meta name="description" content="PortFlow: a berth and yard plan for Port of Hamburg, re-planned every day from live AIS and tide data with CP-SAT and a yard simulation.">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=Rajdhani:wght@500;600;700&display=swap">
+<link rel="stylesheet" href="../vendor/leaflet/leaflet.css">
+<script src="../vendor/leaflet/leaflet.js"></script>
+<script src="hamburg_default.js"></script>
+<style>:root{color-scheme:dark} html,body{margin:0;background:#05090d;color:#d7e5f0;font-family:'IBM Plex Mono',ui-monospace,Menlo,Consolas,monospace}</style>
+</head><body><div id="root"></div>
+<script>window.PORTFLOW_NAV = true; window.PORTFLOW_DATA_URL = "https://raw.githubusercontent.com/artahmid03-source/portflow-simopt-mcp/data/hamburg/tower.json";</script>
+<script src="app.js"></script>
+</body></html>
