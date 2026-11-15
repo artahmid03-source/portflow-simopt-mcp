@@ -2,7 +2,7 @@
   "name": "portflow-control-tower",
   "private": true,
   "type": "module",
-  "scripts": { "build": "python build.py", "validate": "node validate.mjs", "test": "node ftest.cjs" },
+  "scripts": { "build": "python build.py", "validate": "node validate.mjs --check", "test": "node test_page.cjs" },
   "dependencies": { "react": "18.3.1", "react-dom": "18.3.1", "recharts": "2.12.7", "esbuild": "0.21.5" },
-  "devDependencies": { "playwright": "1.47.2" }
+  "devDependencies": { "playwright": "1.63.0" }
 }

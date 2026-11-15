@@ -1,6 +1,8 @@
 """Injects the pipeline output into the HMI, validates the in-page engine against the Python
 reference cases, bundles, and writes the hosted page plus a standalone test page."""
-import json, subprocess, pathlib, shutil
+import json
+import pathlib
+import subprocess
 root = pathlib.Path(__file__).parent
 d = json.load(open(root.parent / "nct_control_tower_data.json"))
 val = json.loads(subprocess.run(["node", "validate.mjs", "--json"], cwd=root, check=True, capture_output=True, text=True).stdout.strip().splitlines()[-1])
@@ -12,7 +14,8 @@ payload = {"engine_version": d["engine_version"], "site": d["site"], "config": d
 jsx = (root / "src/PortFlowControlTower.template.jsx").read_text().replace("/*__MCP_DATA__*/", json.dumps(payload, separators=(",", ":")))
 (root / "src/PortFlowControlTower.jsx").write_text(jsx)
 (root / "src/main.jsx").write_text("import React from 'react';\nimport { createRoot } from 'react-dom/client';\nimport App from './PortFlowControlTower.jsx';\ncreateRoot(document.getElementById('root')).render(<App />);\n")
-shim = root / "src/shims"; shim.mkdir(exist_ok=True)
+shim = root / "src/shims"
+shim.mkdir(exist_ok=True)
 (shim / "react.cjs").write_text("module.exports = window.React;\n")
 (shim / "react-dom.cjs").write_text("module.exports = window.ReactDOM;\n")
 (shim / "react-dom-client.cjs").write_text("module.exports = { createRoot: window.ReactDOM.createRoot };\n")
@@ -36,5 +39,4 @@ cdn = ('<script src="https://cdnjs.cloudflare.com/ajax/libs/react/18.3.1/umd/rea
 esc = lambda js: js.replace("</script", "<\\/script")
 (root / "dist/PortFlowControlTower.html").write_text(head + cdn + "<script>" + esc((root / "dist/app.cdn.js").read_text()) + "</script>\n")
 (root / "dist/test_full.html").write_text("<!doctype html><html><head><meta charset='utf-8'><meta name='viewport' content='width=device-width,initial-scale=1'></head><body style='margin:0'>" + head + "<script>" + esc((root / "dist/app.full.js").read_text()) + "</script></body></html>")
-pass
 print("html", round((root / "dist/PortFlowControlTower.html").stat().st_size / 1024), "KB  jsx", round(len(jsx) / 1024), "KB  validation", [(v["case"], v["gap_pct"]) for v in val])

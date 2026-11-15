@@ -10,4 +10,10 @@ for (const c of data.reference_cases) {
   if (!J) console.log(`${c.case} | ${k.objective} | ${r.kpis.objective} | ${(100 * (r.kpis.objective / k.objective - 1)).toFixed(1)} | ${k.avg_turnaround_days}/${r.kpis.turnaround} | ${k.backpressure_beta_max}/${r.kpis.beta} | ${k.peak_yard_occupancy_pct}/${r.kpis.peak} | ${Date.now() - t}`);
 }
 const b = solve(data, { icd: 0, fcfs: true, forceMax: true, reps: 10 }), pb = data.baseline.kpis;
+if (process.argv.includes('--check')) {
+  // the five cases the in-page planner must reproduce exactly, and a ceiling on the rest
+  const exact = out.slice(0, 5).filter((r) => r.gap_pct !== 0), worst = Math.max(...out.map((r) => Math.abs(r.gap_pct)));
+  if (exact.length || worst > 7) { console.error('FAIL: in-page engine drifted from CP-SAT', JSON.stringify({ exact, worst })); process.exit(1); }
+  console.log(`OK: ${out.length - 3} of ${out.length} cases identical to CP-SAT, worst gap ${worst}%`);
+}
 if (J) console.log(JSON.stringify(out)); else console.log('baseline FCFS', pb.objective, b.kpis.objective, pb.avg_turnaround_days, b.kpis.turnaround, pb.total_anchorage_wait_hrs, b.kpis.wait);

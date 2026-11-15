@@ -1,5 +1,12 @@
 # Changelog
 
+## 6.1.0 · 15 Nov 2026 · CI and continuous AIS collection
+
+- **CI** (`.github/workflows/ci.yml`): ruff, 54 tests, a full pipeline re-run compared with the committed results, page build, in-page engine drift check and an asserted browser test.
+- **Scheduled collector** (`ingest/collect.py`, `.github/workflows/collect.yml`): hourly AISStream listening on two connections (all ships near Chattogram; ships bound for Chattogram across the feeder region), stored as JSONL on the `data` branch; `ingest/build_db.py` loads it into SQLite.
+- `web/test_page.cjs` replaces the print-only browser script with assertions; `validate.mjs --check` fails on drift from CP-SAT.
+- Lint clean under ruff (E, F, W).
+
 ## 6.0.0 · 13 Nov 2026 · Chattogram NCT, live queue
 
 **Site model**

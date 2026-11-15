@@ -1,3 +1,4 @@
+// Captures the README screenshots and prints what each copilot command did (exploratory; the asserted test is test_page.cjs).
 const { chromium } = require('playwright');
 (async () => {
   const b = await chromium.launch(), p = await b.newPage({ viewport: { width: 1440, height: 1000 }, deviceScaleFactor: 1 });

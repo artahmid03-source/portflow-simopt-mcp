@@ -1,6 +1,6 @@
 [project]
 name = "portflow-simopt-mcp"
-version = "6.0.0"
+version = "6.1.0"
 description = "Container-terminal digital twin for Chattogram NCT: CP-SAT berth planning under tide, daylight and pilot/tug limits, coupled to a SimPy yard simulation by Benders cuts, served over MCP."
 readme = "README.md"
 requires-python = ">=3.10"
@@ -14,11 +14,19 @@ dependencies = [
 ]
 
 [project.optional-dependencies]
-ais = ["websockets>=12"]
+ais = ["websockets>=14"]
 
 [dependency-groups]
-dev = ["pytest>=8"]
+dev = ["pytest>=8", "ruff>=0.6"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
-pythonpath = [".", "sites"]
+pythonpath = [".", "sites", "ingest"]
+
+[tool.ruff]
+line-length = 200
+extend-exclude = ["web/node_modules"]
+
+[tool.ruff.lint]
+select = ["E", "F", "W"]
+ignore = ["E501", "E731"]

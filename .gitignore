@@ -6,3 +6,8 @@ web/node_modules/
 web/dist/
 web/src/shims/
 data/*_ais.json
+store/
+committed.json
+*.sqlite
+.ruff_cache/
+web/src/main.jsx

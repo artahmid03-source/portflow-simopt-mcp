@@ -104,7 +104,8 @@ def test_wind_never_shortens_a_plan_and_replay_never_beats_calm(chain):
     for v in windy["schedule"]:           # no vessel may finish inside a suspended hour
         assert phi[v["cargo_done_hr"] - 1] > 0.0
     still = p._replay_berth_plan(calm["schedule"], np.zeros(72), 31.5)
-    gale = np.zeros(72); gale[14:20] = 25.0
+    gale = np.zeros(72)
+    gale[14:20] = 25.0
     blown = p._replay_berth_plan(calm["schedule"], gale, 31.5)
     assert abs(still["turn"] - calm["avg_turnaround_days"]) < 0.006 and still["late"] == 0
     assert blown["turn"] >= still["turn"]
