@@ -44,6 +44,20 @@ def tide_block(fetch: Callable[[str], List], now: datetime, days_ahead: float = 
     return out
 
 
+WIND_URL = ("https://api.open-meteo.com/v1/forecast?latitude=53.55&longitude=9.75&hourly=wind_speed_10m,wind_gusts_10m"
+            "&wind_speed_unit=ms&timezone=UTC&forecast_days=7")
+
+
+def fetch_wind(timeout: float = 30.0) -> Dict[str, Any]:
+    """Hourly wind forecast for the lower Elbe near Wedel (Open-Meteo, free, non-commercial use)."""
+    import urllib.request
+    req = urllib.request.Request(WIND_URL, headers={"User-Agent": "PortFlow-SimOpt research"})
+    with urllib.request.urlopen(req, timeout=timeout) as r:
+        h = json.loads(r.read().decode())["hourly"]
+    return {"source": "Open-Meteo forecast API, 53.55 N 9.75 E, 10 m wind", "hourly_utc_start": h["time"][0] + ":00+00:00",
+            "speed_ms": h["wind_speed_10m"], "gust_ms": h["wind_gusts_10m"]}
+
+
 def _jsonl(path: Path) -> List[Dict[str, Any]]:
     return [json.loads(x) for x in path.read_text(encoding="utf-8").splitlines() if x.strip()] if path.exists() else []
 
@@ -90,10 +104,16 @@ def summary(doc: Dict[str, Any]) -> str:
     return "\n".join(lines) + "\n"
 
 
-def build(store: Path, now: Optional[datetime] = None, fetch: Callable[[str], List] = tides.fetch_levels) -> Dict[str, Any]:
+def build(store: Path, now: Optional[datetime] = None, fetch: Callable[[str], List] = tides.fetch_levels,
+          wind: Optional[Callable[[], Dict[str, Any]]] = fetch_wind) -> Dict[str, Any]:
     now = now or datetime.now(timezone.utc)
     site_store = store / "hamburg"
     doc = {"site": "hamburg", "generated_utc": now.isoformat(timespec="seconds"), "tide": tide_block(fetch, now), "vessels": vessel_block(site_store, now)}
+    if wind is not None:
+        try:
+            doc["wind"] = wind()
+        except Exception as e:                                   # the plan runs without it (no wind limit applied)
+            doc["wind"] = {"error": f"{type(e).__name__}: {e}"[:160]}
     (site_store / "daily").mkdir(parents=True, exist_ok=True)
     text = json.dumps(doc, separators=(",", ":"), ensure_ascii=False)
     (site_store / "daily" / f"{now.strftime('%Y-%m-%d')}.json").write_text(text, encoding="utf-8")

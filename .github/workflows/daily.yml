@@ -33,13 +33,24 @@ jobs:
           enable-cache: true
       - name: Install
         run: uv sync --locked --no-dev
+      - name: Port of Hamburg expected-vessel list
+        run: uv run --no-dev python ingest/hamburg_expected.py --store store
       - name: Build the daily update
         run: uv run --no-dev python run_daily.py --store store
+      - name: Plan against reality (Hamburg)
+        continue-on-error: true
+        run: uv run --no-dev python run_backtest.py --store store
       - name: Hamburg control tower
         continue-on-error: true
+        env:
+          PORTFLOW_PROCS: "4"
+          PORTFLOW_CPSAT_WORKERS: "4"
         run: uv run --no-dev python run_tower.py --site hamburg --store store
       - name: Chattogram control tower
         continue-on-error: true
+        env:
+          PORTFLOW_PROCS: "4"
+          PORTFLOW_CPSAT_WORKERS: "4"
         run: uv run --no-dev python run_tower.py --site chattogram --store store
       - uses: actions/setup-node@v5
         with:

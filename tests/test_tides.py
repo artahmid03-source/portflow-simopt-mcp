@@ -68,7 +68,7 @@ def test_daily_update_builds_from_a_store_without_network(tmp_path):
     (site / "ships.json").write_text(json.dumps({"1": {"name": "FIXTURE A", "imo": 1, "type": 71, "len": 300, "beam": 48}, "2": {"name": "FIXTURE B", "imo": 2, "type": 71, "len": 200, "beam": 32}}))
     (site / "tracked.json").write_text(json.dumps({"2": {"name": "FIXTURE B", "dest": "DEHAM", "draught": 11.2, "eta_utc": "2026-11-15T18:00Z", "first_seen": stamp, "last_seen": stamp}}))
     (site / "runs.jsonl").write_text(json.dumps({"t_end": stamp, "near_ships": 40, "errors": []}))
-    doc = run_daily.build(tmp_path, now=now, fetch=lambda name: synthetic())
+    doc = run_daily.build(tmp_path, now=now, fetch=lambda name: synthetic(), wind=None)
     assert set(doc["tide"]["gauges"]) == {g for g, _ in run_daily.GAUGES} and not doc["tide"]["errors"]
     g = doc["tide"]["gauges"]["HAMBURG ST. PAULI"]
     assert len(g["hourly_cm"]) == 8 * 24 + 1 and g["forecast_rmse_cm_by_lead"]["6h"] < 1
@@ -84,5 +84,5 @@ def test_one_failing_gauge_does_not_lose_the_others(tmp_path):
         if name.startswith("SCHULAU"):
             raise OSError("gauge offline")
         return synthetic()
-    doc = run_daily.build(tmp_path, now=T0 + timedelta(days=31), fetch=fetch)
+    doc = run_daily.build(tmp_path, now=T0 + timedelta(days=31), fetch=fetch, wind=None)
     assert len(doc["tide"]["gauges"]) == 5 and "SCHULAU" in doc["tide"]["errors"][0]

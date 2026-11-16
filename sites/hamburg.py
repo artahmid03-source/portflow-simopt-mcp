@@ -25,6 +25,7 @@ from datetime import datetime, timedelta, timezone
 from pathlib import Path
 from typing import Any, Dict, List, Optional, Sequence, Tuple
 
+import advice
 import chattogram_nct as nct
 
 UTC = timezone.utc
@@ -48,6 +49,11 @@ ELBE_ROUTE = [(54.00, 8.11), (53.93, 8.48), (53.89, 8.70), (53.89, 9.14), (53.80
 APPROACH = {"CTB-W": [(53.536, 9.905)], "CTB-P": [(53.543, 9.928), (53.538, 9.934)], "CTH": [(53.536, 9.905)],
             "CTT": [(53.543, 9.935), (53.540, 9.958)], "CTA": [(53.543, 9.928), (53.530, 9.938), (53.515, 9.940)]}
 KM_SEA, KM_PORT = 755.0, 627.0                         # Elbe kilometre at Elbe-1 and at Waltershof
+BOX_KM = (636.0, 644.0)                                # passing box (Begegnungsbox) between Wedel and Blankenese, Elbe km (approximate)
+MEET_FREE_BEAM_M, MEET_BOX_BEAM_M = 90.0, 104.0       # combined beam: up to 90 m ships may meet anywhere, up to 104 m only in the
+                                                       # passing box, above that not at all (ASSUMPTION from the published box design)
+BIG_SHIP = (330.0, 45.0)                               # HPA: "aussergewoehnlich grosse Fahrzeuge", over 330 m long or 45 m wide
+KOEHLBRAND_MAX_BEAM_M = 51.0                           # ASSUMPTION: ships for Altenwerder pass under the Koehlbrand bridge; wider ships use CTB
 CRITICAL_REACH = (627.0, 690.0)                        # ASSUMPTION: the tide check applies from Waltershof to Brunsbuettel, where the
                                                        # deepened channel is shallowest; seaward of it the fairway is deeper
 
@@ -65,6 +71,8 @@ HAM: Dict[str, Any] = {
     "icd_ratio": 0.25, "initial_yard_occupancy_pct": 72.0,                          # night rail/barge evacuation share, start level: ASSUMPTION
     "draught_indep_m": 13.8, "draught_indep_mega_m": 13.1, "draught_max_in_m": 16.1, "draught_max_in_mega_m": 15.4,
     "draught_max_out_m": 14.8, "draught_max_out_mega_m": 14.1, "deepening_shortfall_m": 0.20, "mega_loa_m": 366.0, "mega_beam_m": 52.0,
+    "wind_limit_ms": 13.9,                            # ASSUMPTION: big ships do not move at Beaufort 7 or more (HPA sets a wind cap, value not published)
+    "objective": "cost", "yard_model": "per_ship",
     "reefer_plugs": 1600, "yard_bays": 40, "daylight_hours": [0, 24], "night_max_loa_m": 9999, "night_max_draught_m": 99.0,
     "max_draught_m": 16.1, "ukc_m": 0.0, "channel_depth_m": 0.0, "spring_max_draught_m": 99.0, "spring_tide_min_m": 0.0, "max_loa_m": 400.0,
     "teu_a": 0.00132, "teu_b": 1.65, "boxes_per_teu": 1 / 1.6, "exchange_mainline": 0.35, "exchange_feeder": 0.7,
@@ -120,11 +128,40 @@ def locate(lat: float, lon: float, max_off_m: float = 160.0) -> Optional[Tuple[s
     return (best[0], best[1]) if best else None
 
 
-def terminal_for(name: str) -> Optional[str]:
+def terminal_for(name: str, beam: Optional[float] = None) -> Optional[str]:
     for rx, t in CARRIER_TERMINAL:
         if rx.search(name or ""):
-            return t
+            return "CTB" if t == "CTA" and (beam or 0) > KOEHLBRAND_MAX_BEAM_M else t
     return None
+
+
+def is_big(loa: float, beam: Optional[float]) -> bool:
+    return loa > BIG_SHIP[0] or (beam or 0) > BIG_SHIP[1]
+
+
+def box_deltas(T: int) -> List[int]:
+    """Whole-hour offsets (outbound start minus inbound start) for which two ships meet inside the passing box."""
+    v = (KM_SEA - KM_PORT) / T
+    mid = (KM_SEA + KM_PORT) / 2.0
+    return [d for d in range(-T + 1, T) if BOX_KM[0] <= mid - v * d / 2.0 <= BOX_KM[1]]
+
+
+def meeting_rules(live: Dict[str, Any], vessels: List[Dict[str, Any]]) -> List[Any]:
+    """(inbound ship, outbound ship, allowed offsets) for every pair too wide to meet freely on the river."""
+    T = HAM["transit_hrs"]
+    beams = {v["id"]: float(v.get("beam") or 0) for v in vessels}
+    beams.update({o["name"]: float(o.get("beam_m") or 0) for o in live.get("fixed_occupants", []) if o["name"] not in beams})
+    out, box = [], box_deltas(T)
+    for v in vessels:
+        for b_id, bb in beams.items():
+            if b_id == v["id"]:
+                continue
+            cb = beams[v["id"]] + bb
+            if cb > MEET_BOX_BEAM_M:
+                out.append((v["id"], b_id, []))
+            elif cb > MEET_FREE_BEAM_M:
+                out.append((v["id"], b_id, box))
+    return out
 
 
 # ----------------------------------------------------------------------------------------- ship figures
@@ -162,6 +199,7 @@ def planning_vessels(live: Dict[str, Any], eta_shift_hrs: Optional[Dict[str, int
             "draft": v["draught_used_m"], "eta": int(v["eta_hr"]) + int((eta_shift_hrs or {}).get(v["name"], 0)),
             "moves": int(v["moves_est"]), "teu_est": int(v["teu_est"]), "min_qc": 1, "max_qc": int(v["max_qc"]), "geared": False,
             "quay": v["terminal"], "pool": v["terminal"], "quay_ranges": [list(r) for r in v["quay_ranges"]],
+            **{k: v.get(k) or advice.cost_weights(float(v["teu_est"]))[k] for k in ("w_wait", "w_occ")},
         })
     return out
 
@@ -200,7 +238,10 @@ def margin_m(live: Dict[str, Any], hr: int) -> float:
     return pts[-1][1]
 
 
-def passage_ok(live: Dict[str, Any], start_hr: int, T: int, need_m: float, inbound: bool) -> bool:
+def passage_ok(live: Dict[str, Any], start_hr: int, T: int, need_m: float, inbound: bool, big: bool = False) -> bool:
+    wind = live.get("wind_ms_hourly") or []
+    if big and any(0 <= start_hr + k < len(wind) and (wind[start_hr + k] or 0) >= HAM["wind_limit_ms"] for k in range(T)):
+        return False                                  # big ships do not move in strong wind
     if need_m <= 0:
         return True
     for k in range(T):
@@ -220,8 +261,9 @@ def passage_ok(live: Dict[str, Any], start_hr: int, T: int, need_m: float, inbou
 def gate_windows(live: Dict[str, Any], tide: List[float], v: Dict[str, Any], H: int, T: int) -> Tuple[List[int], List[int]]:
     indep, max_in, max_out = limits(v["loa"], v.get("beam"))
     d_in, d_out = min(v["draft"], max_in), min(v["draft"], max_out)
-    ok_in = [h for h in range(v["eta"] + T, H - HAM["berth_tail_hrs"]) if passage_ok(live, h - T, T, d_in - indep, True)]
-    ok_out = [h for h in range(v["eta"] + T + 1, H - T) if passage_ok(live, h, T, d_out - indep, False)]
+    big = is_big(v["loa"], v.get("beam"))
+    ok_in = [h for h in range(v["eta"] + T, H - HAM["berth_tail_hrs"]) if passage_ok(live, h - T, T, d_in - indep, True, big)]
+    ok_out = [h for h in range(v["eta"] + T + 1, H - T) if passage_ok(live, h, T, d_out - indep, False, big)]
     return ok_in, ok_out
 
 
@@ -248,6 +290,10 @@ def gates_bitmap(live: Dict[str, Any], H: int, T: int, eta_shift: Optional[Dict[
 # ----------------------------------------------------------------------------------------- live input
 def _jsonl(path: Path) -> List[Dict[str, Any]]:
     return [json.loads(x) for x in path.read_text(encoding="utf-8").splitlines() if x.strip()] if path.exists() else []
+
+
+def _norm(name: str) -> str:
+    return re.sub(r"[^A-Z0-9]", "", (name or "").upper())
 
 
 def _utc(s: str) -> datetime:
@@ -353,51 +399,85 @@ def build_live(store: Path, now: Optional[datetime] = None, max_ships: int = 14)
                 if w:
                     seen_at[m] = QUAY_GEOM[w[0]]["terminal"]
 
-    for m, t in tracked.items():                               # ships declaring Hamburg
+    # the port's own plan for the next two days (HVCC, via hafen-hamburg.de): terminal, berth and arrival time
+    exp_doc = json.loads((site / "expected" / "latest.json").read_text()) if (site / "expected" / "latest.json").exists() else {}
+    expected = {}
+    if exp_doc and now - _utc(exp_doc["fetched_utc"]) <= timedelta(hours=36):
+        for e in exp_doc["ships"]:
+            if e.get("terminal") and ((e.get("length_m") or 0) >= 120 or (e.get("teu") or 0) >= 300):
+                expected[_norm(e["name"])] = e
+    T = HAM["transit_hrs"]
+
+    def add_vessel(name, imo, mmsi, loa, beam, rep, term, eta, basis, tbasis, last, dest):
+        eta_hr = max(0, int(round((eta - epoch).total_seconds() / 3600.0)))
+        if eta_hr > H - 48:
+            return
+        indep, max_in, _ = limits(loa, beam)
+        used_d = min(float(rep), max_in) if rep else min(indep, 11.0)
+        teu = teu_estimate(loa, beam)
+        vessels.append({
+            "name": name, "imo": imo, "mmsi": mmsi, "loa_m": float(loa), "beam_m": beam, "dwt_t": None, "teu_est": teu,
+            "moves_est": moves_estimate(loa, teu), "max_qc": max_cranes(loa, term), "terminal": term, **advice.cost_weights(teu),
+            "quay_ranges": [[q["axis_lo"], q["axis_hi"]] for q in QUAYS.values() if q["terminal"] == term], "terminal_basis": tbasis,
+            "draught_reported_m": rep, "draught_used_m": round(used_d, 2), "tide_dependent": used_d > indep, "big_ship": is_big(loa, beam),
+            "status": f"{last.get('zone', '').lower()} {last['t'][5:16].replace('T', ' ')}Z" if last else tbasis,
+            "declared_destination": dest, "eta_hr": eta_hr, "eta_basis": basis, "last_port": f"AIS destination: {dest}" if dest else "not on AIS",
+            "area": (last or {}).get("zone") or "SEA", "lat": (last or {}).get("lat"), "lon": (last or {}).get("lon"),
+            "sog_kn": (last or {}).get("sog"), "cog_deg": (last or {}).get("cog"), "ais_time_utc": (last or {}).get("t"),
+        })
+
+    done_names = {_norm(o["name"]) for o in occupants}
+    for m, t in tracked.items():                               # ships declaring Hamburg on AIS
         if m in used:
             continue
         s = static(m)
         if not s["name"] or not s["len"] or s["len"] < 120:
             continue
-        term = seen_at.get(m) or terminal_for(s["name"])
-        if not term:
-            excluded.append({"name": s["name"], "mmsi": int(m), "reason": "not identified as a container ship (no carrier name, never seen at a container quay)"})
-            continue
-        last = hist.get(m, [None])[-1]
-        if last and last.get("zone") == "PORT" and _utc(last["t"]) >= fresh:
-            excluded.append({"name": s["name"], "mmsi": int(m), "reason": "already in port, not at a container quay"})
-            continue
-        if last and last.get("zone") in ("ELBE", "ESTUARY") and _utc(last["t"]) >= fresh and (last.get("cog") or 0) > 45 and (last.get("cog") or 0) < 135:
-            eta, basis = epoch, f"on the Elbe inbound at the plan start (AIS {last['t'][11:16]}Z, {last.get('sog')} kn)"
-        elif s["eta_utc"]:
-            eta, basis = _utc(s["eta_utc"]), f"ETA declared on AIS ({s['eta_utc']})"
-            if eta < epoch - timedelta(hours=36):
-                excluded.append({"name": s["name"], "mmsi": int(m), "reason": f"declared ETA {s['eta_utc']} passed and the ship is not in port"})
-                continue
-        else:
-            excluded.append({"name": s["name"], "mmsi": int(m), "reason": "no ETA declared"})
-            continue
-        eta_hr = max(0, int(round((eta - epoch).total_seconds() / 3600.0)))
-        if eta_hr > H - 48:
-            continue
         beam = s["beam"] or round(s["len"] / 7.0, 1)
-        indep, max_in, max_out = limits(s["len"], beam)
-        rep = s["draught"]
-        used_d = min(float(rep), max_in) if rep else min(indep, 11.0)
-        teu = teu_estimate(s["len"], beam)
-        qr = [[q["axis_lo"], q["axis_hi"]] for q in QUAYS.values() if q["terminal"] == term]
-        vessels.append({
-            "name": s["name"], "imo": s["imo"], "mmsi": int(m), "loa_m": float(s["len"]), "beam_m": beam, "dwt_t": None, "teu_est": teu,
-            "moves_est": moves_estimate(s["len"], teu), "max_qc": max_cranes(s["len"], term), "terminal": term, "quay_ranges": qr,
-            "terminal_basis": "seen moored there on AIS" if m in seen_at else "carrier-to-terminal assumption from the ship's name",
-            "draught_reported_m": rep, "draught_used_m": round(used_d, 2), "tide_dependent": used_d > indep,
-            "status": f"{last.get('zone', '').lower()} {last['t'][5:16].replace('T', ' ')}Z" if last else "declared Hamburg on AIS",
-            "declared_destination": s["dest"], "eta_hr": eta_hr, "eta_basis": basis, "last_port": f"AIS destination: {s['dest']}",
-            "area": (last or {}).get("zone") or "SEA", "lat": (last or {}).get("lat"), "lon": (last or {}).get("lon"),
-            "sog_kn": (last or {}).get("sog"), "cog_deg": (last or {}).get("cog"), "ais_time_utc": (last or {}).get("t"),
-        })
+        e = expected.get(_norm(s["name"]))
+        last = hist.get(m, [None])[-1]
+        if e:                                                  # the port's plan wins over guesses
+            term, tbasis = e["terminal"], f"port's expected-vessel list: {e['berth']}"
+            eta = _utc(e["time_utc"]) - timedelta(hours=T)
+            basis = f"alongside {e['time_utc'][5:16].replace('T', ' ')}Z per the port's expected-vessel list (HVCC), minus the {T} h passage"
+        else:
+            term = seen_at.get(m) or terminal_for(s["name"], beam)
+            tbasis = "seen moored there on AIS" if m in seen_at else "carrier-to-terminal assumption from the ship's name"
+            if not term:
+                excluded.append({"name": s["name"], "mmsi": int(m), "reason": "not identified as a container ship (no carrier name, never seen at a container quay)"})
+                continue
+            if last and last.get("zone") == "PORT" and _utc(last["t"]) >= fresh:
+                excluded.append({"name": s["name"], "mmsi": int(m), "reason": "already in port, not at a container quay"})
+                continue
+            if last and last.get("zone") in ("ELBE", "ESTUARY") and _utc(last["t"]) >= fresh and 45 < (last.get("cog") or 0) < 135:
+                eta, basis = epoch, f"on the Elbe inbound at the plan start (AIS {last['t'][11:16]}Z, {last.get('sog')} kn)"
+            elif s["eta_utc"]:
+                eta, basis = _utc(s["eta_utc"]), f"ETA declared on AIS ({s['eta_utc']})"
+                if eta < epoch - timedelta(hours=36):
+                    excluded.append({"name": s["name"], "mmsi": int(m), "reason": f"declared ETA {s['eta_utc']} passed and the ship is not in port"})
+                    continue
+            else:
+                excluded.append({"name": s["name"], "mmsi": int(m), "reason": "no ETA declared"})
+                continue
+        done_names.add(_norm(s["name"]))
+        add_vessel(s["name"], s["imo"], int(m), s["len"], beam, s["draught"] or (e or {}).get("draught_m"), term, eta, basis, tbasis, last, s["dest"])
+    for key, e in expected.items():                            # on the port's list but not (yet) heard declaring Hamburg on AIS
+        if key in done_names:
+            continue
+        loa = e.get("length_m") or (e.get("beam_m") or 20) * 7.0
+        beam = e.get("beam_m") or round(loa / 7.0, 1)
+        add_vessel(e["name"].upper(), e.get("imo"), None, loa, beam, e.get("draught_m"), e["terminal"], _utc(e["time_utc"]) - timedelta(hours=T),
+                   f"alongside {e['time_utc'][5:16].replace('T', ' ')}Z per the port's expected-vessel list (HVCC), minus the {T} h passage",
+                   f"port's expected-vessel list: {e['berth']}", None, None)
     vessels.sort(key=lambda v: (v["eta_hr"], v["name"]))
     vessels = vessels[:max_ships]
+    wind = [None] * (H + 3)
+    wb = (daily.get("wind") or {})
+    if wb.get("hourly_utc_start"):
+        off = int(round((epoch - _utc(wb["hourly_utc_start"])).total_seconds() / 3600.0))
+        for h in range(H + 3):
+            if 0 <= h + off < len(wb["speed_ms"]):
+                wind[h] = wb["speed_ms"][h + off]
     stpauli = next((g for g in gauges if "PAULI" in g["name"]), gauges[-1] if gauges else None)
     tide_hourly = [x if x is not None else 0.0 for x in (stpauli["above_mlw_m"] if stpauli else [0.0] * (H + 3))]
     return {
@@ -413,7 +493,8 @@ def build_live(store: Path, now: Optional[datetime] = None, max_ships: int = 14)
                       "terminal": "seen on AIS, else carrier-to-terminal assumption", "release_of_moored_ships": "arrival + estimated working time + 4 h"},
         "quays": QUAYS, "terminals": TERMINALS, "elbe_route": [list(p) for p in ELBE_ROUTE],
         "fixed_occupants": sorted(occupants, key=lambda o: o["berth_start_m"]), "also_in_port_not_modelled": [], "excluded": excluded[:40],
-        "vessels": vessels, "gauges": gauges, "forecast_rmse_m_by_lead": rmse, "tide_hourly_m": tide_hourly, "tides": [],
+        "vessels": vessels, "gauges": gauges, "wind_ms_hourly": wind, "wind_source": wb.get("source"),
+        "expected_list": {"fetched_utc": exp_doc.get("fetched_utc"), "ships_at_container_terminals": len(expected)} if exp_doc else None, "forecast_rmse_m_by_lead": rmse, "tide_hourly_m": tide_hourly, "tides": [],
         "tide_note": "Tide strip: forecast water level at Hamburg St. Pauli above its mean low water. A tide-dependent ship needs, at every hour it "
                      "spends between Waltershof and Brunsbuettel, the level at its position (interpolated between the six gauges by Elbe kilometre) above mean low water by its draught "
                      "beyond the tide-independent limit plus the forecast error at that lead time.",

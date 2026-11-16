@@ -307,20 +307,7 @@ def summary_markdown(run: Dict[str, Any], tracked: Dict[str, Any], coverage: Opt
     return "\n".join(lines) + "\n"
 
 
-def main() -> int:
-    ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
-    ap.add_argument("--store", default="store")
-    ap.add_argument("--minutes", type=float, default=8.0)
-    ap.add_argument("--url", default=os.environ.get("AISSTREAM_URL", URL))
-    ap.add_argument("--site", default=DEFAULT_SITE, choices=sorted(SITES))
-    ap.add_argument("--also", default="chattogram", help="comma-separated extra sites followed on the third connection ('' for none)")
-    ap.add_argument("--require-key", action="store_true", help="fail instead of skipping when AISSTREAM_API_KEY is not set")
-    a = ap.parse_args()
-    key = os.environ.get("AISSTREAM_API_KEY", "").strip()
-    if not key:
-        print("::warning::AISSTREAM_API_KEY is not set, so nothing was collected. Add it as a repository secret.")
-        return 2 if a.require_key else 0
-    store = Path(a.store)
+def run_once(key: str, a: argparse.Namespace, store: Path) -> int:
     extras = [s for s in a.also.split(",") if s and s != a.site]
     got = asyncio.run(collect(key, a.minutes, _load(store / a.site / "tracked.json", {}).keys(), a.url, probe_ports=_load(PROBE_FILE, None), site=a.site,
                               extra_sites={s: _load(store / s / "tracked.json", {}).keys() for s in extras}))
@@ -337,6 +324,47 @@ def main() -> int:
         print("::error::AISStream refused the connection: " + "; ".join(run["errors"]))
         return 1
     return 0
+
+
+def git_push(store: Path) -> None:
+    """Commit and push the store (a clone of the data branch); used by the always-on mode."""
+    import subprocess
+    def git(*args: str) -> int:
+        return subprocess.run(["git", "-C", str(store), *args], capture_output=True, text=True).returncode
+    git("add", "-A")
+    if git("diff", "--cached", "--quiet") != 0:
+        git("commit", "-q", "-m", f"collect {datetime.now(timezone.utc).strftime('%Y-%m-%dT%H:%MZ')}")
+        if git("pull", "-q", "--rebase") == 0:
+            git("push", "-q")
+
+
+def main() -> int:
+    ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
+    ap.add_argument("--store", default="store")
+    ap.add_argument("--minutes", type=float, default=8.0, help="listening time per cycle")
+    ap.add_argument("--url", default=os.environ.get("AISSTREAM_URL", URL))
+    ap.add_argument("--site", default=DEFAULT_SITE, choices=sorted(SITES))
+    ap.add_argument("--also", default="chattogram", help="comma-separated extra sites followed on the third connection ('' for none)")
+    ap.add_argument("--require-key", action="store_true", help="fail instead of skipping when AISSTREAM_API_KEY is not set")
+    ap.add_argument("--cycles", type=int, default=1, help="always-on mode: number of listen-and-write cycles (0 = forever)")
+    ap.add_argument("--git-push", action="store_true", help="after each cycle, commit and push the store (a clone of the data branch)")
+    a = ap.parse_args()
+    key = os.environ.get("AISSTREAM_API_KEY", "").strip()
+    if not key:
+        print("::warning::AISSTREAM_API_KEY is not set, so nothing was collected. Add it as a repository secret.")
+        return 2 if a.require_key else 0
+    store = Path(a.store)
+    n, rc = 0, 0
+    while a.cycles == 0 or n < a.cycles:
+        try:
+            rc = run_once(key, a, store)
+        except Exception as e:                       # always-on mode keeps going after a dropped connection
+            print(f"cycle failed: {type(e).__name__}: {e}")
+            rc = 1
+        if a.git_push:
+            git_push(store)
+        n += 1
+    return rc
 
 
 if __name__ == "__main__":

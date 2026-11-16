@@ -1,5 +1,18 @@
 # Changelog
 
+## 6.4.0 · 16 Nov 2026 · Review: realism, speed, usefulness
+
+- Port of Hamburg expected-vessel list (HVCC) ingested every half hour; terminal and time from the port replace guesses; feeders added.
+- Elbe passing-box meeting rule, wind limit for big ships, Köhlbrand width limit for Altenwerder; hourly wind forecast in the daily update.
+- Chattogram: 10 m / 200 m limits, high-water movement windows, stale schedule ships dropped, hand-entered port due list (`data/chattogram_due.csv`).
+- Yard simulation sized per ship class, gate pickups scaled, overflow instead of deadlock; cuts keyed by mode and class.
+- CP-SAT crane pool as a cumulative over optional intervals (snapshot pipeline 80 s → 24 s, same optima), warm start from yesterday's plan, multi-thread and multi-process options.
+- Cost objective, just-in-time speed and fuel advice, tide-window risk (`sites/advice.py`, mirrored in the page).
+- Plan against reality: daily plan archive and `run_backtest.py`; panel on the Hamburg page.
+- Collector: 12 minutes every half hour, always-on mode and deployment files.
+- Page: re-planning in a Web Worker; new KPI tiles, table columns and footer notes. In-page planner searches constrained-first orders and shuffles.
+- 88 tests (9 new); browser test of the public pages now checks the worker, the cost tile and the backtest panel.
+
 ## 6.3.0 · 16 Nov 2026 · Control towers for Hamburg and Chattogram on live data
 
 - **Hamburg control tower** (`sites/hamburg.py`): five quay segments on four terminals from the OpenStreetMap outlines, one crane pool per terminal, ships alongside placed from their AIS positions, inbound ships assigned by past moorings or a carrier-to-terminal map, and the Elbe tide rule (tide-independent and tide-dependent draughts for the two ship classes) checked against the six-gauge forecast plus its lead-time error.

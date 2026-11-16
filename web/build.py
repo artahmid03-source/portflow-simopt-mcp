@@ -11,7 +11,9 @@ payload = {"engine_version": d["engine_version"], "site": d["site"], "config": d
   "yard": {k: v for k, v in d["yard"].items() if k not in ("yard_tensor_after", "reefer_rc_thermodynamics")}, "yard_baseline": d["yard_baseline"],
   "reefer": d["reefer"], "baseline": slim(d["baseline"]), "plan_only": {"kpis": d["plan_only"]["kpis"]}, "optimised": slim(d["optimised"]),
   "pilot_tug_sensitivity": d["pilot_tug_sensitivity"], "draught_check": d["draught_check"], "night_cutoff_18h": d["night_cutoff_18h"], "validation": val}
-jsx = (root / "src/PortFlowControlTower.template.jsx").read_text().replace("/*__MCP_DATA__*/", json.dumps(payload, separators=(",", ":")))
+subprocess.run(["npx", "esbuild", "src/worker.js", "--bundle", "--minify", "--format=iife", "--target=es2020", "--outfile=dist/worker.js"], cwd=root, check=True, capture_output=True)
+worker_src = (root / "dist/worker.js").read_text()
+jsx = (root / "src/PortFlowControlTower.template.jsx").read_text().replace("/*__MCP_DATA__*/", json.dumps(payload, separators=(",", ":"))).replace("/*__WORKER_SRC__*/''", json.dumps(worker_src))
 (root / "src/PortFlowControlTower.jsx").write_text(jsx)
 (root / "src/main.jsx").write_text("import React from 'react';\nimport { createRoot } from 'react-dom/client';\nimport App from './PortFlowControlTower.jsx';\ncreateRoot(document.getElementById('root')).render(<App />);\n")
 shim = root / "src/shims"

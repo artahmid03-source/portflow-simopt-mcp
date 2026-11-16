@@ -7,11 +7,13 @@ const assert = require('assert');
 
 const [ctgFile, hamFile] = process.argv.slice(2);
 const docs = path.join(__dirname, '..', 'docs', 'tower');
+const workers = [];
 const fmt = (x, d) => Number(x).toLocaleString('en-US', { minimumFractionDigits: d, maximumFractionDigits: d });
 
 async function open(browser, file, feed) {
   const page = await browser.newPage({ viewport: { width: 1440, height: 1000 } });
   const errors = [];
+  page.on('worker', (w) => workers.push(w.url()));
   page.on('pageerror', (e) => errors.push(`pageerror: ${e.message}`));
   page.on('console', (m) => { if (m.type() === 'error' && !/Failed to load resource|ERR_|net::/.test(m.text())) errors.push(`console: ${m.text()}`); });
   await page.route(/tile\.openstreetmap|openseamap|fonts\.g/, (r) => r.abort());
@@ -47,6 +49,9 @@ const send = async (page, text) => {
     await send(page, 'Take 6 quay cranes at Burchardkai offline for 48 hours');
     assert.deepStrictEqual(await page.$$eval('.pf-chip.act', (e) => e.map((x) => x.textContent)), ['6 CTB STS out h0–48'], 'terminal outage chip'); n++;
     assert.strictEqual((await kpis(page))[0], `${fmt(ref.kpis.avg_turnaround_days, 2)}days`, 'outage re-plan matches CP-SAT'); n++;
+    assert.ok((await page.textContent('body')).includes('Plan against reality'), 'plan-against-reality panel'); n++;
+    assert.ok((await page.textContent('.pf-kpis')).includes('Cost of the queue'), 'cost tile'); n++;
+    assert.ok(workers.length >= 1, 'the re-plan ran in a Web Worker'); n++;
     await page.click('.pf-btn:has-text("Play")'); await page.waitForTimeout(1500);
     await page.click('.pf-btn:has-text("Terminals")'); await page.waitForTimeout(900);
     assert.deepStrictEqual(errors, [], 'no errors on the Hamburg page'); n++;

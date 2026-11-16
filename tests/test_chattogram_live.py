@@ -76,7 +76,7 @@ def test_ais_ships_dead_reckoned_excluded_and_merged_with_the_schedule(tmp_path)
     live = cl.build_live(tmp_path / "chattogram", NOW, fetch=lambda: SERIES)
     by = {v["name"]: v for v in live["vessels"]}
     f = by["TEST FEEDER"]
-    assert f["source"] == "AIS" and f["draught_used_m"] == 9.5 and "dead reckoning" in f["eta_basis"]
+    assert f["source"] == "AIS" and f["draught_used_m"] == 9.8 and "dead reckoning" in f["eta_basis"]
     assert 100 < f["eta_hr"] < 130                                   # about 1,650 nm at 14 kn
     assert by["HAIAN ZETA"]["source"] == "AIS" and by["HAIAN ZETA"]["eta_hr"] == 21
     assert "BIG BULKER" not in by and any(e["name"] == "BIG BULKER" for e in live["excluded"])

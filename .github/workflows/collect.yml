@@ -1,16 +1,18 @@
 name: Collect AIS
 
-# Listens to AISStream for a few minutes every hour and appends what it heard to the `data` branch.
+# Listens to AISStream for 12 minutes every half hour and appends what it heard to the `data` branch, together with
+# the port of Hamburg's list of expected ships. GitHub may skip scheduled runs under load; for continuous collection
+# run the same script in always-on mode on any small server (see deploy/README.md).
 # Needs one repository secret: AISSTREAM_API_KEY (Settings > Secrets and variables > Actions).
 
 on:
   schedule:
-    - cron: "7 * * * *"
+    - cron: "7,37 * * * *"
   workflow_dispatch:
     inputs:
       minutes:
         description: Minutes to listen
-        default: "8"
+        default: "12"
 
 permissions:
   contents: write
@@ -38,7 +40,9 @@ jobs:
       - name: Listen
         env:
           AISSTREAM_API_KEY: ${{ secrets.AISSTREAM_API_KEY }}
-        run: uv run --no-dev python ingest/collect.py --store store --minutes "${{ inputs.minutes || '8' }}"
+        run: uv run --no-dev python ingest/collect.py --store store --minutes "${{ inputs.minutes || '12' }}"
+      - name: Port of Hamburg expected-vessel list
+        run: uv run --no-dev python ingest/hamburg_expected.py --store store
       - name: Save to the data branch
         working-directory: store
         run: |
@@ -49,5 +53,6 @@ jobs:
             echo "Nothing new to save."
           else
             git commit -q -m "collect $(date -u +%Y-%m-%dT%H:%MZ)"
+            git pull -q --rebase
             git push -q
           fi

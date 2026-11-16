@@ -31,6 +31,7 @@ from typing import Any, Callable, Dict, List, Optional, Sequence, Tuple
 
 import numpy as np
 
+import advice
 import chattogram_nct as nct
 import tides
 
@@ -52,6 +53,12 @@ TEU_A, TEU_B = 0.00132, 1.65          # TEU ~ a (L x B)^b, fitted to typical fee
 MOVES_PER_TEU = 0.85                  # boxes per call per TEU of capacity at Chattogram (calibrated on the 2025 CPA TOS snapshots)
 SPEED_DEFAULT_KN = 13.0
 STALE_DAYS = 4.0                      # a ship whose ETA passed this long ago is assumed served and gone
+DUE_CSV = ROOT / "data" / "chattogram_due.csv"   # optional: the port's "vessels due at outer anchorage" list, typed in by hand
+DUE_MAX_AGE_DAYS = 3.0
+# Rules in force since early 2023 (port authority, reported by The Financial Express, 5 Feb 2023): 10.0 m draught and
+# 200 m length enter regularly. River movements start about 4-5 h before the day's high water (P&I club guidance).
+RULES_2023 = {"max_draught_m": 10.0, "spring_max_draught_m": 10.0, "max_loa_m": 200.0}
+HW_WINDOW = (-5, 1)                   # hours relative to each predicted high water in which river transits may run
 NAV = {0: "under way using engine", 1: "at anchor", 2: "not under command", 3: "restricted manoeuvrability", 5: "moored", 8: "under way sailing", 15: "undefined"}
 
 
@@ -197,8 +204,8 @@ def from_ais(a: Dict[str, Any], epoch: datetime) -> Tuple[Optional[Dict[str, Any
         return None, "length not reported"
     beam = float(a["beam"] or round(loa / 7.0, 1))
     rep = a["draught"]
-    used = min(float(rep), nct.NCT["max_draught_m"]) if rep else 9.0
-    if loa > nct.NCT["max_loa_m"]:
+    used = min(float(rep), RULES_2023["max_draught_m"]) if rep else 9.0
+    if loa > RULES_2023["max_loa_m"]:
         return None, f"{loa:.0f} m exceeds the NCT length limit (likely a bulk carrier for the outer anchorage)"
     pos, eta, basis = a["pos"], None, ""
     if a["eta_utc"]:
@@ -223,6 +230,7 @@ def from_ais(a: Dict[str, Any], epoch: datetime) -> Tuple[Optional[Dict[str, Any
     return {
         "name": a["name"], "imo": a["imo"], "mmsi": a["mmsi"], "flag": None, "built": None, "loa_m": loa, "beam_m": beam, "gt": None, "dwt_t": None,
         "teu_est": teu, "moves_est": int(round(MOVES_PER_TEU * teu)), "draught_reported_m": rep, "draught_used_m": round(used, 1),
+        **advice.cost_weights(teu),
         "status": NAV.get(pos["nav"], "under way") + f", heard {region}" if pos else "declared Chattogram on AIS (no position kept)",
         "area": "ANCHORAGE" if eta_hr == 0 else "BAY_NEAR" if eta_hr < 24 else "BAY_MID" if eta_hr < 72 else "BAY_FAR",
         "last_port": f"AIS: last heard {region}" + (f" {pos['t'][:16].replace('T', ' ')}Z" if pos else ""),
@@ -235,12 +243,58 @@ def from_ais(a: Dict[str, Any], epoch: datetime) -> Tuple[Optional[Dict[str, Any
 
 def from_snapshot(v: Dict[str, Any], epoch: datetime, snap_retrieved: str) -> Optional[Dict[str, Any]]:
     eta = datetime.fromisoformat(v["carrier_eta_local"]).replace(tzinfo=DHAKA)
-    if eta < epoch - timedelta(days=1):
+    if eta < epoch:                       # a schedule ETA that has passed without AIS confirmation: assume the call happened
         return None
     eta_hr = max(0, int(round((eta - epoch).total_seconds() / 3600.0)))
-    return dict(v, eta_hr=eta_hr, waited_before_epoch_hr=0.0, source="carrier schedule",
+    teu = v["dwt_t"] / 14.0
+    return dict(v, eta_hr=eta_hr, waited_before_epoch_hr=0.0, source="carrier schedule", **advice.cost_weights(teu),
                 status=f"per the carrier schedule read {snap_retrieved}", area="BAY_FAR" if eta_hr >= 72 else "BAY_MID" if eta_hr >= 24 else "BAY_NEAR",
                 eta_basis=f"carrier ETA {v['carrier_eta_local'].replace('T', ' ')} from the schedule read {snap_retrieved}")
+
+
+def load_due(path: Path, epoch: datetime) -> List[Dict[str, Any]]:
+    """The port's list of vessels due, typed in from the published PDF (columns as in data/chattogram_due.csv).
+    The port portal's robots.txt forbids automated fetching and its certificate is not trusted by common browsers,
+    so this list is entered by hand; it is used only while it is fresh."""
+    import csv
+    if not path.exists():
+        return []
+    rows = [r for r in csv.DictReader(path.read_text(encoding="utf-8").splitlines()) if (r.get("name") or "").strip()]
+    out = []
+    for r in rows:
+        try:
+            listed = datetime.strptime(r["list_date"].strip(), "%Y-%m-%d").replace(tzinfo=DHAKA)
+            arr = datetime.strptime(r["arrival_date"].strip(), "%Y-%m-%d").replace(hour=12, tzinfo=DHAKA)
+        except (KeyError, ValueError):
+            continue
+        if epoch - listed > timedelta(days=DUE_MAX_AGE_DAYS) or arr < epoch - timedelta(days=STALE_DAYS):
+            continue
+        loa = float(r.get("length_m") or 0)
+        if loa < 100 or loa > RULES_2023["max_loa_m"]:
+            continue
+        beam = float(r.get("beam_m") or 0) or round(loa / 7.0, 1)
+        dr = float(r.get("draught_m") or 0) or None
+        teu = teu_estimate(loa, beam)
+        eta_hr = max(0, int(round((arr - epoch).total_seconds() / 3600.0)))
+        out.append({"name": r["name"].strip().upper(), "imo": int(r["imo"]) if (r.get("imo") or "").strip().isdigit() else None, "mmsi": None,
+                    "flag": None, "built": None, "loa_m": loa, "beam_m": beam, "gt": None, "dwt_t": None, "teu_est": teu,
+                    "moves_est": int(round(MOVES_PER_TEU * teu)), "draught_reported_m": dr, "draught_used_m": round(min(dr or 9.0, RULES_2023["max_draught_m"]), 1),
+                    **advice.cost_weights(teu), "status": f"on the port's due list of {r['list_date']} ({r.get('anchorage') or 'outer anchorage'})",
+                    "area": "ANCHORAGE" if eta_hr == 0 else "BAY_NEAR", "last_port": r.get("last_port") or "not stated", "eta_hr": eta_hr,
+                    "waited_before_epoch_hr": 0.0, "eta_basis": f"arrival {r['arrival_date']} declared by the local agent ({r.get('agent') or 'agent'})",
+                    "source": "port due list"})
+    return out
+
+
+def high_water_windows(epoch: datetime, hourly: Sequence[float], window=HW_WINDOW) -> List[List[int]]:
+    """Plan hours in which river movements may run: from 5 h before to 1 h after each predicted high water."""
+    out = []
+    for t, kind, _ in turning_points(epoch, hourly):
+        if kind != "H":
+            continue
+        h = (datetime.fromisoformat(t).replace(tzinfo=epoch.tzinfo) - epoch).total_seconds() / 3600.0
+        out.append([max(0, int(math.floor(h + window[0]))), max(0, int(math.ceil(h + window[1])))])
+    return out
 
 
 def build_live(store: Path, now: Optional[datetime] = None, fetch: Optional[Callable[[], List[Tuple[datetime, float]]]] = None,
@@ -250,7 +304,12 @@ def build_live(store: Path, now: Optional[datetime] = None, fetch: Optional[Call
     snap = json.loads(snapshot_path.read_text())
     H = nct.NCT["horizon_hrs"]
     vessels, excluded, seen = [], [], set()
+    for d in load_due(DUE_CSV, epoch):
+        vessels.append(d)
+        seen.update({str(d["imo"]), d["name"].upper()})
     for a in ais_vessels(store, now):
+        if {str(a["mmsi"]), str(a["imo"]), (a["name"] or "").upper()} & seen:
+            continue
         v, why = from_ais(a, epoch)
         if v:
             vessels.append(v)
@@ -281,6 +340,8 @@ def build_live(store: Path, now: Optional[datetime] = None, fetch: Optional[Call
                       "berth_occupancy": "quay assumed free at the plan start (not observable)"},
         "fixed_occupants": [], "also_in_port_not_modelled": [], "excluded": excluded[:30],
         "vessels": vessels, "tides": turning_points(epoch, tb["hourly_m"]), "tide_hourly_m": tb["hourly_m"], "tide_margin_m": TIDE_CAL["rmse_m"],
+        "hw_windows": high_water_windows(epoch, tb["hourly_m"]), "rules": dict(RULES_2023, hw_window_h=list(HW_WINDOW),
+                                                                               source="10 m / 200 m: CPA, reported 5 Feb 2023; movements 4-5 h before high water: P&I club guidance"),
         "tide_detail": {k: v for k, v in tb.items() if k != "hourly_m"},
         "sun_local": {"sunrise": rise, "sunset": sset}, "daylight_hours": [d0, d1],
         "tide_note": f"Tide: {tb['source']}. Gates keep a {TIDE_CAL['rmse_m']:.2f} m margin for the calibration error. "

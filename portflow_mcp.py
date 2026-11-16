@@ -18,9 +18,10 @@ Changes against v2.0 are tagged in-line as  # v3-FIX n  (defect corrections) and
 # v3-NEW / v4-NEW (the upgrades).  See CHANGELOG.md for the rationale of each.
 """
 import json
+import os
 import math
 import zlib
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List, Optional, Tuple
 
 import numpy as np
 import simpy
@@ -673,7 +674,7 @@ def _run_simpy_terminal_simulation(
     rtg_outages: Optional[List[List[float]]] = None, seed: int = 2026,
     night_window_mins: float = 360.0, prime_movers: int = 12,
     log_events: bool = False, qc_intensity: float = 1.0, yard_cap_teu: float = 2400.0,
-    trace_occupancy: bool = False
+    trace_occupancy: bool = False, n_discharge: int = 750
 ) -> str:
     """One night shift followed by one discharge wave on a 2,400-TEU block cluster.
 
@@ -692,7 +693,9 @@ def _run_simpy_terminal_simulation(
     blocking_ratio = ym["blocking_ratio"] if ym else 0.08
     premarshal_jobs = ym["night_premarshal_relocations_executed"] if ym else 0
     PRIO_OUTAGE, PRIO_VESSEL, PRIO_LANDSIDE = -1, 0, 1
-    N_DISCHARGE, N_GATE, QC_CYCLE_MIN, GATE_IAT_MIN = 750, 420, 1.25 / max(qc_intensity, 0.05), 2.1
+    # gate pickups scale with the wave (420 for the reference 750-box wave)
+    N_DISCHARGE, QC_CYCLE_MIN, GATE_IAT_MIN = int(n_discharge), 1.25 / max(qc_intensity, 0.05), 2.1
+    N_GATE = int(round(0.56 * N_DISCHARGE))
 
     state = {
         "yard_teu": (initial_yard_occupancy_pct / 100.0) * yard_cap_teu,
@@ -827,8 +830,12 @@ def _run_simpy_terminal_simulation(
                 continue
             t_block = env.now
             # v3-FIX 6d: a full yard blocks the quay (v2.0 reached 115% of capacity).
-            while state["yard_teu"] + trucks.count >= yard_cap_teu:
+            while state["yard_teu"] + trucks.count >= yard_cap_teu and env.now - t_block < 2880.0:
                 yield env.timeout(1.0)
+            if state["yard_teu"] + trucks.count >= yard_cap_teu:     # blocked for 48 h: the box goes to overflow storage
+                state["quay_blocked_mins"] += env.now - t_block
+                state["overflow_boxes"] = state.get("overflow_boxes", 0) + 1
+                continue
             req = trucks.request()
             yield req
             state["quay_blocked_mins"] += env.now - t_block
@@ -909,13 +916,25 @@ def _run_simpy_terminal_simulation(
 # ----------------------------------------------------------------------------
 # Tool 5: closed-loop coupling of CP-SAT and SimPy
 # ----------------------------------------------------------------------------
+def _one_replication(args: Tuple[Any, ...]) -> Dict[str, Any]:
+    occ, icd, xray, rtg_fleet, rtg_outages, seed, qc_intensity, yard_cap_teu, n_discharge = args
+    return json.loads(_run_simpy_terminal_simulation(occ, icd, xray, rtg_fleet=rtg_fleet, rtg_outages=rtg_outages, seed=seed,
+                                                     qc_intensity=qc_intensity, yard_cap_teu=yard_cap_teu, n_discharge=n_discharge))
+
+
 def _simulate_replicated(replications: int, occ: float, icd: float, xray: float,
                          rtg_outages: Optional[List[List[float]]] = None, qc_intensity: float = 1.0,
-                         rtg_fleet: int = 8, yard_cap_teu: float = 2400.0) -> Dict[str, Any]:
-    """Mean of every DES output over independent seeds, with a 95% CI on beta."""
-    runs = [json.loads(_run_simpy_terminal_simulation(occ, icd, xray, rtg_fleet=rtg_fleet, rtg_outages=rtg_outages, seed=2026 + k,
-                                                      qc_intensity=qc_intensity, yard_cap_teu=yard_cap_teu))
-            for k in range(replications)]
+                         rtg_fleet: int = 8, yard_cap_teu: float = 2400.0, n_discharge: int = 750) -> Dict[str, Any]:
+    """Mean of every DES output over independent seeds, with a 95% CI on beta.
+    PORTFLOW_PROCS=n runs the replications in n processes (same seeds, so the same results)."""
+    jobs = [(occ, icd, xray, rtg_fleet, rtg_outages, 2026 + k, qc_intensity, yard_cap_teu, n_discharge) for k in range(replications)]
+    procs = int(os.environ.get("PORTFLOW_PROCS", "1"))
+    if procs > 1 and replications >= 4 and hasattr(os, "fork"):
+        import multiprocessing as mp
+        with mp.get_context("fork").Pool(min(procs, replications)) as pool:
+            runs = pool.map(_one_replication, jobs)
+    else:
+        runs = [_one_replication(j) for j in jobs]
     out = {k: round(float(np.mean([r[k] for r in runs])), 3) for k in runs[0] if k != "rtg_utilisation_by_hour"}
     n_h = max(len(r["rtg_utilisation_by_hour"]) for r in runs)
     out["rtg_utilisation_by_hour"] = [round(float(np.mean([r["rtg_utilisation_by_hour"][h] if h < len(r["rtg_utilisation_by_hour"]) else 0.0

@@ -5,9 +5,26 @@
 // written by run_tower.py, which is loaded at runtime.
 import React, { useState, useEffect, useMemo, useRef, useCallback } from 'react';
 import { ResponsiveContainer, LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ReferenceLine, ReferenceArea } from 'recharts';
-import { solve, simulateReplicated, makeSite } from './engine.js';
+import { solve, simulateReplicated, makeSite, planFigures } from './engine.js';
 
 const DEFAULT_MCP_DATA = (typeof window !== 'undefined' && window.PORTFLOW_DEFAULT) || /*__MCP_DATA__*/;
+const WORKER_SRC = /*__WORKER_SRC__*/'';
+
+// Re-plan in a Web Worker when the page allows it; otherwise on the main thread.
+function solveAsync(data, opt, onLog) {
+  if (WORKER_SRC && typeof Worker !== 'undefined' && typeof Blob !== 'undefined' && typeof URL !== 'undefined' && URL.createObjectURL) {
+    try {
+      return new Promise((ok) => {
+        const url = URL.createObjectURL(new Blob([WORKER_SRC], { type: 'text/javascript' })), w = new Worker(url);
+        const fallback = () => { w.terminate(); URL.revokeObjectURL(url); ok(solve(data, opt, onLog)); };
+        w.onmessage = (e) => { if (e.data.log) onLog(e.data.log); if (e.data.done) { w.terminate(); URL.revokeObjectURL(url); ok(e.data.done); } };
+        w.onerror = fallback;
+        w.postMessage({ data, opt });
+      });
+    } catch (e) { /* blocked by the page's security policy: fall through */ }
+  }
+  return new Promise((ok) => setTimeout(() => ok(solve(data, opt, onLog)), 30));
+}
 
 const CSS = `
 .pf{--bg:#05090d;--panel:#0a1219;--well:#060b10;--line:#16293a;--line-hi:#2b4a63;--ink:#d7e5f0;--muted:#8097a9;--tele:#5ef2c8;--amber:#ffb224;--red:#ff5a52;--blue:#4aa3ff;--ok:#3ddc84;
@@ -709,7 +726,7 @@ function Tower({ data, feed }) {
     if (!said.length) { say('a', reply || `I could not turn that into a change to the plan. Try: delay a ship by some hours, take quay or yard cranes out${HH ? ' at a terminal' : ''}, set the ${HH ? 'night rail and barge' : 'off-dock'} evacuation share, set the starting yard level${HH ? '' : ', or set the number of pilot and tug sets'}.`); setBusy(false); return; }
     await reveal([`parsed: ${said.join('; ')}`]);
     const lines = [], t0 = performance.now();
-    const res = await new Promise((ok) => setTimeout(() => ok(solve(data, { etaShift: next.etaShift, qgcOutages: next.qgcOutages, rtgOutages: next.rtgOutages, icd: next.icd ?? undefined, occ: next.occ ?? undefined, tugSets: next.tugSets ?? undefined, reps: 8 }, (l) => lines.push(l))), 30));
+    const res = await solveAsync(data, { etaShift: next.etaShift, qgcOutages: next.qgcOutages, rtgOutages: next.rtgOutages, icd: next.icd ?? undefined, occ: next.occ ?? undefined, tugSets: next.tugSets ?? undefined, reps: 8 }, (l) => lines.push(l));
     await reveal(lines);
     if (!res.feasible) { await reveal(['no feasible plan: scenario not applied']); say('a', `The in-page planner found no plan that finishes inside the ${cfg.horizon_hrs}-hour tide table with ${said.join(', ')}${res.blocker ? `; ${res.blocker} is the ship it could not fit` : ''}. This planner is a fast heuristic: the CP-SAT engine searches exhaustively and can find plans it misses (in testing it fitted a storm-plus-no-evacuation case this planner rejected), so check the case with the Python engine${HH ? ' (run_tower.py)' : ' on the MCP server with nct_simulate_disruption'}. I kept the previous plan.`); setBusy(false); return; }
     await reveal([`${res.converged ? 'converged' : 'stopped'} after ${res.iterations} iteration(s) in ${Math.round(performance.now() - t0)} ms: turnaround ${res.kpis.turnaround} d, wait ${res.kpis.wait} h, backpressure ${res.kpis.beta.toFixed(2)}`]);
@@ -726,6 +743,13 @@ function Tower({ data, feed }) {
   const clk = planClock(data.live.plan_epoch_local, t), hr = Math.min(Math.floor(t), cfg.horizon_hrs), tideNow = data.tide_hourly[hr] + (data.tide_hourly[Math.min(hr + 1, cfg.horizon_hrs)] - data.tide_hourly[hr]) * (t - hr);
   const night = !(site.clock(hr) >= cfg.daylight_hours[0] && site.clock(hr) < cfg.daylight_hours[1]);
   const k = plan.kpis, chips = scChips(sc, cfg), Y = data.yard, R = data.reefer, hy = data.hydrostatics;
+  // money, just-in-time fuel and tide-window risk of the plan on screen (Python figures for the reference plan, in-page otherwise)
+  const fig = useMemo(() => (plan.source === 'CP-SAT reference' && data.advice ? data.advice : planFigures(data, plan.schedule)), [plan, data]);
+  const figBase = useMemo(() => (data.advice_baseline ? data.advice_baseline.totals : planFigures(data, data.baseline.schedule).totals), [data]);
+  const figNom = useMemo(() => (data.advice ? data.advice.totals : planFigures(data, data.optimised.schedule).totals), [data]);
+  const risky = (f) => f.ships.filter((x) => x.risk && x.risk.p_miss >= 0.2).length;
+  const figMap = Object.fromEntries(fig.ships.map((x) => [x.vessel_id, x]));
+  const windNow = HH && data.live.wind_ms_hourly ? data.live.wind_ms_hourly[Math.min(Math.floor(t), data.live.wind_ms_hourly.length - 1)] : null;
   const trace = useMemo(() => (plan.yardTrace || traces.nominal).map((p, i) => ({ h: +(p[0] / 60).toFixed(2), now: p[1], none: traces.none[i] ? traces.none[i][1] : null })), [plan, traces]);
   const vmap = useMemo(() => Object.fromEntries(data.live.vessels.map((v) => [v.name, v])), [data]);
 
@@ -740,6 +764,7 @@ function Tower({ data, feed }) {
           <span className="pf-lamp" style={{ '--c': isLive ? C.ok : C.amber }}><i />{isLive ? `LIVE DATA ${data.live.retrieved}` : `SNAPSHOT ${data.live.retrieved}`}</span>
           <span className="pf-lamp" style={{ '--c': C.blue }}><i />{HH ? `ST. PAULI +${fmt(tideNow, 2)} m MLW` : `TIDE ${fmt(tideNow, 2)} m`}</span>
           {!HH && <span className="pf-lamp" style={{ '--c': night ? C.amber : C.ok }}><i />{night ? 'NIGHT RULE ON' : 'DAYLIGHT'}</span>}
+          {windNow != null && <span className="pf-lamp" style={{ '--c': windNow >= cfg.wind_limit_ms ? C.red : C.ok }}><i />WIND {fmt(windNow)} m/s{windNow >= cfg.wind_limit_ms ? ': BIG SHIPS HOLD' : ''}</span>}
           <span className="pf-lamp" style={{ '--c': k.peak >= 80 ? C.red : C.ok }}><i />YARD PEAK {fmt(k.peak)}%</span>
           <span className="pf-lamp" style={{ '--c': mode === 'claude' ? C.ok : C.amber }}><i />COPILOT: {mode === 'claude' ? 'CLAUDE' : mode === 'offline' ? 'BUILT-IN PARSER' : '…'}</span>
         </div>
@@ -793,6 +818,8 @@ function Tower({ data, feed }) {
             <Kpi label="Peak yard occupancy" v={k.peak} unit="%" d={1} base={baseK.peak} nom={nominal.kpis.peak} flash={flash} />
             <Kpi label="Quay slowdown from yard" v={k.beta} unit="×" d={2} base={baseK.beta} nom={nominal.kpis.beta} flash={flash} />
             <Kpi label="Gate truck wait" v={k.gateWait} unit="min" d={0} base={baseK.gateWait} nom={nominal.kpis.gateWait} flash={flash} />
+            <Kpi label="Cost of the queue" v={fig.totals.cost_usd / 1000} unit="k USD" d={0} base={figBase.cost_usd / 1000} nom={figNom.cost_usd / 1000} flash={flash} />
+            <Kpi label="Ships at risk of missing their tide" v={risky(fig)} unit={`of ${plan.schedule.length}`} d={0} base={risky({ ships: planFigures(data, data.baseline.schedule).ships })} nom={risky(data.advice || planFigures(data, data.optimised.schedule))} flash={flash} />
             <Kpi label={HH ? 'Held for tide' : 'Held for tide or daylight'} v={k.hold} unit="h" d={0} base={baseK.hold} nom={nominal.kpis.hold} flash={flash} />
           </div>
           <p className="pf-note">FCFS baseline: {data.baseline_rule ? data.baseline_rule.replace('off-dock', HH ? 'night rail and barge' : 'off-dock') : `ships berth in arrival order with every crane they can take and no ${HH ? 'night rail and barge' : 'off-dock'} evacuation`}. Nominal plan: the Python engine (CP-SAT with simulation cuts) at {Math.round(cfg.icd_ratio * 100)}% evacuation{isLive ? `, run ${(data.generated_utc || '').slice(0, 16).replace('T', ' ')} UTC on today's data` : ''}. {valNote(data.validation)}{HH && Math.abs(baseK.turnaround - k.turnaround) < 0.005 ? ' With today\'s queue the quays have room, so the baseline and the optimised plan coincide; use the copilot to stress the plan.' : ''}</p>
@@ -833,17 +860,28 @@ function Tower({ data, feed }) {
         <section className="pf-panel">
           <div className="pf-head"><div><div className="pf-tag">Queue</div><h2>Ships in the plan</h2></div>
             <div className="pf-stats" style={{ marginTop: 0 }}><div className="pf-stat"><div className="l">Stability check, {hy.vessel_id}{HH ? ', 360-box test parcel' : ''}</div><div className="v num">GM {fmt(hy.GM_metacentric_height_m, 2)} m · list {fmt(hy.heeling_list_angle_deg, 2)}° · {hy.imo_stability_compliant ? 'pass' : 'FAIL'}</div></div></div></div>
-          <div className="pf-scroll"><table className="pf-table"><thead><tr><th>Vessel</th><th>IMO</th><th>MMSI</th><th>LOA m</th><th>Draught m</th><th className="tl">Reported status</th><th className="tl">Arrival basis</th><th>Berth</th><th>Alongside</th><th>Sails</th><th>Cranes</th><th>Wait h</th><th>Hold h</th></tr></thead>
+          <div className="pf-scroll"><table className="pf-table"><thead><tr><th>Vessel</th><th>IMO</th><th>MMSI</th><th>LOA m</th><th>Draught m</th><th className="tl">Reported status</th><th className="tl">Arrival basis</th><th>Berth</th><th>Alongside</th><th>Sails</th><th>Cranes</th><th>Wait h</th><th>Hold h</th><th>Cost k USD</th><th className="tl">Just-in-time advice</th><th>Tide risk</th></tr></thead>
             <tbody>{plan.schedule.map((r) => { const v = vmap[r.vessel_id]; return (
               <tr key={r.vessel_id} className={sel === r.vessel_id ? 'sel' : ''} onClick={() => setSel(r.vessel_id)}>
                 <td>{r.vessel_id}</td><td>{v.imo}</td><td>{v.mmsi}</td><td>{fmt(v.loa_m, 2)}</td><td>{v.draught_reported_m == null ? '—' : fmt(v.draught_reported_m)} / {fmt(r.draft_m)}</td><td className="tl">{v.status}</td><td className="tl" style={{ maxWidth: 260, overflow: 'hidden', textOverflow: 'ellipsis' }} title={v.eta_basis}>{v.eta_basis}</td>
                 <td>{berthLabel(data, r)}</td><td>{planClock(data.live.plan_epoch_local, r.berth_start_hr).label}</td><td>{planClock(data.live.plan_epoch_local, r.tidal_depart_hr).label}</td><td>{r.assigned_qcs}</td><td>{r.anchorage_wait_hrs}</td><td>{r.tide_departure_hold_hrs}</td>
+                <td>{figMap[r.vessel_id] ? fmt(figMap[r.vessel_id].cost_usd / 1000, 0) : '—'}</td>
+                <td className="tl">{figMap[r.vessel_id] && figMap[r.vessel_id].jit ? `${fmt(figMap[r.vessel_id].jit.speed_now_kn)} → ${fmt(figMap[r.vessel_id].jit.speed_advised_kn)} kn, saves ${fmt(figMap[r.vessel_id].jit.fuel_saved_t)} t fuel` : r.anchorage_wait_hrs > 0 ? 'no position to advise from' : 'no wait planned'}</td>
+                <td style={{ color: figMap[r.vessel_id] && figMap[r.vessel_id].risk && figMap[r.vessel_id].risk.p_miss >= 0.2 ? C.amber : undefined }} title={figMap[r.vessel_id] && figMap[r.vessel_id].risk ? `planned window closes at hour ${figMap[r.vessel_id].risk.window_closes_hr}; slack ${figMap[r.vessel_id].risk.slack_h} h against an arrival error of ±${figMap[r.vessel_id].risk.sigma_h} h; next window ${figMap[r.vessel_id].risk.extra_wait_if_missed_h ?? '—'} h later` : 'no tide window to miss'}>{figMap[r.vessel_id] && figMap[r.vessel_id].risk ? `${fmt(figMap[r.vessel_id].risk.p_miss * 100, 0)}%` : '—'}</td>
               </tr>); })}</tbody></table></div>
           <p className="pf-note">{HH
             ? `Draught: reported on AIS / used in the plan (capped at the inbound tide-dependent limit). Box counts per call are estimates (${data.live.estimates.moves_per_call}); the terminal comes from where AIS has seen the ship moored, or else from a carrier-to-terminal assumption. ${(data.live.excluded || []).length} ships declaring Hamburg were left out (see below).`
             : `Draught: reported by the ship / used in the plan (capped at the ${fmt(cfg.max_draught_m)} m limit). Box counts per call are estimates from ${isLive ? 'length and beam' : 'deadweight'}; terminals are not published, so every ship is treated as an NCT call.`}</p>
         </section>
       </div>
+
+      {(HH || data.backtest) && <section className="pf-panel" style={{ marginTop: 10 }}>
+        <div className="pf-head"><div><div className="pf-tag">Plan against reality</div><h2>How close yesterday's plans came</h2></div></div>
+        {data.backtest && (data.backtest.plan.n || data.backtest.port_list.n) ? <div className="pf-scroll"><table className="pf-table" style={{ minWidth: 640 }}><thead><tr><th>Source</th><th>Calls matched</th><th>Mean error, alongside</th><th>Bias</th><th>90th percentile</th><th>Right terminal</th></tr></thead><tbody>
+          {[['PortFlow plan', data.backtest.plan], ["Port's expected-vessel list (HVCC)", data.backtest.port_list]].map(([l, x]) => <tr key={l}><td>{l}</td><td>{x.n}</td><td>{x.n ? `${fmt(x.mae_h)} h` : '—'}</td><td>{x.n ? `${x.bias_h > 0 ? '+' : ''}${fmt(x.bias_h)} h` : '—'}</td><td>{x.n ? `${fmt(x.p90_abs_h)} h` : '—'}</td><td>{x.terminal_accuracy != null && !Number.isNaN(x.terminal_accuracy) ? `${fmt(x.terminal_accuracy * 100, 0)}%` : '—'}</td></tr>)}
+        </tbody></table></div> : <div className="pf-read">Collecting: every day's plan is archived, and once the planned ships have berthed, AIS mooring times are compared with the plan here. {data.backtest ? `${data.backtest.plans_archived} plans archived, ${data.backtest.observed_calls} container-quay calls seen so far.` : ''}</div>}
+        <p className="pf-note">Positive bias: ships berth later than planned. {data.backtest ? data.backtest.resolution_note : ''} The tide-window risk uses an arrival error of {data.backtest && data.backtest.eta_sigma_fit ? `${data.backtest.eta_sigma_fit.a} h + ${data.backtest.eta_sigma_fit.b} × lead time (fitted)` : '2 h + 0.06 × lead time (assumed until enough calls are matched)'}.</p>
+      </section>}
 
       <details className="pf-foot"><summary>What is measured, what is assumed</summary><ul>
         <li>Read from public sources on {data.live.retrieved}: {data.live.what_is_live}</li>
@@ -853,6 +891,9 @@ function Tower({ data, feed }) {
           ? <li>Assumed: {fmt(cfg.qgc_gmph, 0)} moves per crane-hour; quay cranes per terminal {Object.entries(cfg.crane_pools).map(([k2, v2]) => `${k2} ${v2}`).join(', ')} (Eurogate's count is not confirmed); yard starting {fmt(cfg.initial_yard_occupancy_pct, 0)}% full with {Math.round(cfg.icd_ratio * 100)}% of boxes leaving by night rail and barge; Elbe passage {cfg.transit_hrs} h; the tide check applies between Waltershof and Brunsbüttel; ships moored at the start leave at an estimated hour.</li>
           : <li>Assumed: channel depth {fmt(cfg.channel_depth_m)} m below datum, under-keel clearance {fmt(cfg.ukc_m)} m, {cfg.pilot_tug_sets} pilot and tug sets, yard starting {fmt(cfg.initial_yard_occupancy_pct, 0)}% full, {fmt(cfg.qgc_gmph)} moves per crane-hour, {cfg.qgc_total} quay cranes. The quay-crane, yard-crane and reefer-plug counts are the ones supplied for this model; published figures for NCT differ.</li>}
         <li>{data.live.tide_note}</li>
+        {data.advice && <li>Money and fuel: charter {data.advice.assumptions.charter_usd_day} USD/day, main-engine fuel {data.advice.assumptions.fuel_t_day} t/day, fuel {data.advice.assumptions.fuel_usd_t} USD/t, {data.advice.assumptions.idle_t_day} t/day at anchor, {data.advice.assumptions.co2_per_t_hfo} t CO₂ per t fuel. {cfg.objective === 'cost' ? 'The plan minimises this cost (waiting and time alongside at each ship\'s charter rate).' : ''}</li>}
+        {HH && <li>Elbe rules in the plan: tide-independent and tide-dependent draughts; ships wider than 90 m together meet only in the Wedel–Blankenese passing box and above 104 m not at all; ships over 330 m or 45 m wide do not move at {fmt(cfg.wind_limit_ms)} m/s or more (wind forecast: {data.live.wind_source || 'not available today'}); ships wider than 51 m are not sent under the Köhlbrand bridge to Altenwerder unless the port's list says so. The wind, meeting and bridge thresholds are assumptions.</li>}
+        {!HH && data.live.rules && <li>River rules in the plan: up to {fmt(data.live.rules.max_draught_m)} m draught and {fmt(data.live.rules.max_loa_m, 0)} m length; transits only from 5 h before to 1 h after each predicted high water ({data.live.rules.source}).</li>}
         {(data.live.excluded || []).length > 0 && <li>Left out of the plan: {data.live.excluded.map((e) => `${e.name} (${e.reason})`).join('; ')}.</li>}
       </ul></details>
     </div>

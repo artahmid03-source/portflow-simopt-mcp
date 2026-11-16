@@ -14,12 +14,13 @@ import json
 import os
 import sys
 import time
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 from pathlib import Path
 from typing import Any, Dict, Optional
 
 sys.path.insert(0, str(Path(__file__).resolve().parent / "sites"))
 import portflow_mcp as eng  # noqa: E402
+import advice  # noqa: E402
 import chattogram_nct as nct  # noqa: E402
 
 N_PARCEL = 360
@@ -29,7 +30,9 @@ def site_setup(site: str, store: Path, now: Optional[datetime] = None):
     if site == "chattogram":
         import chattogram_live as cl
         live = cl.build_live(store / "chattogram", now, fetch=lambda: cl.fetch_open_meteo(now or datetime.now(timezone.utc)))
-        cfg = dict(nct.NCT, daylight_hours=list(live["daylight_hours"]))
+        cfg = dict(nct.NCT, daylight_hours=list(live["daylight_hours"]), objective="cost", yard_model="per_ship",
+                   max_draught_m=live["rules"]["max_draught_m"], spring_max_draught_m=live["rules"]["spring_max_draught_m"],
+                   max_loa_m=live["rules"]["max_loa_m"])
         return live, cfg, nct
     if site == "hamburg":
         import hamburg as hh
@@ -41,7 +44,59 @@ def slim(p: Dict[str, Any]) -> Dict[str, Any]:
     return {k: p.get(k) for k in ("kpis", "schedule", "cuts", "iterations_run", "convergence_status", "trace")}
 
 
-def plan_site(site: str, live: Dict[str, Any], cfg: Dict[str, Any], rules: Any, reps: int = 20) -> Dict[str, Any]:
+def _epoch_utc(live: Dict[str, Any]) -> datetime:
+    return datetime.fromisoformat(live["plan_epoch_local"]).astimezone(timezone.utc)
+
+
+def distances_nm(site: str, live: Dict[str, Any]) -> Dict[str, Optional[float]]:
+    """Sea distance each ship still has to sail before its passage starts (for just-in-time speed advice)."""
+    out: Dict[str, Optional[float]] = {}
+    for v in live["vessels"]:
+        if v.get("lat") is None:
+            out[v["name"]] = None
+        elif site == "chattogram":
+            import chattogram_live as cl
+            out[v["name"]] = cl.route_nm(v["lat"], v["lon"])[0]
+        else:
+            import chattogram_live as cl
+            out[v["name"]] = 0.0 if v.get("area") in ("ELBE", "ESTUARY", "PORT") else cl.nm((v["lat"], v["lon"]), (54.0, 8.11))
+    return out
+
+
+def previous_hint(store: Optional[Path], site: str, live: Dict[str, Any]) -> Optional[Dict[str, Any]]:
+    """Yesterday's plan, shifted to today's clock, as a warm start for CP-SAT."""
+    if store is None or not (store / site / "plans").exists():
+        return None
+    files = sorted((store / site / "plans").glob("*.json"))
+    if not files:
+        return None
+    prev = json.loads(files[-1].read_text())
+    e0 = _epoch_utc(live)
+    hint = {}
+    for r in prev.get("rows", []):
+        h = int(round((datetime.fromisoformat(r["berth_start_utc"].replace("Z", "+00:00")) - e0).total_seconds() / 3600.0))
+        if h > 0 and r.get("berth_start_m") is not None:
+            hint[r["vessel_id"]] = {"berth_start_hr": h, "berth_start_m": r["berth_start_m"]}
+    return hint or None
+
+
+def archive_plan(store: Path, site: str, p: Dict[str, Any]) -> None:
+    """Keep each day's plan (absolute times) so run_backtest.py can compare it with what happened."""
+    if p.get("status") != "ok":
+        return
+    e0 = _epoch_utc(p["live"])
+    vmap = {v["name"]: v for v in p["live"]["vessels"]}
+    at = lambda h: (e0 + timedelta(hours=h)).strftime("%Y-%m-%dT%H:%MZ")  # noqa: E731
+    rows = [{"vessel_id": r["vessel_id"], "mmsi": vmap.get(r["vessel_id"], {}).get("mmsi"), "imo": r.get("imo"), "terminal": r.get("quay"),
+             "terminal_basis": vmap.get(r["vessel_id"], {}).get("terminal_basis"), "berth_start_m": r["berth_start_m"],
+             "eta_utc": at(r["eta_hr"]), "berth_start_utc": at(r["berth_start_hr"]), "depart_utc": at(r["tidal_depart_hr"])}
+            for r in p["optimised"]["schedule"]]
+    d = store / site / "plans"
+    d.mkdir(parents=True, exist_ok=True)
+    (d / f"{p['generated_utc'][:10]}.json").write_text(json.dumps({"generated_utc": p["generated_utc"], "plan_epoch_utc": at(0), "rows": rows}, separators=(",", ":")))
+
+
+def plan_site(site: str, live: Dict[str, Any], cfg: Dict[str, Any], rules: Any, reps: int = 20, store: Optional[Path] = None) -> Dict[str, Any]:
     """Everything the Control Tower page shows, for one live queue."""
     t0 = time.time()
     H = cfg["horizon_hrs"]
@@ -59,7 +114,7 @@ def plan_site(site: str, live: Dict[str, Any], cfg: Dict[str, Any], rules: Any, 
     yard = json.loads(eng._optimize_3d_yard_and_reefers(True, 90, vessel_id=lead["name"]))
     reefer = eng._simulate_reefer_block(cfg["reefer_plugs"], seed=99)
 
-    optimised = run(sim_replications=reps)
+    optimised = run(sim_replications=reps, hint=previous_hint(store, site, live))
     baseline = run(icd_ratio=0.0, fcfs=True, force_max_cranes=True, sim_replications=reps)
     baseline_rule = "arrival order, every crane each ship can take, no off-dock evacuation"
     if not baseline.get("kpis"):                      # strict FCFS with all cranes may not fit the horizon on a tight tide
@@ -97,7 +152,7 @@ def plan_site(site: str, live: Dict[str, Any], cfg: Dict[str, Any], rules: Any, 
                                   "first_start_reported": (w_rep[0] if w_rep else None) if w_rep is not None else None})
 
     payload: Dict[str, Any] = {
-        "status": "ok" if optimised.get("schedule") else "no_plan", "site_kind": site, "engine_version": "6.3",
+        "status": "ok" if optimised.get("schedule") else "no_plan", "site_kind": site, "engine_version": "6.4",
         "site": "Chattogram NCT" if site == "chattogram" else "Port of Hamburg container terminals",
         "generated_utc": datetime.now(timezone.utc).isoformat(timespec="seconds"),
         "config": {k: (list(v) if isinstance(v, tuple) else v) for k, v in cfg.items()}, "live": live, "tide_hourly": nct.tide_curve(live, H),
@@ -111,6 +166,22 @@ def plan_site(site: str, live: Dict[str, Any], cfg: Dict[str, Any], rules: Any, 
     }
     if site == "hamburg":
         payload["gates"] = rules.gates_bitmap(live, H, cfg["transit_hrs"])
+        payload["meeting"] = [[a, b, list(allowed)] for a, b, allowed in rules.meeting_rules(live, vs)]
+    # plan against reality, money, fuel and tide-window risk
+    bt = None
+    if store is not None and (store / site / "backtest.json").exists():
+        bt = json.loads((store / site / "backtest.json").read_text())
+        payload["backtest"] = {k: bt.get(k) for k in ("generated_utc", "window_days", "plans_archived", "observed_calls", "plan", "port_list", "eta_sigma_fit", "resolution_note")}
+    tide = nct.tide_curve(live, H)
+    gates = {v["id"]: rules.gate_windows(live, tide, dict(v, eta=-cfg["transit_hrs"]), H, cfg["transit_hrs"])[0] for v in vs}
+    dist = distances_nm(site, live)
+    fit = (bt or {}).get("eta_sigma_fit")
+    if optimised.get("schedule"):
+        payload["advice"] = advice.plan_figures(live, optimised["schedule"], cfg, gates, dist, fit)
+        if baseline.get("schedule"):
+            payload["advice_baseline"] = {"totals": advice.plan_figures(live, baseline["schedule"], cfg, gates, dist, fit)["totals"]}
+    payload["inbound_gates"] = {k: v for k, v in gates.items()}
+    payload["dist_nm"] = dist
     payload["runtime_s"] = round(time.time() - t0, 1)
     return payload
 
@@ -149,7 +220,8 @@ def main() -> int:
     if len(live["vessels"]) == 0:
         p = empty_payload(a.site, live, "no ship in the live queue")
     else:
-        p = plan_site(a.site, live, cfg, rules, a.reps)
+        p = plan_site(a.site, live, cfg, rules, a.reps, store)
+        archive_plan(store, a.site, p)
     out.parent.mkdir(parents=True, exist_ok=True)
     out.write_text(json.dumps(p, separators=(",", ":"), ensure_ascii=False), encoding="utf-8")
     md = summary(p)
