@@ -662,7 +662,7 @@ const SidePanels = React.memo(function SidePanels({ trace, R, cfg, HH }) {
 
 function valNote(val) {
   const ok = (val || []).filter((v) => v.gap_pct != null);
-  if (!ok.length) return 'Re-plans made here use the in-page planner, a fast heuristic checked against CP-SAT in the daily run.';
+  if (!ok.length) return 'Re-plans made here use the in-page planner, a fast heuristic checked against CP-SAT in every scheduled run.';
   return `Re-plans made here use the in-page planner; it matched CP-SAT exactly on ${ok.filter((v) => Math.abs(v.gap_pct) < 0.05).length} of ${val.length} test cases and was within ${fmt(Math.max(...ok.map((v) => Math.abs(v.gap_pct))))}% on the rest.`;
 }
 
@@ -923,7 +923,7 @@ function Tower({ data, feed }) {
         <div className="pf-head"><div><div className="pf-tag">Plan against reality</div><h2>How close yesterday's plans came</h2></div></div>
         {data.backtest && (data.backtest.plan.n || data.backtest.port_list.n) ? <div className="pf-scroll"><table className="pf-table" style={{ minWidth: 640 }}><thead><tr><th>Source</th><th>Calls matched</th><th>Mean error, alongside</th><th>Bias</th><th>90th percentile</th><th>Right terminal</th></tr></thead><tbody>
           {[['PortFlow plan', data.backtest.plan], ["Port's expected-vessel list (HVCC)", data.backtest.port_list]].map(([l, x]) => <tr key={l}><td>{l}</td><td>{x.n}</td><td>{x.n ? `${fmt(x.mae_h)} h` : '—'}</td><td>{x.n ? `${x.bias_h > 0 ? '+' : ''}${fmt(x.bias_h)} h` : '—'}</td><td>{x.n ? `${fmt(x.p90_abs_h)} h` : '—'}</td><td>{x.terminal_accuracy != null && !Number.isNaN(x.terminal_accuracy) ? `${fmt(x.terminal_accuracy * 100, 0)}%` : '—'}</td></tr>)}
-        </tbody></table></div> : <div className="pf-read">Collecting: every day's plan is archived, and once the planned ships have berthed, AIS mooring times are compared with the plan here. {data.backtest ? `${data.backtest.plans_archived} plans archived, ${data.backtest.observed_calls} container-quay calls seen so far.` : ''}</div>}
+        </tbody></table></div> : <div className="pf-read">Collecting: every plan is archived (the first of each day is scored), and once the planned ships have berthed, AIS mooring times are compared with the plan here. {data.backtest ? `${data.backtest.plans_archived} plans archived, ${data.backtest.observed_calls} container-quay calls seen so far.` : ''}</div>}
         <p className="pf-note">Positive bias: ships berth later than planned. {data.backtest ? data.backtest.resolution_note : ''} The tide-window risk uses an arrival error of {data.backtest && data.backtest.eta_sigma_fit ? `${data.backtest.eta_sigma_fit.a} h + ${data.backtest.eta_sigma_fit.b} × lead time (fitted)` : '2 h + 0.06 × lead time (assumed until enough calls are matched)'}.</p>
       </section>}
 

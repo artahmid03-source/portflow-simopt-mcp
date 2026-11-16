@@ -96,6 +96,10 @@ def run(store: Path, now: Optional[datetime] = None) -> Dict[str, Any]:
     now = now or datetime.now(UTC)
     site = store / "hamburg"
     plans = sorted((site / "plans").glob("*.json")) if (site / "plans").exists() else []
+    first_of_day: Dict[str, Path] = {}
+    for p in plans:                              # plans run every 4 h: score the first plan of each day, so no day counts six times
+        first_of_day.setdefault(p.stem[:10], p)
+    scored = sorted(first_of_day.values())
     exp = sorted((site / "expected").glob("20*.json")) if (site / "expected").exists() else []
     since = now - timedelta(days=30)
     calls = observed_calls(site, since, now)
@@ -105,7 +109,7 @@ def run(store: Path, now: Optional[datetime] = None) -> Dict[str, Any]:
         if s.get("name"):
             by_name[hh._norm(s["name"])] = m
     plan_recs, hvcc_recs = [], []
-    for p in plans:
+    for p in scored:
         doc = json.loads(p.read_text())
         made = _utc(doc["generated_utc"])
         if made < since:

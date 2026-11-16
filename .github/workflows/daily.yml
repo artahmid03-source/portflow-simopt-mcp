@@ -1,13 +1,13 @@
-name: Daily update and control-tower plans
+name: Control-tower plans (every 4 hours)
 
-# Once a day: fit the tide model to the official Elbe gauges and summarise the collected AIS
+# Every 4 hours (03:40, 07:40, ... UTC): fit the tide model to the official Elbe gauges and summarise the collected AIS
 # (hamburg/latest.json, hamburg/daily/DATE.json), then plan both ports on today's data with CP-SAT and
 # the yard simulation (hamburg/tower.json, chattogram/tower.json), check the in-page engine against
 # those plans, and save everything to the `data` branch. The tower pages load the tower files.
 
 on:
   schedule:
-    - cron: "40 3 * * *"
+    - cron: "40 3,7,11,15,19,23 * * *"
   workflow_dispatch:
 
 permissions:
@@ -74,7 +74,7 @@ jobs:
           if git diff --cached --quiet; then
             echo "Nothing new to save."
           else
-            git commit -q -m "daily $(date -u +%Y-%m-%d)"
+            git commit -q -m "plans $(date -u +%Y-%m-%dT%H:%MZ)"
             git pull -q --rebase
             git push -q
           fi

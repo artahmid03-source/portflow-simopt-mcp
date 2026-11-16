@@ -7,6 +7,7 @@
 - Cut validity written up (Forbes et al. 2024): cuts keyed by (crane mode, size class) are exact for the simulated response; the ledger is a heuristic.
 - Declared-ETA log in the collector and a cross-validated arrival-time model (`run_eta_model.py`), applied to Hamburg ETAs only once it beats the declared ones.
 - 103 tests (15 new); API browser test.
+- Plans, tide forecast, backtest and arrival-time model now refresh every 4 hours instead of once a day (no free always-on host without a card was found; see the README); plans archived per run, first of each day scored.
 - Deployed at https://portflow-api.onrender.com; yard simulations cached per data version and warmed at start-up for the free host's fraction of a CPU.
 
 ## 6.4.0 · 16 Nov 2026 · Review: realism, speed, usefulness

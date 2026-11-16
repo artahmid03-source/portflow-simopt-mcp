@@ -64,7 +64,7 @@ def distances_nm(site: str, live: Dict[str, Any]) -> Dict[str, Optional[float]]:
 
 
 def previous_hint(store: Optional[Path], site: str, live: Dict[str, Any]) -> Optional[Dict[str, Any]]:
-    """Yesterday's plan, shifted to today's clock, as a warm start for CP-SAT."""
+    """The previous run's plan, shifted to this run's clock, as a warm start for CP-SAT."""
     if store is None or not (store / site / "plans").exists():
         return None
     files = sorted((store / site / "plans").glob("*.json"))
@@ -81,7 +81,7 @@ def previous_hint(store: Optional[Path], site: str, live: Dict[str, Any]) -> Opt
 
 
 def archive_plan(store: Path, site: str, p: Dict[str, Any]) -> None:
-    """Keep each day's plan (absolute times) so run_backtest.py can compare it with what happened."""
+    """Keep each run's plan (absolute times, one file per date and hour) so run_backtest.py can compare it with what happened."""
     if p.get("status") != "ok":
         return
     e0 = _epoch_utc(p["live"])
@@ -93,7 +93,7 @@ def archive_plan(store: Path, site: str, p: Dict[str, Any]) -> None:
             for r in p["optimised"]["schedule"]]
     d = store / site / "plans"
     d.mkdir(parents=True, exist_ok=True)
-    (d / f"{p['generated_utc'][:10]}.json").write_text(json.dumps({"generated_utc": p["generated_utc"], "plan_epoch_utc": at(0), "rows": rows}, separators=(",", ":")))
+    (d / f"{p['generated_utc'][:10]}T{p['generated_utc'][11:13]}.json").write_text(json.dumps({"generated_utc": p["generated_utc"], "plan_epoch_utc": at(0), "rows": rows}, separators=(",", ":")))
 
 
 def ledger_refine(live: Dict[str, Any], cfg: Dict[str, Any], run: Any, optimised: Dict[str, Any], reps: int) -> Dict[str, Any]:

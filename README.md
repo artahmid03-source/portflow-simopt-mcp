@@ -6,7 +6,7 @@
 ![MCP](https://img.shields.io/badge/MCP-FastMCP%20%C2%B7%2013%20tools-6E56CF)
 [![CI](https://github.com/artahmid03-source/portflow-simopt-mcp/actions/workflows/ci.yml/badge.svg)](https://github.com/artahmid03-source/portflow-simopt-mcp/actions/workflows/ci.yml)
 [![Collect AIS](https://github.com/artahmid03-source/portflow-simopt-mcp/actions/workflows/collect.yml/badge.svg)](https://github.com/artahmid03-source/portflow-simopt-mcp/actions/workflows/collect.yml)
-[![Daily plans](https://github.com/artahmid03-source/portflow-simopt-mcp/actions/workflows/daily.yml/badge.svg)](https://github.com/artahmid03-source/portflow-simopt-mcp/actions/workflows/daily.yml)
+[![Plans every 4 h](https://github.com/artahmid03-source/portflow-simopt-mcp/actions/workflows/daily.yml/badge.svg)](https://github.com/artahmid03-source/portflow-simopt-mcp/actions/workflows/daily.yml)
 ![Deterministic](https://img.shields.io/badge/output-byte--reproducible-5EF2C8)
 ![License](https://img.shields.io/badge/license-MIT-lightgrey)
 
@@ -293,7 +293,7 @@ deploy/                      always-on collector: Dockerfile, Windows Task Sched
 run_tower.py                 daily plan for one site → <store>/<site>/tower.json (CP-SAT + Benders + yard + reefer + reference cases)
 run_daily.py                 daily Hamburg update: tide forecast for six Elbe gauges + vessel picture from the collected AIS
 tools/compare_runs.py        compares two pipeline outputs (used by CI)
-.github/workflows/           ci.yml (lint, tests, reproducibility, page builds and browser tests) · collect.yml (hourly AIS) · daily.yml (tide forecast, both towers' plans)
+.github/workflows/           ci.yml (lint, tests, reproducibility, page builds and browser tests) · collect.yml (hourly AIS) · daily.yml (every 4 h: tide forecast, both towers' plans)
 run_nct_pipeline.py          live-queue pipeline → nct_control_tower_data.json
 tests/                       test_invariants.py (19) · test_nct.py (25) · test_ais_ingest.py (4) · test_collect.py (11) · test_tides.py (6) · test_chattogram_live.py (7) · test_hamburg.py (7) · test_realism.py (9)
 web/                         HMI: src/engine.js, src/PortFlowControlTower.template.jsx, build.py, build_pages.py, validate.mjs, test_page.cjs, test_towers.cjs, fixtures/
@@ -364,7 +364,7 @@ A review of the running system and of the literature (16 Nov 2026) found two dat
 - **Yard simulation per ship size.** The discharge wave is now sized to the ship (500, 1,000, 2,000 or 3,000 boxes by size class) instead of always 750, gate pickups scale with it, and a yard full for 48 h sends boxes to overflow instead of stalling the simulation. Cuts are keyed by crane mode and size class.
 
 **Plan against reality**
-- Every daily plan is archived (`<site>/plans/DATE.json`). `run_backtest.py` matches each planned ship with the time AIS first saw it moored at a container quay, and reports the mean and 90th-percentile error, the bias and how often the terminal was right, for PortFlow's plan and for the port's own list. Once 12 calls are matched, the arrival-error model used for the tide-window risk is fitted from them. The page shows the table.
+- Every plan is archived (`<site>/plans/DATE` + `Thh.json`; since v6.5 a new plan every 4 hours, and the backtest scores the first plan of each day). `run_backtest.py` matches each planned ship with the time AIS first saw it moored at a container quay, and reports the mean and 90th-percentile error, the bias and how often the terminal was right, for PortFlow's plan and for the port's own list. Once 12 calls are matched, the arrival-error model used for the tide-window risk is fitted from them. The page shows the table.
 
 **Faster**
 - The crane limit is now a cumulative constraint over one optional working interval per crane option, instead of a yes/no variable per ship and hour. The Chattogram snapshot pipeline went from about 80 s to 24 s with the same optimal objective in every case (one alternative optimum for the plan-only case).
@@ -387,7 +387,10 @@ A review of the running system and of the literature (16 Nov 2026) found two dat
 
 ## Continuous AIS collection
 
-AIS is the one input that cannot be fetched after the fact, so it is collected on a timer. `.github/workflows/collect.yml` runs `ingest/collect.py` every hour for eight minutes and commits what it heard to the `data` branch as plain text:
+AIS is the one input that cannot be fetched after the fact, so it is collected on a timer. `.github/workflows/collect.yml` runs `ingest/collect.py` twice an hour (scheduled; GitHub skips some runs) for twelve minutes and commits what it heard to the `data` branch as plain text. The plans are rebuilt every 4 hours from whatever has been collected.
+
+**Always-on listening.** `deploy/` runs the collector around the clock (Docker, or Windows Task Scheduler on a PC that stays on). A November 2026 survey of free hosts found none that runs a 24/7 background process without a payment card: Render, Koyeb, Zeabur and similar free tiers sleep or scale to zero, Fly.io and Heroku no longer have free tiers, and AWS and Azure free VMs expire. The two permanent free virtual machines, Google Cloud's e2-micro (US regions, 1 GB) and Oracle Cloud Always Free (cut to 2 Arm cores and 12 GB in June 2026; Oracle may reclaim VMs that stay under 20% load for a week, which an idle listener would), both need a card on sign-up. The e2-micro is the better fit for the collector.
+
 
 | File | Contents |
 |---|---|
@@ -395,7 +398,7 @@ AIS is the one input that cannot be fetched after the fact, so it is collected o
 | `static/YYYY-MM-DD.jsonl` | name, IMO, type, size, draught, declared destination and ETA, written when a ship changes them |
 | `tracked.json` | ships that have declared the site's port as their destination in the last 14 days |
 | `runs.jsonl` | messages heard, ships seen and errors for every run: the coverage log |
-| `tower.json` | the day's control-tower plan (written by the daily job) |
+| `tower.json` | the latest control-tower plan (rewritten every 4 hours) |
 
 Files live under `hamburg/` and `chattogram/` on the `data` branch. Three connections run side by side (AISStream allows three per key). One listens to the port and its approaches. The second first reads static data across the wider sea region to find cargo ships declaring the port as destination, then re-subscribes with an MMSI filter to follow only those. The third does the same for Chattogram (`--also chattogram`). The site (boxes, destination pattern, zones) is one entry in `ingest/collect.py`. Tide predictions are not collected because they can be looked up for any past date.
 
