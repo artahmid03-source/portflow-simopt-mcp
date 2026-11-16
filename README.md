@@ -10,14 +10,32 @@
 ![Deterministic](https://img.shields.io/badge/output-byte--reproducible-5EF2C8)
 ![License](https://img.shields.io/badge/license-MIT-lightgrey)
 
-A simulation-optimisation digital twin of the **New Mooring Container Terminal (NCT), Chattogram, Bangladesh**, planned against the ships actually bound for the port on 13 November 2026. It is pure software. A constraint-programming planner (OR-Tools CP-SAT) decides where and when each ship berths, how many quay cranes it gets, and when the Karnaphuli tide and daylight let it cross the bar. A discrete-event simulation of the yard (SimPy) measures how much those cranes slow down once the yard fills. The two exchange logic-based Benders cuts until the plan is optimal for the yard it creates.
+A simulation-optimisation digital twin of two container ports, **Chattogram (New Mooring Container Terminal, Bangladesh)** and **the Port of Hamburg**. It is pure software. A constraint-programming planner (OR-Tools CP-SAT) decides where and when each ship berths, how many quay cranes it gets, and when the tide (and at Chattogram, daylight) lets it cross the bar or sail the Elbe. A discrete-event simulation of the yard (SimPy) measures how much those cranes slow down once the yard fills. The two exchange logic-based Benders cuts until the plan is optimal for the yard it creates.
 
-The engine is served over the Model Context Protocol, so an AI assistant can call it. A control-room web page carries a JavaScript port of the planner and simulator, so it can re-plan a typed disruption on the spot.
+Every 4 hours, GitHub Actions re-plans both ports from live AIS ship positions, the Port of Hamburg's expected-vessel list, tide and wind forecasts, and compares earlier plans with what the ships actually did. The public control-tower pages show the plan on a real map, and their copilot sends typed disruptions to the same CP-SAT engine running on a server ([planning API](https://portflow-api.onrender.com/health)), with an in-browser planner as fallback. The engine is also served over the Model Context Protocol, so an AI assistant can call it.
 
-> **Live control towers, re-planned every day from live AIS and tide data:**
-> [Hamburg](https://artahmid03-source.github.io/portflow-simopt-mcp/tower/hamburg.html) · [Chattogram](https://artahmid03-source.github.io/portflow-simopt-mcp/tower/chattogram.html) · [Hamburg live AIS and tide forecast](https://artahmid03-source.github.io/portflow-simopt-mcp/) · **Design file:** [Figma](https://www.figma.com/design/u2uDIWNSOxIM0IFEvztXZ8)
+> **Live control towers:** [Hamburg](https://artahmid03-source.github.io/portflow-simopt-mcp/tower/hamburg.html) · [Chattogram](https://artahmid03-source.github.io/portflow-simopt-mcp/tower/chattogram.html) · [Hamburg live AIS and tide forecast](https://artahmid03-source.github.io/portflow-simopt-mcp/) · **Design file:** [Figma](https://www.figma.com/design/u2uDIWNSOxIM0IFEvztXZ8)
 >
-> ![Control tower](docs/screenshots/01_nominal.png)
+> ![Hamburg control tower on live data](docs/screenshots/hamburg_tower.png)
+
+| | |
+|---|---|
+| ![Copilot re-planning on the server](docs/screenshots/hamburg_copilot_server.png) | ![Chattogram control tower](docs/screenshots/chattogram_tower.png) |
+| **Copilot.** A typed crane outage re-planned by the CP-SAT engine on the server; the log shows each Benders iteration. | **Chattogram.** The 13 Nov queue on the Bay of Bengal map: ships from Singapore, the Malacca Strait and Colombo. |
+| ![Yard ledger](docs/screenshots/chattogram_yard_ledger.png) | ![Berth plan](docs/screenshots/hamburg_berth_plan.png) |
+| **Yard ledger.** The yard carried across the whole plan. At Chattogram it sits above 80%, so the realistic turnaround is 4.25 days, not 3.32. | **Berth plan.** Quay position against time per terminal, with the Elbe tide. |
+
+![Queue table with cost, just-in-time advice, tide risk and the reason each ship waits](docs/screenshots/hamburg_queue_table.png)
+
+### What the live towers show (examples)
+
+| Run | Ships | First come, first served → PortFlow | Notes |
+|---|---:|---|---|
+| Hamburg, 15 Nov 14:30 UTC | 11 | 1.42 → **1.22 days**, wait before the Elbe 75 → 30 h | the port's own list added five ships |
+| Hamburg, 16 Nov 18:56 UTC | 13 | 1.15 → 1.15 days; peak yard 81% → **58%**; queue cost 584k → 576k USD | a light day: the gain is in the yard, not in waiting |
+| Chattogram, 13 Nov queue | 8 | no first-come plan fits the horizon; PortFlow 3.32 days | yard ledger peaks at 84%, so 4.25 days is the realistic figure |
+
+The 13 Nov snapshot study below (one-off, with stated assumptions) is where the method was first validated.
 
 ---
 
@@ -32,7 +50,7 @@ The engine is served over the Model Context Protocol, so an AI assistant can cal
 
 ---
 
-## Results on the live queue (13 Nov 2026, 12:00 Bangladesh time)
+## Snapshot study: Chattogram queue of 13 Nov 2026, 12:00 Bangladesh time (v6.0)
 
 Eight container ships: HAIAN ZETA and HR HERA at anchor; HR FARHA, KOTA DUNIA, CNC NEPTUNE, MTT PELEPAS, SINAR SABA and KOTA RAJIN inbound. SOL MALAYSIA is already alongside. Simulation figures are means of 20 replications.
 
@@ -297,7 +315,7 @@ tools/compare_runs.py        compares two pipeline outputs (used by CI)
 run_nct_pipeline.py          live-queue pipeline → nct_control_tower_data.json
 tests/                       test_invariants.py (19) · test_nct.py (25) · test_ais_ingest.py (4) · test_collect.py (11) · test_tides.py (6) · test_chattogram_live.py (7) · test_hamburg.py (7) · test_realism.py (9)
 web/                         HMI: src/engine.js, src/PortFlowControlTower.template.jsx, build.py, build_pages.py, validate.mjs, test_page.cjs, test_towers.cjs, fixtures/
-docs/screenshots/            HMI captures
+docs/screenshots/            control-tower captures (Hamburg and Chattogram, v6.5)
 ```
 
 ---
