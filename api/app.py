@@ -26,7 +26,7 @@ from typing import Any, Dict, Optional, Tuple
 ROOT = Path(__file__).resolve().parent.parent
 sys.path[:0] = [str(ROOT), str(ROOT / "sites")]
 os.environ.setdefault("PORTFLOW_CPSAT_TIME_S", "20")
-os.environ.setdefault("PORTFLOW_CPSAT_WORKERS", "2")
+os.environ.setdefault("PORTFLOW_CPSAT_WORKERS", "1")
 import chattogram_nct as nct  # noqa: E402
 
 RAW = os.environ.get("PORTFLOW_DATA_URL", "https://raw.githubusercontent.com/artahmid03-source/portflow-simopt-mcp/data/{site}/tower.json")
@@ -34,6 +34,8 @@ ORIGINS = [o.strip() for o in os.environ.get("PORTFLOW_ORIGINS", "https://artahm
 SITES = ("hamburg", "chattogram")
 TTL_S = 600
 _cache: Dict[str, Tuple[float, Dict[str, Any]]] = {}
+_sims: Dict[str, Dict[str, Any]] = {}          # per site and data version: yard simulations already run (see run_nct_benders)
+REPS = int(os.environ.get("PORTFLOW_API_REPS", "4"))
 _busy = threading.Semaphore(int(os.environ.get("PORTFLOW_API_JOBS", "1")))
 VERSION = "6.5"
 
@@ -106,9 +108,15 @@ def plan(site: str, scenario: Dict[str, Any], loader=None) -> Dict[str, Any]:
     args = clean(scenario or {}, doc)
     hint = {r["vessel_id"]: r for r in doc["optimised"]["schedule"]}
     t0 = time.time()
-    res = nct.run_nct_benders(doc["live"], cfg=doc["config"], rules=rules_for(site), sim_replications=6, hint=hint, **args)
+    ver = f"{site}|{doc.get('generated_utc')}"
+    cache = _sims.setdefault(ver, {})
+    for k in [k for k in _sims if k.startswith(site + "|") and k != ver]:
+        del _sims[k]                                # the daily data changed: drop the old simulations
+    n0 = len(cache)
+    res = nct.run_nct_benders(doc["live"], cfg=doc["config"], rules=rules_for(site), sim_replications=REPS, hint=hint, sim_cache=cache, **args)
     out = to_page(res)
     out.update({"site": site, "data_generated_utc": doc.get("generated_utc"), "runtime_s": round(time.time() - t0, 1),
+                "yard_sims_reused": n0 > 0 and len(cache) == n0, "yard_sims_new": len(cache) - n0,
                 "scenario_applied": {k: v for k, v in args.items() if v is not None}})
     return out
 
@@ -153,10 +161,13 @@ class Handler(BaseHTTPRequestHandler):
             req = json.loads(self.rfile.read(n).decode("utf-8"))
         except ValueError:
             return self._json(400, {"error": "invalid JSON"})
-        if not _busy.acquire(timeout=1.0):
+        site = str(req.get("site", ""))
+        if site not in SITES:
+            return self._json(400, {"error": f"site must be one of {SITES}"})
+        if not _busy.acquire(timeout=60.0):          # wait for a job in progress (or the start-up warm-up) to finish
             return self._json(429, {"error": "the planner is busy with another request; the page will re-plan in the browser"})
         try:
-            self._json(200, plan(str(req.get("site", "")), req.get("scenario") or {}))
+            self._json(200, plan(site, req.get("scenario") or {}))
         except ValueError as e:
             self._json(400, {"error": str(e)})
         except Exception as e:  # noqa: BLE001  (report, do not crash the server)
@@ -168,10 +179,24 @@ class Handler(BaseHTTPRequestHandler):
         sys.stderr.write("%s %s\n" % (self.address_string(), fmt % args))
 
 
+def warm() -> None:
+    """Run the nominal plan for each site once at start-up, so the yard simulations it needs are cached before the first
+    operator command (a free host has a fraction of a CPU; most scenarios reuse these simulations)."""
+    for site in SITES:
+        with _busy:
+            try:
+                r = plan(site, {})
+                print(f"warm {site}: feasible={r['feasible']} in {r['runtime_s']} s", flush=True)
+            except Exception as e:  # noqa: BLE001
+                print(f"warm {site} failed: {e}", flush=True)
+
+
 def main(port: Optional[int] = None) -> None:
     port = port or int(os.environ.get("PORT", "8000"))
     srv = ThreadingHTTPServer(("0.0.0.0", port), Handler)
     print(f"PortFlow API {VERSION} on :{port}", flush=True)
+    if os.environ.get("PORTFLOW_API_WARM", "1") == "1":
+        threading.Thread(target=warm, daemon=True).start()
     srv.serve_forever()
 
 

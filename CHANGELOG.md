@@ -7,6 +7,7 @@
 - Cut validity written up (Forbes et al. 2024): cuts keyed by (crane mode, size class) are exact for the simulated response; the ledger is a heuristic.
 - Declared-ETA log in the collector and a cross-validated arrival-time model (`run_eta_model.py`), applied to Hamburg ETAs only once it beats the declared ones.
 - 103 tests (15 new); API browser test.
+- Deployed at https://portflow-api.onrender.com; yard simulations cached per data version and warmed at start-up for the free host's fraction of a CPU.
 
 ## 6.4.0 · 16 Nov 2026 · Review: realism, speed, usefulness
 

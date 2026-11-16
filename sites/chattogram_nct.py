@@ -339,8 +339,10 @@ def run_nct_benders(
     qgc_outages: Optional[List[List[int]]] = None, eta_shift_hrs: Optional[Dict[str, int]] = None,
     pilot_tug_sets: Optional[int] = None, max_iterations: int = 8,
     cfg: Optional[Dict[str, Any]] = None, rules: Any = None, hint: Optional[Dict[str, Any]] = None,
-    ship_beta: Optional[Dict[str, float]] = None
+    ship_beta: Optional[Dict[str, float]] = None, sim_cache: Optional[Dict[str, Dict[str, Any]]] = None
 ) -> Dict[str, Any]:
+    """sim_cache: optional dict shared across calls; a yard simulation is reused when its inputs (crane mode and class,
+    yard level, evacuation share, replications, yard-crane outages, yard sizing) are identical, so the cut is the same."""
     live = live or load_live()
     cfg = cfg or NCT
     rules = rules or sys.modules[__name__]
@@ -360,7 +362,13 @@ def run_nct_benders(
         row = {"iteration": it, "master_objective": sea["objective_value"], "avg_turnaround_days": sea["avg_turnaround_days"],
                "cranes": {r["vessel_id"]: r["assigned_qcs"] for r in sea["schedule"]}, "cuts_added": {}}
         for k in new:
-            sims[k] = _yard_sim(k, occ, icd, sim_replications, rtg_outages, cfg)
+            ck = json.dumps([k, occ, icd, sim_replications, rtg_outages or [], cfg["rtg_per_berth_cluster"], cfg["yard_cluster_teu"], cfg["qgc_gmph"], cfg["ref_boxes_per_hr"]])
+            if sim_cache is not None and ck in sim_cache:
+                sims[k] = sim_cache[ck]
+            else:
+                sims[k] = _yard_sim(k, occ, icd, sim_replications, rtg_outages, cfg)
+                if sim_cache is not None:
+                    sim_cache[ck] = sims[k]
             cuts[k] = sims[k]["computed_cpsat_backpressure_beta"]
             row["cuts_added"][k] = cuts[k]
         trace.append(row)

@@ -18,7 +18,7 @@ async function open(browser, file, feed) {
   page.on('console', (m) => { if (m.type() === 'error' && !/Failed to load resource|ERR_|net::/.test(m.text())) errors.push(`console: ${m.text()}`); });
   await page.route(/tile\.openstreetmap|openseamap|fonts\.g/, (r) => r.abort());
   await page.route(/raw\.githubusercontent\.com/, (r) => (feed ? r.fulfill({ status: 200, contentType: 'application/json', headers: { 'access-control-allow-origin': '*' }, body: fs.readFileSync(feed) }) : r.fulfill({ status: 404, headers: { 'access-control-allow-origin': '*' }, body: 'no' })));
-  await page.goto('file://' + path.join(docs, file));
+  await page.goto('file://' + path.join(docs, file) + '?api=off');   // the real API is tested in test_api.cjs
   await page.waitForSelector('.pf-kpi', { timeout: 20000 });
   await page.waitForTimeout(1300);
   return { page, errors };

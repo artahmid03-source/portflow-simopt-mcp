@@ -12,7 +12,7 @@ const docs = path.join(__dirname, '..', 'docs', 'tower');
 
 (async () => {
   const fixtures = path.dirname(hamFile);
-  const srv = spawn(process.env.PYTHON || 'python3', [path.join(__dirname, '..', 'api', 'app.py')], { env: { ...process.env, PORT: String(PORT), PORTFLOW_DATA_URL: `file://${fixtures}/{site}_tower.json`, PORTFLOW_CPSAT_WORKERS: '2' }, stdio: ['ignore', 'pipe', 'pipe'] });
+  const srv = spawn(process.env.PYTHON || 'python3', [path.join(__dirname, '..', 'api', 'app.py')], { env: { ...process.env, PORT: String(PORT), PORTFLOW_DATA_URL: `file://${fixtures}/{site}_tower.json`, PORTFLOW_CPSAT_WORKERS: '1', PORTFLOW_API_WARM: '0' }, stdio: ['ignore', 'pipe', 'pipe'] });
   let n = 0;
   try {
     for (let i = 0; i < 60; i++) { try { const r = await fetch(`${API}/health`); if (r.ok) break; } catch (e) { /* not up yet */ } await new Promise((r) => setTimeout(r, 500)); }

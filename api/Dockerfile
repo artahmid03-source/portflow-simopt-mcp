@@ -7,6 +7,6 @@ RUN pip install --no-cache-dir "ortools>=9.10" "simpy>=4.1" "scipy>=1.11" "numpy
 COPY portflow_mcp.py ./
 COPY sites/ sites/
 COPY api/ api/
-ENV PYTHONUNBUFFERED=1 PORTFLOW_CPSAT_TIME_S=20 PORTFLOW_CPSAT_WORKERS=2 PORTFLOW_PROCS=1
+ENV PYTHONUNBUFFERED=1 PORTFLOW_CPSAT_TIME_S=20 PORTFLOW_CPSAT_WORKERS=1 PORTFLOW_PROCS=1
 EXPOSE 8000
 CMD ["python", "api/app.py"]
