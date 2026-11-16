@@ -34,6 +34,7 @@ def page(site, title, extra_head=""):
 """
 
 ham_head = '<link rel="stylesheet" href="../vendor/leaflet/leaflet.css">\n<script src="../vendor/leaflet/leaflet.js"></script>\n<script src="hamburg_default.js"></script>\n'
-(docs / "chattogram.html").write_text(page("chattogram", "Chattogram NCT · PortFlow Control Tower") + '<script src="app.js"></script>\n</body></html>\n', encoding="utf-8")
+leaflet = '<link rel="stylesheet" href="../vendor/leaflet/leaflet.css">\n<script src="../vendor/leaflet/leaflet.js"></script>\n'
+(docs / "chattogram.html").write_text(page("chattogram", "Chattogram NCT · PortFlow Control Tower", leaflet) + '<script src="app.js"></script>\n</body></html>\n', encoding="utf-8")
 (docs / "hamburg.html").write_text(page("hamburg", "Port of Hamburg · PortFlow Control Tower", ham_head) + '<script src="app.js"></script>\n</body></html>\n', encoding="utf-8")
 print("pages:", sorted(p.name for p in docs.iterdir()), round((docs / "app.js").stat().st_size / 1024), "KB app")

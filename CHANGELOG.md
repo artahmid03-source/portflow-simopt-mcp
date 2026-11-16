@@ -8,6 +8,7 @@
 - `run_tower.py`: the daily plan for one site → `<site>/tower.json` on the data branch; FCFS baseline falls back when it does not fit the horizon.
 - In-page engine: gate masks, quay segments and crane pools; matches CP-SAT on the Hamburg cases.
 - HMI: one page for both ports. Hamburg gets a real Leaflet map with the plan animated along the Elbe and terminal bands in the berth chart; the page loads the daily plan at runtime and falls back to the embedded plan with a banner. Public pages `docs/tower/hamburg.html` and `docs/tower/chattogram.html`.
+- Chattogram gets the same real map: Bay of Bengal sea routes from Singapore/Malacca and Colombo, the outer anchorage, the Karnaphuli river line and the NCT and CCT quays from OpenStreetMap; the schematic chart remains only where Leaflet is not loaded.
 - Coverage probe removed (its finding stands: no AIS at Chattogram); the third connection now follows Chattogram-bound ships.
 - 79 tests; a second browser test for the public pages.
 

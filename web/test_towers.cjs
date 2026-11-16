@@ -59,6 +59,10 @@ const send = async (page, text) => {
     assert.ok((await page.textContent('.pf-lamps')).includes('LIVE DATA'), 'live lamp'); n++;
     assert.strictEqual((await kpis(page))[0], `${fmt(d.optimised.kpis.avg_turnaround_days, 2)}days`, 'live turnaround tile'); n++;
     assert.strictEqual(await page.$$eval('.pf-gbar', (e) => e.length), d.optimised.schedule.length, 'Gantt bars'); n++;
+    assert.ok(await page.$('.pf-map.leaflet-container'), 'Chattogram Leaflet map'); n++;
+    assert.ok((await page.$$eval('.pf-mk', (e) => e.length)) >= d.optimised.schedule.length, 'a marker per planned ship'); n++;
+    await page.click('.pf-btn:has-text("Karnaphuli and NCT")'); await page.fill('.pf-scrub input', '30'); await page.waitForTimeout(900);
+    assert.ok((await page.textContent('.pf-card')).length > 0, 'ship card under the map'); n++;
     assert.deepStrictEqual(errors, [], 'no errors on the Chattogram page'); n++;
     await page.close();
   }
@@ -67,6 +71,7 @@ const send = async (page, text) => {
     const { page, errors } = await open(browser, 'chattogram.html', null);
     assert.ok((await page.textContent('.pf-banner')).includes('could not be loaded'), 'fallback banner'); n++;
     assert.ok((await page.textContent('.pf-lamps')).includes('SNAPSHOT'), 'snapshot lamp'); n++;
+    assert.ok((await page.$$eval('.pf-mk', (e) => e.length)) >= 8, 'snapshot ships on the real map'); n++;
     assert.deepStrictEqual(errors, [], 'no errors on fallback'); n++;
     await page.close();
   }
