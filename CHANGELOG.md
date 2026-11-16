@@ -1,5 +1,13 @@
 # Changelog
 
+## 6.5.0 · 16 Nov 2026 · Server engine for the copilot, yard ledger, learned arrival times
+
+- Planning API (`api/app.py`, standard library over the engine): `POST /plan` runs the CP-SAT + yard-simulation Benders loop for a page scenario on that day's data; Dockerfile and Render blueprint. The tower pages use it first when configured and fall back to the in-browser planner.
+- Yard ledger across the whole plan with background flows; per-ship slowdown fed back into the planner with a damped fixed-point loop (`run_tower.ledger_refine`), reporting when it does not settle. Panel and "Why it waits" column on the page; Python/JS parity checked in CI.
+- Cut validity written up (Forbes et al. 2024): cuts keyed by (crane mode, size class) are exact for the simulated response; the ledger is a heuristic.
+- Declared-ETA log in the collector and a cross-validated arrival-time model (`run_eta_model.py`), applied to Hamburg ETAs only once it beats the declared ones.
+- 103 tests (15 new); API browser test.
+
 ## 6.4.0 · 16 Nov 2026 · Review: realism, speed, usefulness
 
 - Port of Hamburg expected-vessel list (HVCC) ingested every half hour; terminal and time from the port replace guesses; feeders added.

@@ -12,6 +12,9 @@ import shutil
 
 root = pathlib.Path(__file__).parent
 docs = root.parent / "docs" / "tower"
+API_FILE = pathlib.Path(__file__).resolve().parent / "api_url.txt"   # the deployed planning API (api/app.py), if any
+API = API_FILE.read_text(encoding="utf-8").strip() if API_FILE.exists() else ""
+API_JS = f' window.PORTFLOW_API = "{API}";' if API.startswith("https://") else ""
 RAW = "https://raw.githubusercontent.com/artahmid03-source/portflow-simopt-mcp/data/{site}/tower.json"
 
 ap = argparse.ArgumentParser()
@@ -32,7 +35,7 @@ def page(site, title, extra_head=""):
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=Rajdhani:wght@500;600;700&display=swap">
 {extra_head}<style>:root{{color-scheme:dark}} html,body{{margin:0;background:#05090d;color:#d7e5f0;font-family:'IBM Plex Mono',ui-monospace,Menlo,Consolas,monospace}}</style>
 </head><body><div id="root"></div>
-<script>window.PORTFLOW_NAV = true; window.PORTFLOW_DATA_URL = "{RAW.format(site=site)}";</script>
+<script>window.PORTFLOW_NAV = true; window.PORTFLOW_DATA_URL = "{RAW.format(site=site)}";{API_JS}</script>
 """
 
 hver = hashlib.sha1((docs / "hamburg_default.js").read_bytes()).hexdigest()[:10]

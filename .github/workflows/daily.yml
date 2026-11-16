@@ -40,6 +40,9 @@ jobs:
       - name: Plan against reality (Hamburg)
         continue-on-error: true
         run: uv run --no-dev python run_backtest.py --store store
+      - name: Learned arrival-time model (Hamburg)
+        continue-on-error: true
+        run: uv run --no-dev python run_eta_model.py --store store
       - name: Hamburg control tower
         continue-on-error: true
         env:

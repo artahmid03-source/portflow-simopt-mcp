@@ -5,7 +5,7 @@
 // written by run_tower.py, which is loaded at runtime.
 import React, { useState, useEffect, useMemo, useRef, useCallback } from 'react';
 import { ResponsiveContainer, LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ReferenceLine, ReferenceArea } from 'recharts';
-import { solve, simulateReplicated, makeSite, planFigures } from './engine.js';
+import { solve, simulateReplicated, makeSite, planFigures, yardLedger, explainRow } from './engine.js';
 
 const DEFAULT_MCP_DATA = (typeof window !== 'undefined' && window.PORTFLOW_DEFAULT) || /*__MCP_DATA__*/;
 const WORKER_SRC = /*__WORKER_SRC__*/'';
@@ -24,6 +24,29 @@ function solveAsync(data, opt, onLog) {
     } catch (e) { /* blocked by the page's security policy: fall through */ }
   }
   return new Promise((ok) => setTimeout(() => ok(solve(data, opt, onLog)), 30));
+}
+
+// The real engine (CP-SAT + yard simulation) on a server, when one is configured: window.PORTFLOW_API or ?api=<url>.
+// The page asks it first and falls back to the in-browser planner if it is unreachable, busy or slow.
+function apiUrl() {
+  if (typeof window === 'undefined') return null;
+  try { const q = new URLSearchParams(window.location.search).get('api'); if (q === 'off') return null; if (q && /^https:\/\/|^http:\/\/localhost/.test(q)) return q.replace(/\/$/, ''); } catch (e) { /* no URL API */ }
+  return window.PORTFLOW_API ? String(window.PORTFLOW_API).replace(/\/$/, '') : null;
+}
+async function solveServer(data, opt, onLog) {
+  const api = apiUrl();
+  if (!api || !data.site_kind || typeof fetch === 'undefined') return null;
+  onLog(`asking the server CP-SAT engine (${api.replace(/^https?:\/\//, '')}); a sleeping server can take a minute to wake`);
+  const ctl = typeof AbortController !== 'undefined' ? new AbortController() : null, tm = ctl && setTimeout(() => ctl.abort(), 100000), t0 = Date.now();
+  try {
+    const r = await fetch(`${api}/plan`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, signal: ctl ? ctl.signal : undefined,
+      body: JSON.stringify({ site: data.site_kind, scenario: { etaShift: opt.etaShift, qgcOutages: opt.qgcOutages, rtgOutages: opt.rtgOutages, icd: opt.icd, occ: opt.occ, tugSets: opt.tugSets } }) });
+    if (!r.ok) { onLog(`server CP-SAT: HTTP ${r.status}; re-planning in the browser instead`); return null; }
+    const res = await r.json();
+    (res.trace || []).forEach((it) => onLog(`server CP-SAT iteration ${it.iteration}: objective ${it.master_objective ?? it.objective ?? '-'}, turnaround ${it.avg_turnaround_days ?? '-'} d${it.cuts_added && Object.keys(it.cuts_added).length ? `, yard cuts ${Object.entries(it.cuts_added).map(([k, v]) => `${k}=${Number(v).toFixed(3)}`).join(' ')}` : ''}`));
+    onLog(`server CP-SAT answered in ${((Date.now() - t0) / 1000).toFixed(1)} s (solve ${res.runtime_s} s, data of ${res.data_generated_utc || 'today'})`);
+    return res;
+  } catch (e) { onLog(`server CP-SAT unreachable (${(e && e.name) || 'error'}); re-planning in the browser instead`); return null; } finally { if (tm) clearTimeout(tm); }
 }
 
 const CSS = `
@@ -726,14 +749,18 @@ function Tower({ data, feed }) {
     if (!said.length) { say('a', reply || `I could not turn that into a change to the plan. Try: delay a ship by some hours, take quay or yard cranes out${HH ? ' at a terminal' : ''}, set the ${HH ? 'night rail and barge' : 'off-dock'} evacuation share, set the starting yard level${HH ? '' : ', or set the number of pilot and tug sets'}.`); setBusy(false); return; }
     await reveal([`parsed: ${said.join('; ')}`]);
     const lines = [], t0 = performance.now();
-    const res = await solveAsync(data, { etaShift: next.etaShift, qgcOutages: next.qgcOutages, rtgOutages: next.rtgOutages, icd: next.icd ?? undefined, occ: next.occ ?? undefined, tugSets: next.tugSets ?? undefined, reps: 8 }, (l) => lines.push(l));
+    const opt = { etaShift: next.etaShift, qgcOutages: next.qgcOutages, rtgOutages: next.rtgOutages, icd: next.icd ?? undefined, occ: next.occ ?? undefined, tugSets: next.tugSets ?? undefined, reps: 8 };
+    const srvLines = [], srv = scChips(next, cfg).length ? await solveServer(data, opt, (l) => srvLines.push(l)) : null;
+    if (srvLines.length) await reveal(srvLines);
+    const res = srv || await solveAsync(data, opt, (l) => lines.push(l));
     await reveal(lines);
+    if (!res.feasible && srv) { await reveal(['no feasible plan: scenario not applied']); say('a', `The CP-SAT engine on the server found no plan that finishes inside the ${cfg.horizon_hrs}-hour horizon with ${said.join(', ')} within its time limit. I kept the previous plan.`); setBusy(false); return; }
     if (!res.feasible) { await reveal(['no feasible plan: scenario not applied']); say('a', `The in-page planner found no plan that finishes inside the ${cfg.horizon_hrs}-hour tide table with ${said.join(', ')}${res.blocker ? `; ${res.blocker} is the ship it could not fit` : ''}. This planner is a fast heuristic: the CP-SAT engine searches exhaustively and can find plans it misses (in testing it fitted a storm-plus-no-evacuation case this planner rejected), so check the case with the Python engine${HH ? ' (run_tower.py)' : ' on the MCP server with nct_simulate_disruption'}. I kept the previous plan.`); setBusy(false); return; }
     await reveal([`${res.converged ? 'converged' : 'stopped'} after ${res.iterations} iteration(s) in ${Math.round(performance.now() - t0)} ms: turnaround ${res.kpis.turnaround} d, wait ${res.kpis.wait} h, backpressure ${res.kpis.beta.toFixed(2)}`]);
     const old = Object.fromEntries(plan.schedule.map((r) => [r.vessel_id, r])), k0 = plan.kpis, k1 = res.kpis;
     const moved = res.schedule.filter((r) => { const o = old[r.vessel_id]; return o && (o.berth_start_hr !== r.berth_start_hr || Math.abs(o.berth_start_m - r.berth_start_m) > 5 || o.assigned_qcs !== r.assigned_qcs); });
     const isNominal = !scChips(next, cfg).length;
-    setSc(next); setPlan(isNominal ? { ...nominal, source: 'CP-SAT reference', yardTrace: null } : { schedule: res.schedule, kpis: k1, source: 'in-page re-plan', yardTrace: res.yardTrace }); setFlash((f) => f + 1); setT(0);
+    setSc(next); setPlan(isNominal ? { ...nominal, source: 'CP-SAT reference', yardTrace: null } : { schedule: res.schedule, kpis: k1, source: srv ? 'server CP-SAT re-plan' : 'in-page re-plan', yardTrace: res.yardTrace }); setFlash((f) => f + 1); setT(0);
     const kk = isNominal ? nominal.kpis : k1;
     say('a', `${reply ? `${reply}\n` : ''}Re-planned: average turnaround ${fmt(k0.turnaround, 2)} → ${fmt(kk.turnaround, 2)} days, ${HH ? 'wait before the Elbe' : 'anchorage wait'} ${fmt(k0.wait, 0)} → ${fmt(kk.wait, 0)} h, peak yard ${fmt(k0.peak)} → ${fmt(kk.peak)}%, backpressure ${fmt(k0.beta, 2)} → ${fmt(kk.beta, 2)}.${moved.length && !isNominal ? `\nMoved: ${moved.slice(0, 4).map((r) => `${r.vessel_id} to ${berthLabel(data, r)} at hour ${r.berth_start_hr} with ${r.assigned_qcs} quay cranes`).join('; ')}${moved.length > 4 ? `; and ${moved.length - 4} more` : ''}.` : ''}\nPlaying the new plan on the chart.`);
     if (!(typeof window !== 'undefined' && window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches)) { setSpeed(16); setPlaying(true); }
@@ -749,6 +776,8 @@ function Tower({ data, feed }) {
   const figNom = useMemo(() => (data.advice ? data.advice.totals : planFigures(data, data.optimised.schedule).totals), [data]);
   const risky = (f) => f.ships.filter((x) => x.risk && x.risk.p_miss >= 0.2).length;
   const figMap = Object.fromEntries(fig.ships.map((x) => [x.vessel_id, x]));
+  const ledger = useMemo(() => yardLedger(data, plan.schedule, sc.icd ?? undefined, sc.occ ?? undefined), [data, plan, sc]);
+  const ledgerRows = useMemo(() => { const ks = Object.keys(ledger.pools), n = ledger.pools[ks[0]].length, out = []; for (let h = 0; h < n; h += 2) { const row = { h }; ks.forEach((k) => { row[k] = ledger.pools[k][h]; }); out.push(row); } return out; }, [ledger]);
   const windNow = HH && data.live.wind_ms_hourly ? data.live.wind_ms_hourly[Math.min(Math.floor(t), data.live.wind_ms_hourly.length - 1)] : null;
   const trace = useMemo(() => (plan.yardTrace || traces.nominal).map((p, i) => ({ h: +(p[0] / 60).toFixed(2), now: p[1], none: traces.none[i] ? traces.none[i][1] : null })), [plan, traces]);
   const vmap = useMemo(() => Object.fromEntries(data.live.vessels.map((v) => [v.name, v])), [data]);
@@ -834,6 +863,20 @@ function Tower({ data, feed }) {
             : `Solid bar: working cargo. Hatched: cargo finished, ship held until the tide and daylight allow it to sail. Teal stubs: the ${cfg.transit_hrs}-hour pilotage in and out. Dark bands: night, when ships over ${cfg.night_max_loa_m} m or deeper than ${fmt(cfg.night_max_draught_m)} m may not move. Green ticks: hours when the selected ship may transit.`}</p>
         </section>
 
+        <section className="pf-panel">
+          <div className="pf-head"><div><div className="pf-tag">Yard ledger</div><h2>Yard occupancy over the whole plan</h2></div>
+            <div className="pf-stats" style={{ marginTop: 0 }}><div className="pf-stat"><div className="l">Peak</div><div className="v num" style={{ color: ledger.peak_pct >= 80 ? C.red : C.ok }}>{fmt(ledger.peak_pct)}%</div></div>
+              {data.ledger && data.ledger.refined_kpis && <div className="pf-stat"><div className="l">Turnaround with the yard carried over</div><div className="v num">{fmt(data.ledger.refined_kpis.avg_turnaround_days, 2)} days (plan {fmt(data.optimised.kpis.avg_turnaround_days, 2)})</div></div>}</div></div>
+          <div style={{ height: 200 }}><ResponsiveContainer><LineChart data={ledgerRows} margin={{ top: 6, right: 10, bottom: 0, left: -14 }}>
+            <CartesianGrid stroke={C.line} vertical={false} /><XAxis dataKey="h" type="number" domain={[0, cfg.horizon_hrs]} unit=" h" {...ax} /><YAxis domain={[40, 100]} unit="%" {...ax} />
+            <ReferenceLine y={80} stroke={C.red} strokeDasharray="4 3" label={{ value: '80% cliff', fill: C.red, fontSize: 10, position: 'insideTopRight' }} />
+            <ReferenceLine x={Math.min(t, cfg.horizon_hrs)} stroke={C.tele} />
+            <Tooltip {...tip} formatter={(v, n) => [`${fmt(v)}%`, n === 'all' ? 'yard' : n]} labelFormatter={(h) => `plan hour ${h}`} />
+            {Object.keys(ledger.pools).map((k, i) => <Line key={k} dataKey={k} stroke={HH ? TERM_C[k] : [C.tele, C.blue, C.amber][i % 3]} strokeWidth={2} dot={false} isAnimationActive={false} />)}
+          </LineChart></ResponsiveContainer></div>
+          <p className="pf-note">The yard simulation above follows one shift; this ledger follows {HH ? 'each terminal\'s' : 'the whole'} yard hour by hour through the plan: imports land while a ship works (less the share evacuated at night) and leave after a {cfg.import_dwell_days}-day dwell, exports arrive in the 72 h before their ship and leave as it loads; half of each call is imports. Above about 80% yard cranes slow down sharply.{data.ledger && data.ledger.refined_kpis ? ((data.ledger.status || 'converged') === 'converged' ? ` Feeding each ship's ledger slowdown back into the planner settles in ${data.ledger.trace.length} rounds at ${fmt(data.ledger.refined_kpis.avg_turnaround_days, 2)} days, the more realistic figure when the yard runs this full.` : ` Feeding each ship's ledger slowdown back into the planner does not settle: ${data.ledger.status}. The last feasible round gives ${fmt(data.ledger.refined_kpis.avg_turnaround_days, 2)} days, so the yard, not the quay, is the binding limit.`) : ''} Background flows (earlier calls' imports leaving, later calls' exports arriving) run at this plan's average rates. Capacities and dwell are assumptions.</p>
+        </section>
+
         <section className="pf-panel s7">
           <div className="pf-head"><div><div className="pf-tag">Yard block, 40 × 6 × 5</div><h2>Stack plan for {hy.vessel_id}'s parcel</h2></div>
             <div className="pf-seg">
@@ -860,7 +903,7 @@ function Tower({ data, feed }) {
         <section className="pf-panel">
           <div className="pf-head"><div><div className="pf-tag">Queue</div><h2>Ships in the plan</h2></div>
             <div className="pf-stats" style={{ marginTop: 0 }}><div className="pf-stat"><div className="l">Stability check, {hy.vessel_id}{HH ? ', 360-box test parcel' : ''}</div><div className="v num">GM {fmt(hy.GM_metacentric_height_m, 2)} m · list {fmt(hy.heeling_list_angle_deg, 2)}° · {hy.imo_stability_compliant ? 'pass' : 'FAIL'}</div></div></div></div>
-          <div className="pf-scroll"><table className="pf-table"><thead><tr><th>Vessel</th><th>IMO</th><th>MMSI</th><th>LOA m</th><th>Draught m</th><th className="tl">Reported status</th><th className="tl">Arrival basis</th><th>Berth</th><th>Alongside</th><th>Sails</th><th>Cranes</th><th>Wait h</th><th>Hold h</th><th>Cost k USD</th><th className="tl">Just-in-time advice</th><th>Tide risk</th></tr></thead>
+          <div className="pf-scroll"><table className="pf-table"><thead><tr><th>Vessel</th><th>IMO</th><th>MMSI</th><th>LOA m</th><th>Draught m</th><th className="tl">Reported status</th><th className="tl">Arrival basis</th><th>Berth</th><th>Alongside</th><th>Sails</th><th>Cranes</th><th>Wait h</th><th>Hold h</th><th>Cost k USD</th><th className="tl">Just-in-time advice</th><th>Tide risk</th><th className="tl">Why it waits</th></tr></thead>
             <tbody>{plan.schedule.map((r) => { const v = vmap[r.vessel_id]; return (
               <tr key={r.vessel_id} className={sel === r.vessel_id ? 'sel' : ''} onClick={() => setSel(r.vessel_id)}>
                 <td>{r.vessel_id}</td><td>{v.imo}</td><td>{v.mmsi}</td><td>{fmt(v.loa_m, 2)}</td><td>{v.draught_reported_m == null ? '—' : fmt(v.draught_reported_m)} / {fmt(r.draft_m)}</td><td className="tl">{v.status}</td><td className="tl" style={{ maxWidth: 260, overflow: 'hidden', textOverflow: 'ellipsis' }} title={v.eta_basis}>{v.eta_basis}</td>
@@ -868,6 +911,7 @@ function Tower({ data, feed }) {
                 <td>{figMap[r.vessel_id] ? fmt(figMap[r.vessel_id].cost_usd / 1000, 0) : '—'}</td>
                 <td className="tl">{figMap[r.vessel_id] && figMap[r.vessel_id].jit ? `${fmt(figMap[r.vessel_id].jit.speed_now_kn)} → ${fmt(figMap[r.vessel_id].jit.speed_advised_kn)} kn, saves ${fmt(figMap[r.vessel_id].jit.fuel_saved_t)} t fuel` : r.anchorage_wait_hrs > 0 ? 'no position to advise from' : 'no wait planned'}</td>
                 <td style={{ color: figMap[r.vessel_id] && figMap[r.vessel_id].risk && figMap[r.vessel_id].risk.p_miss >= 0.2 ? C.amber : undefined }} title={figMap[r.vessel_id] && figMap[r.vessel_id].risk ? `planned window closes at hour ${figMap[r.vessel_id].risk.window_closes_hr}; slack ${figMap[r.vessel_id].risk.slack_h} h against an arrival error of ±${figMap[r.vessel_id].risk.sigma_h} h; next window ${figMap[r.vessel_id].risk.extra_wait_if_missed_h ?? '—'} h later` : 'no tide window to miss'}>{figMap[r.vessel_id] && figMap[r.vessel_id].risk ? `${fmt(figMap[r.vessel_id].risk.p_miss * 100, 0)}%` : '—'}</td>
+                <td className="tl" style={{ maxWidth: 360, overflow: 'hidden', textOverflow: 'ellipsis' }} title={explainRow(data, r)}>{explainRow(data, r) || '—'}</td>
               </tr>); })}</tbody></table></div>
           <p className="pf-note">{HH
             ? `Draught: reported on AIS / used in the plan (capped at the inbound tide-dependent limit). Box counts per call are estimates (${data.live.estimates.moves_per_call}); the terminal comes from where AIS has seen the ship moored, or else from a carrier-to-terminal assumption. ${(data.live.excluded || []).length} ships declaring Hamburg were left out (see below).`

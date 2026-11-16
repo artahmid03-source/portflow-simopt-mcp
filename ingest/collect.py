@@ -312,6 +312,11 @@ def run_once(key: str, a: argparse.Namespace, store: Path) -> int:
     got = asyncio.run(collect(key, a.minutes, _load(store / a.site / "tracked.json", {}).keys(), a.url, probe_ports=_load(PROBE_FILE, None), site=a.site,
                               extra_sites={s: _load(store / s / "tracked.json", {}).keys() for s in extras}))
     run = write_store(store, got)
+    try:                                         # declared ETAs, for the learned arrival-time model (run_eta_model.py)
+        from eta_log import log_declared
+        log_declared(store / a.site)
+    except Exception as e:  # noqa: BLE001  (never fail a collector run over the log)
+        print(f"eta log skipped: {e}")
     md = f"Site: {a.site}\n\n" + summary_markdown(run, _load(store / a.site / "tracked.json", {}), got.get("coverage"))
     for s, g in got["extra"].items():
         g["ended"] = got["ended"]

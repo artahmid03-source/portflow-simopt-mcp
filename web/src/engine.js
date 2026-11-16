@@ -273,3 +273,37 @@ export function planFigures(data, schedule) {
   }
   return { ships, totals: Object.fromEntries(Object.entries(tot).map(([k, x]) => [k, +x.toFixed(1)])) };
 }
+
+// ---------------------------------------------------------------- yard ledger and explanations (mirror of sites/advice.py)
+const ledgerCycle = (occ) => { const o = Math.min(Math.max(occ, 0.15), 0.95), k = 0.78; return 1 + 0.25 * o + 0.42 * Math.max(0, Math.pow(o / (1 - o), 1.32) - Math.pow(k / (1 - k), 1.32)); };
+export function yardLedger(data, schedule, icd, occ0) {
+  const C = data.config, H = C.horizon_hrs; icd = icd ?? C.icd_ratio; occ0 = (occ0 ?? C.initial_yard_occupancy_pct) / 100;
+  const caps = C.yard_teu_by_pool || { all: C.yard_teu_total || C.yard_cluster_teu * 4 }, first = Object.keys(caps)[0];
+  const tb = C.teu_per_box || 1, dwell = Math.round(24 * (C.import_dwell_days || 7)), vmap = Object.fromEntries(data.live.vessels.map((v) => [v.name, v]));
+  const delta = Object.fromEntries(Object.keys(caps).map((p) => [p, new Float64Array(H + 1)]));
+  const bg = Object.fromEntries(Object.keys(caps).map((p) => [p, 0]));
+  const add = (p, a, b, teu) => { b = Math.max(b, a + 1); let before = 0; for (let h = a; h < b; h++) { if (h < 0) before += teu / (b - a); else if (h <= H) delta[p][h] += teu / (b - a); } return before; };
+  const poolOf = (id) => { const v = vmap[id] || {}; return v.terminal && caps[v.terminal] ? v.terminal : first; };
+  for (const r of schedule) {
+    const p = poolOf(r.vessel_id), half = (r.moves / 2) * tb, s = r.berth_start_hr, e = Math.max(r.cargo_done_hr, s + 1);
+    add(p, s, e, half * (1 - icd)); add(p, s + dwell, e + dwell, -half * (1 - icd)); const pre = add(p, s - 72, s, half); add(p, s, e, -half);
+    bg[p] += (-half * (1 - icd) + pre) / H;
+  }
+  const pools = {};
+  for (const [p, c] of Object.entries(caps)) { let lvl = occ0 * c; pools[p] = []; for (let h = 0; h <= H; h++) { lvl += delta[p][h] + bg[p]; pools[p].push(Math.max(0, lvl) / c); } }
+  const ships = schedule.map((r) => { const p = poolOf(r.vessel_id), hs = []; for (let h = Math.max(r.berth_start_hr, 0); h < Math.min(Math.max(r.cargo_done_hr, r.berth_start_hr + 1), H + 1); h++) hs.push(pools[p][h]);
+    const occs = hs.length ? hs : [occ0], beta = occs.reduce((a, o) => a + ledgerCycle(o), 0) / occs.length / ledgerCycle(0.6);
+    return { vessel_id: r.vessel_id, pool: p, mean_occ_pct: +(100 * occs.reduce((a, b) => a + b, 0) / occs.length).toFixed(1), peak_occ_pct: +(100 * Math.max(...occs)).toFixed(1), ledger_beta: +Math.max(1, beta).toFixed(3) }; });
+  return { pools: Object.fromEntries(Object.entries(pools).map(([p, a]) => [p, a.map((x) => +(100 * x).toFixed(1))])), ships, peak_pct: +(100 * Math.max(...Object.values(pools).flat())).toFixed(1) };
+}
+export function explainRow(data, r) {
+  const T = data.config.transit_hrs, gin = (data.inbound_gates || {})[r.vessel_id], gout = (data.outbound_gates || {})[r.vessel_id] || [], label = data.config.crane_pools ? 'tide' : 'tide or daylight';
+  if (!gin) return '';
+  const first = [...gin].sort((a, b) => a - b).find((h) => h >= r.eta_hr + T), parts = [];
+  if (r.anchorage_wait_hrs <= 0) parts.push('berths on arrival');
+  else if (first != null && first >= r.berth_start_hr) parts.push(`waits ${r.anchorage_wait_hrs} h for the ${label} gate (first open hour ${first})`);
+  else if (first != null) parts.push(`waits ${r.anchorage_wait_hrs} h although the ${label} gate opens at hour ${first}: quay space, cranes or passage slots are taken before that`);
+  else parts.push(`waits ${r.anchorage_wait_hrs} h`);
+  if (r.tide_departure_hold_hrs > 0) { const nxt = [...gout].sort((a, b) => a - b).find((h) => h >= r.cargo_done_hr); parts.push(`held ${r.tide_departure_hold_hrs} h after cargo for the outbound ${label} gate${nxt == null || nxt === r.tidal_depart_hr ? '' : ', or for a passage slot'}`); }
+  return parts.join('; ');
+}

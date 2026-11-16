@@ -73,6 +73,8 @@ HAM: Dict[str, Any] = {
     "draught_max_out_m": 14.8, "draught_max_out_mega_m": 14.1, "deepening_shortfall_m": 0.20, "mega_loa_m": 366.0, "mega_beam_m": 52.0,
     "wind_limit_ms": 13.9,                            # ASSUMPTION: big ships do not move at Beaufort 7 or more (HPA sets a wind cap, value not published)
     "objective": "cost", "yard_model": "per_ship",
+    "yard_teu_by_pool": {t: 2500.0 * n for t, n in STS.items()},   # ASSUMPTION: about 2,500 TEU of yard per quay crane (ledger)
+    "import_dwell_days": 4.0, "teu_per_box": 1.6,                    # ASSUMPTION: import dwell; TEU per box
     "reefer_plugs": 1600, "yard_bays": 40, "daylight_hours": [0, 24], "night_max_loa_m": 9999, "night_max_draught_m": 99.0,
     "max_draught_m": 16.1, "ukc_m": 0.0, "channel_depth_m": 0.0, "spring_max_draught_m": 99.0, "spring_tide_min_m": 0.0, "max_loa_m": 400.0,
     "teu_a": 0.00132, "teu_b": 1.65, "boxes_per_teu": 1 / 1.6, "exchange_mainline": 0.35, "exchange_feeder": 0.7,
@@ -314,6 +316,16 @@ def gauges_from_daily(daily: Dict[str, Any], epoch: datetime, hours: int) -> Tup
     return sorted(out, key=lambda x: -x["km"]), {k: round(sum(v) / len(v), 3) for k, v in rm.items()}
 
 
+def eta_correction(model: Optional[Dict[str, Any]], lead_h: float, len_m: Optional[float]) -> float:
+    """Hours to add to an AIS-declared ETA, from run_eta_model.py's fit (0 until that model is active)."""
+    if not model or not model.get("active"):
+        return 0.0
+    x = max(0.0, min(lead_h, 240.0)) / 24.0
+    y = sum(c * f for c, f in zip(model["coef"], (1.0, x, x * x, (len_m or 250.0) / 100.0)))
+    lo, hi = model.get("clip_h", (-24.0, 48.0))
+    return round(min(max(y, lo), hi), 1)
+
+
 def build_live(store: Path, now: Optional[datetime] = None, max_ships: int = 14) -> Dict[str, Any]:
     """Live input for the Hamburg plan from the collector store and the daily gauge forecast (store/hamburg/latest.json)."""
     now = now or datetime.now(UTC)
@@ -324,6 +336,7 @@ def build_live(store: Path, now: Optional[datetime] = None, max_ships: int = 14)
     gauges, rmse = gauges_from_daily(daily, epoch, H + 3)
     ships = json.loads((site / "ships.json").read_text()) if (site / "ships.json").exists() else {}
     tracked = json.loads((site / "tracked.json").read_text()) if (site / "tracked.json").exists() else {}
+    eta_model = json.loads((site / "eta_model.json").read_text()) if (site / "eta_model.json").exists() else None
 
     hist: Dict[str, List[Dict[str, Any]]] = {}
     for d in range(21, -1, -1):
@@ -453,6 +466,10 @@ def build_live(store: Path, now: Optional[datetime] = None, max_ships: int = 14)
                 eta, basis = epoch, f"on the Elbe inbound at the plan start (AIS {last['t'][11:16]}Z, {last.get('sog')} kn)"
             elif s["eta_utc"]:
                 eta, basis = _utc(s["eta_utc"]), f"ETA declared on AIS ({s['eta_utc']})"
+                fix = eta_correction(eta_model, (eta - now).total_seconds() / 3600.0, s["len"])
+                if fix:
+                    eta += timedelta(hours=fix)
+                    basis += f", {fix:+.1f} h by the learned arrival-time model (n={eta_model['n']}, error {eta_model['mae_raw_h']} -> {eta_model['mae_cv_h']} h)"
                 if eta < epoch - timedelta(hours=36):
                     excluded.append({"name": s["name"], "mmsi": int(m), "reason": f"declared ETA {s['eta_utc']} passed and the ship is not in port"})
                     continue
@@ -499,4 +516,5 @@ def build_live(store: Path, now: Optional[datetime] = None, max_ships: int = 14)
                      "spends between Waltershof and Brunsbuettel, the level at its position (interpolated between the six gauges by Elbe kilometre) above mean low water by its draught "
                      "beyond the tide-independent limit plus the forecast error at that lead time.",
         "daylight_hours": [0, 24],
+        "eta_model": {k: eta_model.get(k) for k in ("active", "n", "min_n", "mae_raw_h", "mae_cv_h", "reason", "fitted_utc")} if eta_model else None,
     }

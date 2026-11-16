@@ -53,6 +53,9 @@ NCT: Dict[str, Any] = {
     "pilot_tug_sets": 2,              # ASSUMPTION: simultaneous river transits the pilots and tugs can serve
     "horizon_hrs": 192,
     "ref_boxes_per_hr": 48.0,         # discharge rate the DES yard cluster treats as intensity 1.0
+    "yard_teu_total": 16800.0,        # 14 blocks x 1,200 slots (ledger)
+    "import_dwell_days": 7.0,         # ASSUMPTION: mean import dwell (ledger)
+    "teu_per_box": 1.0,               # moves are already counted in TEU-equivalent boxes here
 }
 
 
@@ -165,7 +168,8 @@ def solve_nct_plan(
     force_qcs: Optional[Dict[str, int]] = None, fcfs: bool = False,
     qgc_outages: Optional[List[List[int]]] = None, eta_shift_hrs: Optional[Dict[str, int]] = None,
     pilot_tug_sets: Optional[int] = None, scalar_beta: float = 1.0,
-    cfg: Optional[Dict[str, Any]] = None, rules: Any = None, hint: Optional[Dict[str, Any]] = None
+    cfg: Optional[Dict[str, Any]] = None, rules: Any = None, hint: Optional[Dict[str, Any]] = None,
+    ship_beta: Optional[Dict[str, float]] = None
 ) -> Dict[str, Any]:
     """cfg and rules default to NCT and this module. Another site passes its own configuration and a module with
     planning_vessels, gate_windows, tide_needed and night_restricted (see sites/hamburg.py). Vessels may carry
@@ -215,7 +219,7 @@ def solve_nct_plan(
         modes = []
         for q in range(v["min_qc"], v["max_qc"] + 1):
             z = model.NewBoolVar(f"z_{vid}_{q}")
-            rate = cfg["qgc_gmph"] / max(beta_for(q, v), 0.5) * eng.crane_effect(q, False)
+            rate = cfg["qgc_gmph"] / max(beta_for(q, v) * (ship_beta or {}).get(v["id"], 1.0), 0.5) * eng.crane_effect(q, False)
             dq = int(math.ceil(v["moves"] / rate))
             model.Add(dur == dq).OnlyEnforceIf(z)
             model.Add(qc == q).OnlyEnforceIf(z)
@@ -280,7 +284,7 @@ def solve_nct_plan(
 
     model.Minimize(sum(obj))
     solver = cp_model.CpSolver()
-    solver.parameters.max_time_in_seconds = 60.0
+    solver.parameters.max_time_in_seconds = float(os.environ.get("PORTFLOW_CPSAT_TIME_S", 60.0))   # the web API caps this
     solver.parameters.num_workers = int(os.environ.get("PORTFLOW_CPSAT_WORKERS", eng.CPSAT_WORKERS))   # 1 = byte-reproducible
     solver.parameters.random_seed = 7
     status = solver.Solve(model)
@@ -334,7 +338,8 @@ def run_nct_benders(
     force_max_cranes: bool = False, rtg_outages: Optional[List[List[float]]] = None,
     qgc_outages: Optional[List[List[int]]] = None, eta_shift_hrs: Optional[Dict[str, int]] = None,
     pilot_tug_sets: Optional[int] = None, max_iterations: int = 8,
-    cfg: Optional[Dict[str, Any]] = None, rules: Any = None, hint: Optional[Dict[str, Any]] = None
+    cfg: Optional[Dict[str, Any]] = None, rules: Any = None, hint: Optional[Dict[str, Any]] = None,
+    ship_beta: Optional[Dict[str, float]] = None
 ) -> Dict[str, Any]:
     live = live or load_live()
     cfg = cfg or NCT
@@ -348,7 +353,7 @@ def run_nct_benders(
     trace, sea, converged = [], None, False
     for it in range(1, max_iterations + 1):
         sea = solve_nct_plan(live, mode_beta=cuts, force_qcs=force, fcfs=fcfs, qgc_outages=qgc_outages,
-                             eta_shift_hrs=eta_shift_hrs, pilot_tug_sets=pilot_tug_sets, cfg=cfg, rules=rules, hint=hint)
+                             eta_shift_hrs=eta_shift_hrs, pilot_tug_sets=pilot_tug_sets, cfg=cfg, rules=rules, hint=hint, ship_beta=ship_beta)
         if not sea["feasible"]:
             break
         new = sorted({r["crane_intensity"] for r in sea["schedule"]} - set(cuts))

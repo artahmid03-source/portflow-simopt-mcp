@@ -56,6 +56,10 @@ jobs:
         run: python3 build.py
       - name: In-page engine against CP-SAT reference cases
         run: node validate.mjs --check
+      - name: Yard ledger and explanations match Python (daily-tower fixtures)
+        run: |
+          node validate.mjs --data fixtures/hamburg_tower.json --parity
+          node validate.mjs --data fixtures/chattogram_tower.json --parity
       - name: Install the test browser
         run: npx playwright install --with-deps chromium
       - name: Browser test
@@ -64,3 +68,11 @@ jobs:
         run: |
           python3 build_pages.py --hamburg-default fixtures/hamburg_tower.json
           node test_towers.cjs fixtures/chattogram_tower.json fixtures/hamburg_tower.json
+      - uses: astral-sh/setup-uv@v6
+        with:
+          python-version: "3.13"
+          enable-cache: true
+      - name: Server CP-SAT re-plan through the planning API (api/app.py)
+        run: |
+          (cd .. && uv sync --locked --no-dev)
+          PYTHON=../.venv/bin/python node test_api.cjs fixtures/hamburg_tower.json

@@ -1,6 +1,6 @@
 import fs from 'fs';
-import { solve, simulateReplicated, makeSite } from './src/engine.js';
-// node validate.mjs [--json] [--check] [--data <file>] [--write]   (--write stores the comparison in the file as "validation")
+import { solve, simulateReplicated, makeSite, yardLedger, explainRow } from './src/engine.js';
+// node validate.mjs [--json] [--check] [--parity] [--data <file>] [--write]   (--parity: only the ledger/explanation match)   (--write stores the comparison in the file as "validation")
 const arg = (k) => { const i = process.argv.indexOf(k); return i > 0 ? process.argv[i + 1] : null; };
 const file = arg('--data') || new URL('../nct_control_tower_data.json', import.meta.url).pathname;
 const data = JSON.parse(fs.readFileSync(file, 'utf8'));
@@ -23,4 +23,13 @@ if (process.argv.includes('--check')) {
   console.log(`OK: ${out.length - 3} of ${out.length} cases identical to CP-SAT, worst gap ${worst}%`);
 }
 if (J) console.log(JSON.stringify(out)); else if (pb && b.feasible) console.log('baseline FCFS', pb.objective, b.kpis.objective, pb.avg_turnaround_days, b.kpis.turnaround, pb.total_anchorage_wait_hrs, b.kpis.wait);
+// the yard ledger and the "why it waits" text must match the Python figures the daily run stored
+if (data.ledger && data.advice) {
+  const L = yardLedger(data, data.optimised.schedule), P = data.ledger, ks = Object.keys(P.pools);
+  const dl = Math.max(...ks.map((k) => Math.max(...P.pools[k].map((v, i) => Math.abs(v - L.pools[k][i])))));
+  const why = Object.fromEntries(data.advice.ships.map((x) => [x.vessel_id, x.why]));
+  const bad = data.optimised.schedule.filter((r) => why[r.vessel_id] != null && explainRow(data, r) !== why[r.vessel_id]).map((r) => r.vessel_id);
+  if (!J) console.log(`ledger: Python peak ${P.peak_pct}% / JS ${L.peak_pct}%, largest hourly gap ${dl.toFixed(2)} pts; why-text mismatches: ${bad.length}`);
+  if ((process.argv.includes('--check') || process.argv.includes('--parity')) && (dl > 0.15 || bad.length)) { console.error('FAIL: ledger or explanations drifted from Python', JSON.stringify({ dl, bad })); process.exit(1); }
+}
 if (process.argv.includes('--write')) { data.validation = out; fs.writeFileSync(file, JSON.stringify(data)); }

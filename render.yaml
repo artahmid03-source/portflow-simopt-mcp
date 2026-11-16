@@ -1,0 +1,14 @@
+# Render Blueprint for the PortFlow planning API (free web service; it sleeps after 15 idle minutes and wakes on the
+# next request in about a minute, which the tower pages wait for before falling back to the in-browser planner).
+services:
+  - type: web
+    name: portflow-api
+    runtime: docker
+    plan: free
+    dockerfilePath: ./api/Dockerfile
+    dockerContext: .
+    healthCheckPath: /health
+    autoDeploy: true
+    envVars:
+      - key: PORTFLOW_ORIGINS
+        value: https://artahmid03-source.github.io

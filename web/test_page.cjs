@@ -19,7 +19,7 @@ const fmt = (x, d) => Number(x).toLocaleString('en-US', { minimumFractionDigits:
 
   const kpis = () => page.$$eval('.pf-kpi .v', (els) => els.map((e) => e.textContent));
   const chips = () => page.$$eval('.pf-chip.act', (els) => els.map((e) => e.textContent));
-  const blocking = () => page.$eval('.pf-stat .v', (e) => e.textContent);
+  const blocking = () => page.$$eval('.pf-stat', (els) => els.find((e) => e.querySelector('.l').textContent === 'Blocking boxes now').querySelector('.v').textContent);
   const lastReply = () => page.$$eval('.pf-msg.a', (els) => els[els.length - 1].textContent);
   // tiles count up to their new values over 0.8 s, so wait for the first tile and then let the rest finish
   const settle = async (want) => { await page.waitForFunction((w) => document.querySelector('.pf-kpi .v').textContent === w, want, { timeout: 15000 }); await page.waitForTimeout(1200); };
@@ -41,7 +41,7 @@ const fmt = (x, d) => Number(x).toLocaleString('en-US', { minimumFractionDigits:
   assert.strictEqual(await page.$$eval('.y3-box', (e) => e.length), data.yard.boxes_in_block, 'boxes in block');
   assert.strictEqual(await blocking(), String(data.yard.post_premarshal_blocking_inversions), 'blocking after grooming');
   await page.click('text=As landed');
-  await page.waitForFunction((w) => document.querySelector('.pf-stat .v').textContent === w, String(data.yard.initial_blocking_inversions), { timeout: 5000 });
+  await page.waitForFunction((w) => [...document.querySelectorAll('.pf-stat')].find((e) => e.querySelector('.l').textContent === 'Blocking boxes now').querySelector('.v').textContent === w, String(data.yard.initial_blocking_inversions), { timeout: 5000 });
 
   // 3. a command re-plans in the page and lands on the CP-SAT reference result
   const late = data.reference_cases.find((c) => c.case === 'HR FARHA 6 h late').kpis;

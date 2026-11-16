@@ -96,6 +96,33 @@ def archive_plan(store: Path, site: str, p: Dict[str, Any]) -> None:
     (d / f"{p['generated_utc'][:10]}.json").write_text(json.dumps({"generated_utc": p["generated_utc"], "plan_epoch_utc": at(0), "rows": rows}, separators=(",", ":")))
 
 
+def ledger_refine(live: Dict[str, Any], cfg: Dict[str, Any], run: Any, optimised: Dict[str, Any], reps: int) -> Dict[str, Any]:
+    """Carry the yard over the whole horizon (advice.yard_ledger) and feed each ship's slowdown back into the plan until it
+    settles. This is a fixed-point refinement on top of the Benders loop, not an optimality proof."""
+    base = advice.yard_ledger(live, optimised["schedule"], cfg)
+    sb: Dict[str, float] = {}
+    plan, trace, status = optimised, [], "converged"
+    for it in range(1, 9):
+        led = advice.yard_ledger(live, plan["schedule"], cfg)
+        new = {s["vessel_id"]: s["ledger_beta"] for s in led["ships"]}
+        change = max([abs(new[k] - sb.get(k, 1.0)) for k in new] or [0.0])
+        trace.append({"iteration": it, "max_change": round(change, 3), "peak_pct": led["peak_pct"]})
+        if change < 0.02:
+            break
+        # damped step (as the Benders beta update): a full step can overshoot when the yard sits past the knee
+        step = {k: round(0.5 * sb.get(k, 1.0) + 0.5 * new[k], 3) for k in new}
+        nxt = run(sim_replications=max(4, reps // 2), ship_beta=step)
+        if not nxt.get("schedule"):
+            status = ("not settled: the next step does not clear the queue inside the horizon; the last feasible round is shown"
+                      if plan is not optimised else "infeasible: with the yard carried over, the queue does not clear inside the horizon")
+            break
+        sb, plan = step, nxt
+    else:
+        status = "stopped after 8 rounds"
+    return {**base, "refined_kpis": plan.get("kpis") if plan is not optimised else None, "ship_beta": sb, "trace": trace, "status": status,
+            "refined_schedule": [{k: r[k] for k in ("vessel_id", "berth_start_hr", "cargo_done_hr", "tidal_depart_hr", "assigned_qcs")} for r in plan["schedule"]] if plan is not optimised else None}
+
+
 def plan_site(site: str, live: Dict[str, Any], cfg: Dict[str, Any], rules: Any, reps: int = 20, store: Optional[Path] = None) -> Dict[str, Any]:
     """Everything the Control Tower page shows, for one live queue."""
     t0 = time.time()
@@ -152,7 +179,7 @@ def plan_site(site: str, live: Dict[str, Any], cfg: Dict[str, Any], rules: Any, 
                                   "first_start_reported": (w_rep[0] if w_rep else None) if w_rep is not None else None})
 
     payload: Dict[str, Any] = {
-        "status": "ok" if optimised.get("schedule") else "no_plan", "site_kind": site, "engine_version": "6.4",
+        "status": "ok" if optimised.get("schedule") else "no_plan", "site_kind": site, "engine_version": "6.5",
         "site": "Chattogram NCT" if site == "chattogram" else "Port of Hamburg container terminals",
         "generated_utc": datetime.now(timezone.utc).isoformat(timespec="seconds"),
         "config": {k: (list(v) if isinstance(v, tuple) else v) for k, v in cfg.items()}, "live": live, "tide_hourly": nct.tide_curve(live, H),
@@ -177,10 +204,14 @@ def plan_site(site: str, live: Dict[str, Any], cfg: Dict[str, Any], rules: Any, 
     dist = distances_nm(site, live)
     fit = (bt or {}).get("eta_sigma_fit")
     if optimised.get("schedule"):
-        payload["advice"] = advice.plan_figures(live, optimised["schedule"], cfg, gates, dist, fit)
         if baseline.get("schedule"):
             payload["advice_baseline"] = {"totals": advice.plan_figures(live, baseline["schedule"], cfg, gates, dist, fit)["totals"]}
+    gates_out = {v["id"]: rules.gate_windows(live, tide, dict(v, eta=-cfg["transit_hrs"]), H, cfg["transit_hrs"])[1] for v in vs}
+    if optimised.get("schedule"):
+        payload["advice"] = advice.plan_figures(live, optimised["schedule"], cfg, gates, dist, fit, gates_out)
+        payload["ledger"] = ledger_refine(live, cfg, run, optimised, reps)
     payload["inbound_gates"] = {k: v for k, v in gates.items()}
+    payload["outbound_gates"] = gates_out
     payload["dist_nm"] = dist
     payload["runtime_s"] = round(time.time() - t0, 1)
     return payload

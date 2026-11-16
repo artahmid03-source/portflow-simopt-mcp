@@ -181,6 +181,10 @@ Observed bounds: optimised plan 2,544 → 2,544 (2 iterations); no-relief plan 2
 
 **Scope of the guarantee.** Optimal relative to the simulated response: $\beta$ are sample means with fixed seeds, and the cut assumes a berth's slowdown depends on its own crane mode (each ocean berth has its own yard cluster of seven yard cranes).
 
+**Why the cuts are valid (v6.4 onwards).** Since v6.4 the key of a cut is the pair (crane mode, ship size class), and the simulation is run for exactly that pair: the same discharge wave, crane intensity, starting yard level, evacuation share and outages. The response the cut stores is therefore a function of its key alone, so a cut can never remove a plan whose own simulated response it does not describe. This is the condition under which logic-based Benders cuts from a simulation stay valid (Forbes et al., *European Journal of Operational Research* 312(3), 2024: a cut must be implied by the simulated response of every master solution that maps to the same key). It is also why a cut keyed only by crane mode, as before v6.4, was not quite valid once ships of different sizes shared a mode: a 3,000-box call and a 500-box call stress the yard differently. The guarantee remains relative to the simulation, its seeds and its one-shift horizon.
+
+**What the guarantee does not cover: the yard across days.** The simulation follows one shift starting from a given yard level, so it does not see that today's imports are still in the yard tomorrow. v6.5 adds a **yard ledger** (`advice.yard_ledger`): hour by hour over the whole plan, imports land while a ship works (less the share evacuated at night) and leave after the dwell time, exports arrive in the 72 h before their ship and leave as it loads, and background flows from calls outside the horizon run at the plan's average rates. Each ship's slowdown is then the yard-crane cycle at the ledger level while it works, relative to the cycle at 60%, on the same curve as the simulation (made continuous at the 78% knee). `run_tower.ledger_refine` feeds these per-ship slowdowns back into the planner (as extra cuts keyed by ship) with a damped step, until they stop moving. This is a **fixed-point heuristic, not an optimality proof**: the ledger is a deterministic flow model, and the loop can fail to settle when the yard sits well past the knee. On the test data Hamburg settles in two rounds (peak 76%, plan unchanged at 1.22 days); Chattogram does not settle (peak 84%: every damped step slows the ships further), and its last feasible round, 4.25 days against 3.32, is shown as the realistic figure together with the message that the yard, not the quay, is the binding limit.
+
 ---
 
 ## Live data and AIS ingestion
@@ -373,6 +377,14 @@ A review of the running system and of the literature (16 Nov 2026) found two dat
 - **Just-in-time speed advice.** For a ship with an AIS position and a planned wait, the slower speed that reaches the passage in time and the fuel and CO₂ it saves (fuel per mile ∝ speed²; IMO's containership study found 4-14% voyage savings).
 - **Tide-window risk.** For each ship, the probability of missing the tide window the plan relies on, and how long the next window is.
 
+## v6.5: the engine behind the page, a yard that carries over, and learned arrival times
+
+**Server-side copilot.** `api/app.py` serves the real engine (CP-SAT berth plan, yard-simulation cuts, Benders loop) over HTTP: `POST /plan {"site", "scenario"}` takes the page's scenario, clamps it, loads that day's `tower.json` from the data branch (cached ten minutes), warm-starts from the daily plan and returns the plan in the shape the page's own planner returns. When the page has an API address (`web/api_url.txt` at build time, or `?api=<url>`; `?api=off` disables it), every copilot command goes to the server first; the log shows each server iteration, the plan lamp reads SERVER CP-SAT RE-PLAN, and the page falls back to the in-browser planner if the server is unreachable, busy (one job at a time, HTTP 429) or takes more than 100 s (a free host that has gone to sleep takes about a minute to wake). CP-SAT is capped at 20 s and 2 threads there. Deployment: `api/Dockerfile` and a Render blueprint (`render.yaml`, free plan). A browser test (`web/test_api.cjs`) starts the API locally and checks that a terminal-outage command comes back from the server with the CP-SAT reference result.
+
+**Yard ledger.** See *Benders loop and why it converges* above. The page draws the ledger for the plan on screen (per terminal at Hamburg) with the 80% line, and the "Why it waits" column says, per ship, whether it waits for the tide gate, for quay space, cranes or passage slots, and whether it is held after cargo for the outbound tide. Python and the page compute both identically; CI checks it.
+
+**Learned arrival times.** The collector now logs every ETA a ship declares on AIS with the time it was heard (`<site>/eta_log.jsonl`). `run_eta_model.py` (daily) matches each logged ETA with the call AIS later saw and fits a small ridge regression of the error on lead time, lead time squared and ship length, with 5-fold cross-validation. The Hamburg plan applies the correction only when the model has at least 20 matched calls and beats the declared ETAs by 10% or more out of sample; until then the ship's basis says "ETA declared on AIS", and afterwards it states the correction and the error before and after.
+
 ## Continuous AIS collection
 
 AIS is the one input that cannot be fetched after the fact, so it is collected on a timer. `.github/workflows/collect.yml` runs `ingest/collect.py` every hour for eight minutes and commits what it heard to the `data` branch as plain text:
@@ -408,6 +420,7 @@ The collector is tested offline against a stand-in server that follows the AISSt
 
 ## References
 
+- M. Forbes et al. (2024). Combining optimisation and simulation using logic-based Benders decomposition. *European Journal of Operational Research* 312(3), 840–854 (arXiv:2107.08390).
 - J. N. Hooker and G. Ottosson (2003). Logic-based Benders decomposition. *Mathematical Programming* 96(1), 33–60.
 - C. Bierwirth and F. Meisel (2015). A follow-up survey of berth allocation and quay crane scheduling problems in container terminals. *European Journal of Operational Research* 244(3), 675–689.
 
