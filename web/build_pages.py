@@ -7,6 +7,7 @@ Run after `python build.py` (which writes dist/app.full.js).   python build_page
 import argparse
 import json
 import pathlib
+import hashlib
 import shutil
 
 root = pathlib.Path(__file__).parent
@@ -18,6 +19,7 @@ ap.add_argument("--hamburg-default", default=None, help="a validated hamburg tow
 a = ap.parse_args()
 docs.mkdir(parents=True, exist_ok=True)
 shutil.copyfile(root / "dist" / "app.full.js", docs / "app.js")
+ver = hashlib.sha1((docs / "app.js").read_bytes()).hexdigest()[:10]       # cache-busting: browsers keep app.js otherwise
 if a.hamburg_default:
     d = json.loads(pathlib.Path(a.hamburg_default).read_text())
     (docs / "hamburg_default.js").write_text("window.PORTFLOW_DEFAULT = " + json.dumps(d, separators=(",", ":"), ensure_ascii=False) + ";\n", encoding="utf-8")
@@ -33,8 +35,9 @@ def page(site, title, extra_head=""):
 <script>window.PORTFLOW_NAV = true; window.PORTFLOW_DATA_URL = "{RAW.format(site=site)}";</script>
 """
 
-ham_head = '<link rel="stylesheet" href="../vendor/leaflet/leaflet.css">\n<script src="../vendor/leaflet/leaflet.js"></script>\n<script src="hamburg_default.js"></script>\n'
+hver = hashlib.sha1((docs / "hamburg_default.js").read_bytes()).hexdigest()[:10]
+ham_head = f'<link rel="stylesheet" href="../vendor/leaflet/leaflet.css">\n<script src="../vendor/leaflet/leaflet.js"></script>\n<script src="hamburg_default.js?v={hver}"></script>\n'
 leaflet = '<link rel="stylesheet" href="../vendor/leaflet/leaflet.css">\n<script src="../vendor/leaflet/leaflet.js"></script>\n'
-(docs / "chattogram.html").write_text(page("chattogram", "Chattogram NCT · PortFlow Control Tower", leaflet) + '<script src="app.js"></script>\n</body></html>\n', encoding="utf-8")
-(docs / "hamburg.html").write_text(page("hamburg", "Port of Hamburg · PortFlow Control Tower", ham_head) + '<script src="app.js"></script>\n</body></html>\n', encoding="utf-8")
+(docs / "chattogram.html").write_text(page("chattogram", "Chattogram NCT · PortFlow Control Tower", leaflet) + f'<script src="app.js?v={ver}"></script>\n</body></html>\n', encoding="utf-8")
+(docs / "hamburg.html").write_text(page("hamburg", "Port of Hamburg · PortFlow Control Tower", ham_head) + f'<script src="app.js?v={ver}"></script>\n</body></html>\n', encoding="utf-8")
 print("pages:", sorted(p.name for p in docs.iterdir()), round((docs / "app.js").stat().st_size / 1024), "KB app")
