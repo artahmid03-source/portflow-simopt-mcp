@@ -1,7 +1,7 @@
 [project]
 name = "portflow-simopt-mcp"
 version = "6.5.0"
-description = "Container-terminal digital twin for Chattogram NCT: CP-SAT berth planning under tide, daylight and pilot/tug limits, coupled to a SimPy yard simulation by Benders cuts, served over MCP."
+description = "Container-terminal digital twin for Chattogram NCT and the Port of Hamburg: CP-SAT berth planning under tide and river rules, coupled to a SimPy yard simulation by Benders cuts, re-planned every 4 hours on live data, served over MCP and HTTP."
 readme = "README.md"
 requires-python = ">=3.10"
 license = { text = "MIT" }
