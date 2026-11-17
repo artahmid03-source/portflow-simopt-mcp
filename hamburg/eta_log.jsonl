@@ -17,3 +17,11 @@
 {"mmsi":636025011,"name":"MSC SAN FRANCISCO","heard_utc":"2026-11-17T00:56:33Z","eta_utc":"2026-11-20T01:00Z","len":366,"dest":"DEHAM"}
 {"mmsi":636025449,"name":"MSC ANNABELLA","heard_utc":"2026-11-17T00:57:04Z","eta_utc":"2026-11-14T11:00Z","len":368,"dest":"NL RTM > DE HAM"}
 {"mmsi":636025672,"name":"NETA A.","heard_utc":"2026-11-17T00:51:47Z","eta_utc":"2026-11-17T11:00Z","len":158,"dest":"DEHAM"}
+{"mmsi":228401800,"name":"CMA CGM CONCORDE","heard_utc":"2026-11-17T09:10:22Z","eta_utc":"2026-11-18T13:00Z","len":400,"dest":"NLRTM>>DEHAM"}
+{"mmsi":229947000,"name":"CMA CGM LOIRE","heard_utc":"2026-11-17T09:11:30Z","eta_utc":"2026-11-18T21:00Z","len":300,"dest":"DEHAM"}
+{"mmsi":242410400,"name":"CMA CGM NADOR","heard_utc":"2026-11-17T09:16:53Z","eta_utc":"2026-11-15T05:00Z","len":152,"dest":"DEHAM"}
+{"mmsi":255915667,"name":"ELBINSEL","heard_utc":"2026-11-17T09:10:47Z","eta_utc":"2026-11-17T06:00Z","len":170,"dest":"DEHAM"}
+{"mmsi":305543000,"name":"CHARLIE","heard_utc":"2026-11-17T09:14:55Z","eta_utc":"2026-11-15T18:00Z","len":147,"dest":"DEHAM"}
+{"mmsi":538090729,"name":"BBC MALMO","heard_utc":"2026-11-17T09:16:53Z","eta_utc":"2026-11-17T04:00Z","len":159,"dest":"DEHAM"}
+{"mmsi":636014956,"name":"EM HYDRA","heard_utc":"2026-11-17T09:10:44Z","eta_utc":"2026-11-16T23:01Z","len":174,"dest":"DEHAM"}
+{"mmsi":636093160,"name":"AL SAFAT","heard_utc":"2026-11-17T09:11:33Z","eta_utc":"2026-11-18T14:30Z","len":307,"dest":"DEHAM"}
