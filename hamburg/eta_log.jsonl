@@ -25,3 +25,8 @@
 {"mmsi":538090729,"name":"BBC MALMO","heard_utc":"2026-11-17T09:16:53Z","eta_utc":"2026-11-17T04:00Z","len":159,"dest":"DEHAM"}
 {"mmsi":636014956,"name":"EM HYDRA","heard_utc":"2026-11-17T09:10:44Z","eta_utc":"2026-11-16T23:01Z","len":174,"dest":"DEHAM"}
 {"mmsi":636093160,"name":"AL SAFAT","heard_utc":"2026-11-17T09:11:33Z","eta_utc":"2026-11-18T14:30Z","len":307,"dest":"DEHAM"}
+{"mmsi":255705000,"name":"AVA D","heard_utc":"2026-11-17T18:33:23Z","eta_utc":"2026-11-17T15:30Z","len":168,"dest":"DEHAM"}
+{"mmsi":305313000,"name":"ANNALISA P","heard_utc":"2026-11-17T18:33:04Z","eta_utc":"2026-11-17T16:30Z","len":166,"dest":"DEHAM VIA NOK"}
+{"mmsi":372319000,"name":"NYK DIANA","heard_utc":"2026-11-17T18:36:53Z","eta_utc":"2026-11-17T01:45Z","len":294,"dest":"DEHAM"}
+{"mmsi":636024513,"name":"MSC VIOLA","heard_utc":"2026-11-17T18:41:08Z","eta_utc":"2026-11-16T23:30Z","len":366,"dest":"DEHAM"}
+{"mmsi":636024775,"name":"ISTANBUL EXPRESS","heard_utc":"2026-11-17T18:38:17Z","eta_utc":"2026-11-17T15:30Z","len":300,"dest":"DEHAM"}
