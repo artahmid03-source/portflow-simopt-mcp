@@ -56,3 +56,8 @@
 {"mmsi":636025672,"name":"NETA A.","heard_utc":"2026-11-18T06:48:54Z","eta_utc":"2026-11-17T22:59Z","len":158,"dest":"DEHAM"}
 {"mmsi":247416300,"name":"GRANDE SVEZIA","heard_utc":"2026-11-18T09:12:41Z","eta_utc":"2026-11-17T22:59Z","len":220,"dest":"DEHAM"}
 {"mmsi":255806165,"name":"WEC FRANS HALS","heard_utc":"2026-11-18T09:05:15Z","eta_utc":"2026-11-18T07:00Z","len":135,"dest":"PTLEI-DEHAM"}
+{"mmsi":255805555,"name":"AKACIA","heard_utc":"2026-11-18T18:06:49Z","eta_utc":"2026-11-19T00:01Z","len":149,"dest":"DEHAM CTA"}
+{"mmsi":255917287,"name":"ELBMOON","heard_utc":"2026-11-18T18:05:11Z","eta_utc":"2026-11-19T17:00Z","len":170,"dest":"DEHAM"}
+{"mmsi":305412000,"name":"SUNSET X","heard_utc":"2026-11-18T18:08:40Z","eta_utc":"2026-11-18T21:00Z","len":129,"dest":"DEHAM"}
+{"mmsi":477103800,"name":"OOCL UNITED KINGDOM","heard_utc":"2026-11-18T18:02:42Z","eta_utc":"2026-11-17T23:30Z","len":400,"dest":"PLGDN>DEHAM"}
+{"mmsi":636022169,"name":"OCEAN SCALLION","heard_utc":"2026-11-18T18:06:33Z","eta_utc":"2026-11-10T10:00Z","len":229,"dest":"DE HAM"}
