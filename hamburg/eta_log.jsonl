@@ -30,3 +30,16 @@
 {"mmsi":372319000,"name":"NYK DIANA","heard_utc":"2026-11-17T18:36:53Z","eta_utc":"2026-11-17T01:45Z","len":294,"dest":"DEHAM"}
 {"mmsi":636024513,"name":"MSC VIOLA","heard_utc":"2026-11-17T18:41:08Z","eta_utc":"2026-11-16T23:30Z","len":366,"dest":"DEHAM"}
 {"mmsi":636024775,"name":"ISTANBUL EXPRESS","heard_utc":"2026-11-17T18:38:17Z","eta_utc":"2026-11-17T15:30Z","len":300,"dest":"DEHAM"}
+{"mmsi":210359000,"name":"ELBWATER","heard_utc":"2026-11-18T01:27:31Z","eta_utc":"2026-11-18T05:00Z","len":152,"dest":"DEHAM VIA NOK"}
+{"mmsi":211141000,"name":"BIANCA RAMBOW","heard_utc":"2026-11-18T01:26:17Z","eta_utc":"2026-11-18T05:00Z","len":134,"dest":"DEHAM"}
+{"mmsi":230985000,"name":"AILA","heard_utc":"2026-11-18T01:25:12Z","eta_utc":"2026-11-17T14:00Z","len":141,"dest":"DEHAM"}
+{"mmsi":246539000,"name":"MAXIMA","heard_utc":"2026-11-18T01:17:30Z","eta_utc":"2026-11-15T08:00Z","len":150,"dest":"DEHAM"}
+{"mmsi":255705000,"name":"AVA D","heard_utc":"2026-11-18T01:27:49Z","eta_utc":"2026-11-17T15:30Z","len":168,"dest":"DEHAM"}
+{"mmsi":255805555,"name":"AKACIA","heard_utc":"2026-11-18T01:26:29Z","eta_utc":"2026-11-17T21:00Z","len":149,"dest":"DEHAM"}
+{"mmsi":255915667,"name":"ELBINSEL","heard_utc":"2026-11-18T01:22:47Z","eta_utc":"2026-11-17T06:00Z","len":170,"dest":"DEHAM"}
+{"mmsi":255916314,"name":"DP WORLD LONDON","heard_utc":"2026-11-18T01:26:57Z","eta_utc":"2026-11-17T00:30Z","len":148,"dest":"DEHAM"}
+{"mmsi":563155500,"name":"EVER APEX","heard_utc":"2026-11-18T01:24:05Z","eta_utc":"2026-11-14T22:00Z","len":399,"dest":"GBFXT>DEHAM"}
+{"mmsi":636019097,"name":"BERGE ORIZABA","heard_utc":"2026-11-18T01:28:14Z","eta_utc":"2026-11-12T10:00Z","len":292,"dest":"DEHAM"}
+{"mmsi":636023066,"name":"BULK PRUDENCE","heard_utc":"2026-11-18T01:19:28Z","eta_utc":"2026-11-18T17:00Z","len":199,"dest":"DEHAM"}
+{"mmsi":636024513,"name":"MSC VIOLA","heard_utc":"2026-11-18T01:23:08Z","eta_utc":"2026-11-16T23:30Z","len":366,"dest":"DEHAM"}
+{"mmsi":636024775,"name":"ISTANBUL EXPRESS","heard_utc":"2026-11-18T01:26:36Z","eta_utc":"2026-11-17T15:30Z","len":300,"dest":"DEHAM\"G"}
