@@ -21,7 +21,7 @@
  },
  "211141000": {
   "first_seen": "2026-11-18T01:26:17Z",
-  "last_seen": "2026-11-18T06:50:18Z",
+  "last_seen": "2026-11-18T09:14:18Z",
   "name": "BIANCA RAMBOW",
   "imo": 9297591,
   "dest": "DEHAM",
@@ -51,7 +51,7 @@
  },
  "215134000": {
   "first_seen": "2026-11-18T06:49:29Z",
-  "last_seen": "2026-11-18T06:49:29Z",
+  "last_seen": "2026-11-18T09:07:41Z",
   "name": "CMA CGM GEMINI",
   "imo": 9410791,
   "dest": "DEHAM",
@@ -131,7 +131,7 @@
  },
  "229630000": {
   "first_seen": "2026-11-18T06:43:57Z",
-  "last_seen": "2026-11-18T06:43:57Z",
+  "last_seen": "2026-11-18T09:07:57Z",
   "name": "X-PRESS MULHACEN",
   "imo": 9365960,
   "dest": "DEHAM VIA NOK",
@@ -161,17 +161,17 @@
  },
  "230985000": {
   "first_seen": "2026-11-18T01:25:12Z",
-  "last_seen": "2026-11-18T06:49:39Z",
+  "last_seen": "2026-11-18T09:13:51Z",
   "name": "AILA",
   "imo": 9354337,
   "dest": "DEHAM",
   "draught": 6.3,
   "len": 141,
-  "eta_utc": null
+  "eta_utc": "2026-11-17T14:00Z"
  },
  "242410400": {
   "first_seen": "2026-11-15T14:14:04Z",
-  "last_seen": "2026-11-18T06:54:14Z",
+  "last_seen": "2026-11-18T09:12:21Z",
   "name": "CMA CGM NADOR",
   "imo": 9396696,
   "dest": "DEHAM",
@@ -201,7 +201,7 @@
  },
  "246539000": {
   "first_seen": "2026-11-15T14:16:08Z",
-  "last_seen": "2026-11-18T06:53:30Z",
+  "last_seen": "2026-11-18T09:11:30Z",
   "name": "MAXIMA",
   "imo": 9882061,
   "dest": "DEHAM",
@@ -211,13 +211,13 @@
  },
  "247416300": {
   "first_seen": "2026-11-18T06:48:44Z",
-  "last_seen": "2026-11-18T06:48:44Z",
+  "last_seen": "2026-11-18T09:12:41Z",
   "name": "GRANDE SVEZIA",
   "imo": 9992622,
   "dest": "DEHAM",
   "draught": 8.9,
   "len": 220,
-  "eta_utc": null
+  "eta_utc": "2026-11-17T22:59Z"
  },
  "255705000": {
   "first_seen": "2026-11-17T00:56:19Z",
@@ -231,7 +231,7 @@
  },
  "255805555": {
   "first_seen": "2026-11-17T00:50:17Z",
-  "last_seen": "2026-11-18T06:48:41Z",
+  "last_seen": "2026-11-18T09:12:53Z",
   "name": "AKACIA",
   "imo": 9315020,
   "dest": "DEHAM",
@@ -271,27 +271,27 @@
  },
  "255806165": {
   "first_seen": "2026-11-17T00:52:43Z",
-  "last_seen": "2026-11-17T00:52:43Z",
+  "last_seen": "2026-11-18T09:05:15Z",
   "name": "WEC FRANS HALS",
   "imo": 9326964,
   "dest": "PTLEI-DEHAM",
   "draught": 8,
   "len": 135,
-  "eta_utc": "2026-11-18T06:00Z"
+  "eta_utc": "2026-11-18T07:00Z"
  },
  "255915667": {
   "first_seen": "2026-11-17T09:10:47Z",
-  "last_seen": "2026-11-18T06:52:50Z",
+  "last_seen": "2026-11-18T09:10:48Z",
   "name": "ELBINSEL",
   "imo": 9977426,
   "dest": "DEHAM",
-  "draught": 8.2,
+  "draught": 8.3,
   "len": 170,
-  "eta_utc": null
+  "eta_utc": "2026-11-17T06:00Z"
  },
  "255916314": {
   "first_seen": "2026-11-17T00:56:56Z",
-  "last_seen": "2026-11-18T06:50:56Z",
+  "last_seen": "2026-11-18T09:14:57Z",
   "name": "DP WORLD LONDON",
   "imo": 1037206,
   "dest": "DEHAM",
@@ -321,13 +321,13 @@
  },
  "305313000": {
   "first_seen": "2026-11-17T18:33:04Z",
-  "last_seen": "2026-11-18T06:51:53Z",
+  "last_seen": "2026-11-18T09:15:56Z",
   "name": "ANNALISA P",
   "imo": 9437141,
   "dest": "DEHAM VIA NOK",
   "draught": 6.9,
   "len": 166,
-  "eta_utc": "2026-11-17T16:30Z"
+  "eta_utc": null
  },
  "305543000": {
   "first_seen": "2026-11-15T17:02:58Z",
@@ -341,7 +341,7 @@
  },
  "310750000": {
   "first_seen": "2026-11-18T06:43:43Z",
-  "last_seen": "2026-11-18T06:43:43Z",
+  "last_seen": "2026-11-18T09:07:41Z",
   "name": "MONTREAL EXPRESS",
   "imo": 9253741,
   "dest": "DEHAM",
@@ -391,13 +391,13 @@
  },
  "477103800": {
   "first_seen": "2026-11-17T00:50:36Z",
-  "last_seen": "2026-11-17T00:50:36Z",
+  "last_seen": "2026-11-18T09:14:36Z",
   "name": "OOCL UNITED KINGDOM",
   "imo": 9776200,
   "dest": "PLGDN>DEHAM",
-  "draught": 12.3,
+  "draught": 12.4,
   "len": 400,
-  "eta_utc": "2026-11-17T23:30Z"
+  "eta_utc": null
  },
  "477157800": {
   "first_seen": "2026-11-15T14:16:02Z",
@@ -431,7 +431,7 @@
  },
  "538010949": {
   "first_seen": "2026-11-18T06:53:02Z",
-  "last_seen": "2026-11-18T06:53:02Z",
+  "last_seen": "2026-11-18T09:11:04Z",
   "name": "EVONA",
   "imo": 9552355,
   "dest": "DE HAM",
@@ -461,17 +461,17 @@
  },
  "563155500": {
   "first_seen": "2026-11-15T14:18:08Z",
-  "last_seen": "2026-11-18T06:54:06Z",
+  "last_seen": "2026-11-18T09:12:06Z",
   "name": "EVER APEX",
   "imo": 9893979,
   "dest": "GBFXT>DEHAM",
   "draught": 12,
   "len": 399,
-  "eta_utc": "2026-11-14T22:00Z"
+  "eta_utc": null
  },
  "563279200": {
   "first_seen": "2026-11-17T00:52:31Z",
-  "last_seen": "2026-11-18T06:53:22Z",
+  "last_seen": "2026-11-18T09:05:22Z",
   "name": "SEASPAN BENEFACTOR",
   "imo": 9739666,
   "dest": "DEHAM",
@@ -511,7 +511,7 @@
  },
  "636021403": {
   "first_seen": "2026-11-15T14:14:41Z",
-  "last_seen": "2026-11-18T06:50:46Z",
+  "last_seen": "2026-11-18T09:14:46Z",
   "name": "THETIS",
   "imo": 9738208,
   "dest": "DE HAM",
@@ -541,7 +541,7 @@
  },
  "636023310": {
   "first_seen": "2026-11-17T00:52:44Z",
-  "last_seen": "2026-11-18T06:52:44Z",
+  "last_seen": "2026-11-18T09:10:45Z",
   "name": "ONE INTELLIGENCE",
   "imo": 9933121,
   "dest": "DEHAM",
@@ -561,7 +561,7 @@
  },
  "636024513": {
   "first_seen": "2026-11-15T17:01:38Z",
-  "last_seen": "2026-11-18T06:47:07Z",
+  "last_seen": "2026-11-18T09:11:08Z",
   "name": "MSC VIOLA",
   "imo": 9947172,
   "dest": "DEHAM",
@@ -571,7 +571,7 @@
  },
  "636024775": {
   "first_seen": "2026-11-15T16:59:49Z",
-  "last_seen": "2026-11-18T06:53:50Z",
+  "last_seen": "2026-11-18T09:11:50Z",
   "name": "ISTANBUL EXPRESS",
   "imo": 9723277,
   "dest": "DEHAM",
@@ -601,7 +601,7 @@
  },
  "636025672": {
   "first_seen": "2026-11-17T00:51:47Z",
-  "last_seen": "2026-11-18T06:48:54Z",
+  "last_seen": "2026-11-18T09:13:14Z",
   "name": "NETA A.",
   "imo": 9412531,
   "dest": "DEHAM",
