@@ -95,3 +95,10 @@
 {"mmsi":477103800,"name":"OOCL UNITED KINGDOM","heard_utc":"2026-11-19T17:24:12Z","eta_utc":"2026-11-17T23:30Z","len":400,"dest":"PLGDN>DEHAM"}
 {"mmsi":563051400,"name":"MAERSK MONTE ROSA","heard_utc":"2026-11-19T17:21:54Z","eta_utc":"2026-11-21T21:30Z","len":272,"dest":"GBSOU - DEHAM"}
 {"mmsi":636021036,"name":"BALTIMORE EXPRESS","heard_utc":"2026-11-19T17:25:48Z","eta_utc":"2026-11-19T01:30Z","len":368,"dest":"DEWVN>>DEHAM"}
+{"mmsi":228401800,"name":"CMA CGM CONCORDE","heard_utc":"2026-11-19T23:56:08Z","eta_utc":"2026-11-19T15:30Z","len":400,"dest":"NLRTM>>DEHAM"}
+{"mmsi":255916486,"name":"ELBSPRING","heard_utc":"2026-11-19T23:59:01Z","eta_utc":"2026-11-19T22:00Z","len":169,"dest":"DEHAM"}
+{"mmsi":255917287,"name":"ELBMOON","heard_utc":"2026-11-19T23:58:13Z","eta_utc":"2026-11-19T17:30Z","len":170,"dest":"DEHAM"}
+{"mmsi":305287000,"name":"NEUENFELDE","heard_utc":"2026-11-19T23:55:42Z","eta_utc":"2026-11-19T23:00Z","len":133,"dest":"DEHAM"}
+{"mmsi":305472000,"name":"BBC EDGE","heard_utc":"2026-11-19T23:54:46Z","eta_utc":"2026-11-19T23:00Z","len":139,"dest":"DEHAM"}
+{"mmsi":477154700,"name":"COSCO GEMINI","heard_utc":"2026-11-19T23:57:02Z","eta_utc":"2026-11-19T15:30Z","len":399,"dest":"DEHAM"}
+{"mmsi":564398000,"name":"MAERSK BATUR","heard_utc":"2026-11-19T23:50:05Z","eta_utc":"2026-11-20T18:30Z","len":223,"dest":"HAMBURG"}
