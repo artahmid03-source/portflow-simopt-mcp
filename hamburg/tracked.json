@@ -91,7 +91,7 @@
  },
  "219019094": {
   "first_seen": "2026-11-19T07:59:29Z",
-  "last_seen": "2026-11-19T07:53:33Z",
+  "last_seen": "2026-11-19T17:25:16Z",
   "name": "MARIBO MAERSK",
   "imo": 9619969,
   "dest": "DEBRV>>DEHAM",
@@ -181,7 +181,7 @@
  },
  "242410400": {
   "first_seen": "2026-11-15T14:14:04Z",
-  "last_seen": "2026-11-19T08:01:57Z",
+  "last_seen": "2026-11-19T17:26:34Z",
   "name": "CMA CGM NADOR",
   "imo": 9396696,
   "dest": "DEHAM",
@@ -221,13 +221,13 @@
  },
  "247310400": {
   "first_seen": "2026-11-19T00:27:42Z",
-  "last_seen": "2026-11-19T07:58:11Z",
+  "last_seen": "2026-11-19T17:28:14Z",
   "name": "GRANDE SIERRA LEONE",
   "imo": 9437945,
   "dest": "CIABJ>DEHAM",
   "draught": 8.1,
   "len": 212,
-  "eta_utc": "2026-11-18T17:00Z"
+  "eta_utc": null
  },
  "247416300": {
   "first_seen": "2026-11-18T06:48:44Z",
@@ -241,7 +241,7 @@
  },
  "249874000": {
   "first_seen": "2026-11-19T00:21:24Z",
-  "last_seen": "2026-11-19T07:58:15Z",
+  "last_seen": "2026-11-19T17:29:19Z",
   "name": "SOUTH",
   "imo": 9491472,
   "dest": "DEHAM VIA SKAGEN",
@@ -291,13 +291,13 @@
  },
  "255805906": {
   "first_seen": "2026-11-19T08:00:17Z",
-  "last_seen": "2026-11-19T08:00:17Z",
+  "last_seen": "2026-11-19T17:30:51Z",
   "name": "EDITH",
   "imo": 9328625,
   "dest": "DEHAM",
   "draught": 5.6,
   "len": 139,
-  "eta_utc": "2026-11-19T13:00Z"
+  "eta_utc": "2026-11-19T13:30Z"
  },
  "255805979": {
   "first_seen": "2026-11-15T14:17:23Z",
@@ -311,23 +311,23 @@
  },
  "255806165": {
   "first_seen": "2026-11-17T00:52:43Z",
-  "last_seen": "2026-11-19T08:01:18Z",
+  "last_seen": "2026-11-19T17:25:23Z",
   "name": "WEC FRANS HALS",
   "imo": 9326964,
   "dest": "DEHAM-NLMOE",
   "draught": 8,
   "len": 135,
-  "eta_utc": "2026-11-18T07:00Z"
+  "eta_utc": null
  },
  "255806352": {
   "first_seen": "2026-11-19T00:22:48Z",
-  "last_seen": "2026-11-19T08:00:37Z",
+  "last_seen": "2026-11-19T17:21:43Z",
   "name": "FINE SCHEPERS",
   "imo": 9323467,
   "dest": "DEHAM",
   "draught": 7.5,
   "len": 141,
-  "eta_utc": null
+  "eta_utc": "2026-11-18T16:30Z"
  },
  "255915667": {
   "first_seen": "2026-11-17T09:10:47Z",
@@ -359,9 +359,19 @@
   "len": 170,
   "eta_utc": "2026-11-19T17:00Z"
  },
+ "256641000": {
+  "first_seen": "2026-11-19T17:28:03Z",
+  "last_seen": "2026-11-19T17:28:03Z",
+  "name": "YORK",
+  "imo": 1020514,
+  "dest": "PTAVE-DEHAM",
+  "draught": 7.8,
+  "len": 179,
+  "eta_utc": "2026-11-19T12:30Z"
+ },
  "304520000": {
   "first_seen": "2026-11-19T00:18:58Z",
-  "last_seen": "2026-11-19T08:00:44Z",
+  "last_seen": "2026-11-19T17:29:43Z",
   "name": "BF CARP",
   "imo": 9437256,
   "dest": "DEHAM",
@@ -418,6 +428,16 @@
   "draught": 6.6,
   "len": 147,
   "eta_utc": "2026-11-15T18:00Z"
+ },
+ "309901000": {
+  "first_seen": "2026-11-19T17:22:38Z",
+  "last_seen": "2026-11-19T17:22:38Z",
+  "name": "MOL CELEBRATION",
+  "imo": 9321251,
+  "dest": "DEHAM",
+  "draught": 12.8,
+  "len": 316,
+  "eta_utc": "2026-11-20T06:00Z"
  },
  "310750000": {
   "first_seen": "2026-11-18T06:43:43Z",
@@ -481,13 +501,13 @@
  },
  "477103800": {
   "first_seen": "2026-11-17T00:50:36Z",
-  "last_seen": "2026-11-19T07:54:13Z",
+  "last_seen": "2026-11-19T17:24:12Z",
   "name": "OOCL UNITED KINGDOM",
   "imo": 9776200,
   "dest": "PLGDN>DEHAM",
   "draught": 12.4,
   "len": 400,
-  "eta_utc": null
+  "eta_utc": "2026-11-17T23:30Z"
  },
  "477157800": {
   "first_seen": "2026-11-15T14:16:02Z",
@@ -521,7 +541,7 @@
  },
  "538010949": {
   "first_seen": "2026-11-18T06:53:02Z",
-  "last_seen": "2026-11-19T07:53:03Z",
+  "last_seen": "2026-11-19T17:29:19Z",
   "name": "EVONA",
   "imo": 9552355,
   "dest": "DE HAM",
@@ -549,6 +569,16 @@
   "len": 272,
   "eta_utc": "2026-11-17T23:30Z"
  },
+ "563051400": {
+  "first_seen": "2026-11-19T17:21:54Z",
+  "last_seen": "2026-11-19T17:21:54Z",
+  "name": "MAERSK MONTE ROSA",
+  "imo": 9283215,
+  "dest": "GBSOU - DEHAM",
+  "draught": 10.8,
+  "len": 272,
+  "eta_utc": "2026-11-21T21:30Z"
+ },
  "563155500": {
   "first_seen": "2026-11-15T14:18:08Z",
   "last_seen": "2026-11-19T00:24:05Z",
@@ -561,7 +591,7 @@
  },
  "563279200": {
   "first_seen": "2026-11-17T00:52:31Z",
-  "last_seen": "2026-11-19T07:59:21Z",
+  "last_seen": "2026-11-19T17:29:28Z",
   "name": "SEASPAN BENEFACTOR",
   "imo": 9739666,
   "dest": "DEHAM",
@@ -611,13 +641,13 @@
  },
  "636021036": {
   "first_seen": "2026-11-19T08:03:24Z",
-  "last_seen": "2026-11-19T08:03:24Z",
+  "last_seen": "2026-11-19T17:25:48Z",
   "name": "BALTIMORE EXPRESS",
   "imo": 9665621,
   "dest": "DEWVN>>DEHAM",
   "draught": 12.2,
   "len": 368,
-  "eta_utc": null
+  "eta_utc": "2026-11-19T01:30Z"
  },
  "636021403": {
   "first_seen": "2026-11-15T14:14:41Z",
@@ -631,7 +661,7 @@
  },
  "636022169": {
   "first_seen": "2026-11-16T09:33:38Z",
-  "last_seen": "2026-11-19T08:00:36Z",
+  "last_seen": "2026-11-19T17:30:38Z",
   "name": "OCEAN SCALLION",
   "imo": 9592094,
   "dest": "DE HAM",
@@ -651,7 +681,7 @@
  },
  "636023310": {
   "first_seen": "2026-11-17T00:52:44Z",
-  "last_seen": "2026-11-19T07:58:56Z",
+  "last_seen": "2026-11-19T17:28:44Z",
   "name": "ONE INTELLIGENCE",
   "imo": 9933121,
   "dest": "DEHAM",
@@ -671,7 +701,7 @@
  },
  "636024513": {
   "first_seen": "2026-11-15T17:01:38Z",
-  "last_seen": "2026-11-19T07:59:09Z",
+  "last_seen": "2026-11-19T17:29:20Z",
   "name": "MSC VIOLA",
   "imo": 9947172,
   "dest": "DEHAM",
@@ -691,13 +721,13 @@
  },
  "636025011": {
   "first_seen": "2026-11-17T00:56:33Z",
-  "last_seen": "2026-11-19T07:57:28Z",
+  "last_seen": "2026-11-19T17:20:17Z",
   "name": "MSC SAN FRANCISCO",
   "imo": 9987328,
   "dest": "DEHAM",
   "draught": 12.2,
   "len": 366,
-  "eta_utc": "2026-11-19T11:30Z"
+  "eta_utc": null
  },
  "636025449": {
   "first_seen": "2026-11-15T14:15:02Z",
@@ -721,7 +751,7 @@
  },
  "636093160": {
   "first_seen": "2026-11-17T09:11:33Z",
-  "last_seen": "2026-11-19T08:00:23Z",
+  "last_seen": "2026-11-19T17:25:22Z",
   "name": "AL SAFAT",
   "imo": 9349497,
   "dest": "DEHAM",

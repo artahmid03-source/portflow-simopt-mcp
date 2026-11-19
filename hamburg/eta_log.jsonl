@@ -89,3 +89,9 @@
 {"mmsi":636024513,"name":"MSC VIOLA","heard_utc":"2026-11-19T07:59:09Z","eta_utc":"2026-11-16T23:30Z","len":366,"dest":"DEHAM"}
 {"mmsi":636025011,"name":"MSC SAN FRANCISCO","heard_utc":"2026-11-19T07:57:28Z","eta_utc":"2026-11-19T11:30Z","len":366,"dest":"DEHAM"}
 {"mmsi":636093160,"name":"AL SAFAT","heard_utc":"2026-11-19T08:00:23Z","eta_utc":"2026-11-18T23:30Z","len":307,"dest":"DEHAM"}
+{"mmsi":255805906,"name":"EDITH","heard_utc":"2026-11-19T17:30:51Z","eta_utc":"2026-11-19T13:30Z","len":139,"dest":"DEHAM"}
+{"mmsi":256641000,"name":"YORK","heard_utc":"2026-11-19T17:28:03Z","eta_utc":"2026-11-19T12:30Z","len":179,"dest":"PTAVE-DEHAM"}
+{"mmsi":309901000,"name":"MOL CELEBRATION","heard_utc":"2026-11-19T17:22:38Z","eta_utc":"2026-11-20T06:00Z","len":316,"dest":"DEHAM"}
+{"mmsi":477103800,"name":"OOCL UNITED KINGDOM","heard_utc":"2026-11-19T17:24:12Z","eta_utc":"2026-11-17T23:30Z","len":400,"dest":"PLGDN>DEHAM"}
+{"mmsi":563051400,"name":"MAERSK MONTE ROSA","heard_utc":"2026-11-19T17:21:54Z","eta_utc":"2026-11-21T21:30Z","len":272,"dest":"GBSOU - DEHAM"}
+{"mmsi":636021036,"name":"BALTIMORE EXPRESS","heard_utc":"2026-11-19T17:25:48Z","eta_utc":"2026-11-19T01:30Z","len":368,"dest":"DEWVN>>DEHAM"}
