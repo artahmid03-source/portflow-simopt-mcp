@@ -61,3 +61,24 @@
 {"mmsi":305412000,"name":"SUNSET X","heard_utc":"2026-11-18T18:08:40Z","eta_utc":"2026-11-18T21:00Z","len":129,"dest":"DEHAM"}
 {"mmsi":477103800,"name":"OOCL UNITED KINGDOM","heard_utc":"2026-11-18T18:02:42Z","eta_utc":"2026-11-17T23:30Z","len":400,"dest":"PLGDN>DEHAM"}
 {"mmsi":636022169,"name":"OCEAN SCALLION","heard_utc":"2026-11-18T18:06:33Z","eta_utc":"2026-11-10T10:00Z","len":229,"dest":"DE HAM"}
+{"mmsi":211141000,"name":"BIANCA RAMBOW","heard_utc":"2026-11-19T00:26:12Z","eta_utc":"2026-11-18T05:00Z","len":134,"dest":"DEHAM"}
+{"mmsi":242410400,"name":"CMA CGM NADOR","heard_utc":"2026-11-19T00:25:23Z","eta_utc":"2026-11-15T05:00Z","len":152,"dest":"DEHAM"}
+{"mmsi":246539000,"name":"MAXIMA","heard_utc":"2026-11-19T00:24:48Z","eta_utc":"2026-11-15T08:00Z","len":150,"dest":"DEHAM"}
+{"mmsi":247310400,"name":"GRANDE SIERRA LEONE","heard_utc":"2026-11-19T00:27:42Z","eta_utc":"2026-11-18T17:00Z","len":212,"dest":"CIABJ>DEHAM"}
+{"mmsi":249874000,"name":"SOUTH","heard_utc":"2026-11-19T00:21:24Z","eta_utc":"2026-11-18T22:00Z","len":169,"dest":"DEHAM VIA SKAGEN"}
+{"mmsi":255805555,"name":"AKACIA","heard_utc":"2026-11-19T00:19:28Z","eta_utc":"2026-11-19T00:01Z","len":149,"dest":"DEHAM CTA"}
+{"mmsi":255806165,"name":"WEC FRANS HALS","heard_utc":"2026-11-19T00:26:03Z","eta_utc":"2026-11-18T07:00Z","len":135,"dest":"PTLEI-DEHAM"}
+{"mmsi":255806352,"name":"FINE SCHEPERS","heard_utc":"2026-11-19T00:22:48Z","eta_utc":"2026-11-18T16:30Z","len":141,"dest":"DEHAM"}
+{"mmsi":255915667,"name":"ELBINSEL","heard_utc":"2026-11-19T00:22:47Z","eta_utc":"2026-11-17T06:00Z","len":170,"dest":"DEHAM"}
+{"mmsi":304520000,"name":"BF CARP","heard_utc":"2026-11-19T00:18:58Z","eta_utc":"2026-11-19T09:00Z","len":139,"dest":"DEHAM"}
+{"mmsi":305412000,"name":"SUNSET X","heard_utc":"2026-11-19T00:26:42Z","eta_utc":"2026-11-18T21:00Z","len":129,"dest":"DEHAM"}
+{"mmsi":310750000,"name":"MONTREAL EXPRESS","heard_utc":"2026-11-19T00:19:43Z","eta_utc":"2026-11-20T06:00Z","len":294,"dest":"DEHAM"}
+{"mmsi":441399000,"name":"HMM COLOMBO","heard_utc":"2026-11-19T00:21:09Z","eta_utc":"2026-11-20T20:00Z","len":304,"dest":"NLRTM>DEHAM"}
+{"mmsi":563155500,"name":"EVER APEX","heard_utc":"2026-11-19T00:24:05Z","eta_utc":"2026-11-14T22:00Z","len":399,"dest":"GBFXT>DEHAM"}
+{"mmsi":563279200,"name":"SEASPAN BENEFACTOR","heard_utc":"2026-11-19T00:23:21Z","eta_utc":"2026-11-16T17:00Z","len":337,"dest":"DEHAM"}
+{"mmsi":564398000,"name":"MAERSK BATUR","heard_utc":"2026-11-19T00:18:13Z","eta_utc":"2026-11-20T14:30Z","len":223,"dest":"HAMBURG"}
+{"mmsi":636019097,"name":"BERGE ORIZABA","heard_utc":"2026-11-19T00:22:15Z","eta_utc":"2026-11-12T10:00Z","len":292,"dest":"DEHAM"}
+{"mmsi":636021403,"name":"THETIS","heard_utc":"2026-11-19T00:26:46Z","eta_utc":"2026-11-12T20:00Z","len":199,"dest":"DE HAM"}
+{"mmsi":636022169,"name":"OCEAN SCALLION","heard_utc":"2026-11-19T00:24:35Z","eta_utc":"2026-11-10T10:00Z","len":229,"dest":"DE HAM"}
+{"mmsi":636023310,"name":"ONE INTELLIGENCE","heard_utc":"2026-11-19T00:22:48Z","eta_utc":"2026-11-18T01:00Z","len":399,"dest":"DEHAM"}
+{"mmsi":636025672,"name":"NETA A.","heard_utc":"2026-11-19T00:27:05Z","eta_utc":"2026-11-17T22:59Z","len":158,"dest":"DEHAM"}
