@@ -102,3 +102,20 @@
 {"mmsi":305472000,"name":"BBC EDGE","heard_utc":"2026-11-19T23:54:46Z","eta_utc":"2026-11-19T23:00Z","len":139,"dest":"DEHAM"}
 {"mmsi":477154700,"name":"COSCO GEMINI","heard_utc":"2026-11-19T23:57:02Z","eta_utc":"2026-11-19T15:30Z","len":399,"dest":"DEHAM"}
 {"mmsi":564398000,"name":"MAERSK BATUR","heard_utc":"2026-11-19T23:50:05Z","eta_utc":"2026-11-20T18:30Z","len":223,"dest":"HAMBURG"}
+{"mmsi":210028000,"name":"CONTSHIPS BOREALIS","heard_utc":"2026-11-20T07:11:03Z","eta_utc":"2026-11-20T01:30Z","len":170,"dest":"DEHAM"}
+{"mmsi":211130180,"name":"GENOVA EXPRESS","heard_utc":"2026-11-20T07:07:00Z","eta_utc":"2026-11-20T01:30Z","len":400,"dest":"DEHAM"}
+{"mmsi":228401800,"name":"CMA CGM CONCORDE","heard_utc":"2026-11-20T07:08:43Z","eta_utc":"2026-11-19T15:30Z","len":400,"dest":"NLRTM>>DEHAM"}
+{"mmsi":255805906,"name":"EDITH","heard_utc":"2026-11-20T07:11:44Z","eta_utc":"2026-11-19T13:30Z","len":139,"dest":"DEHAM"}
+{"mmsi":255916486,"name":"ELBSPRING","heard_utc":"2026-11-20T07:09:46Z","eta_utc":"2026-11-19T22:00Z","len":169,"dest":"DEHAM"}
+{"mmsi":255917287,"name":"ELBMOON","heard_utc":"2026-11-20T07:10:52Z","eta_utc":"2026-11-19T17:30Z","len":170,"dest":"DEHAM"}
+{"mmsi":256641000,"name":"YORK","heard_utc":"2026-11-20T07:09:12Z","eta_utc":"2026-11-19T12:30Z","len":179,"dest":"PTAVE-DEHAM"}
+{"mmsi":256981000,"name":"CMA CGM NANSHA","heard_utc":"2026-11-20T07:04:30Z","eta_utc":"2026-11-21T09:00Z","len":300,"dest":"DEHAM"}
+{"mmsi":304520000,"name":"BF CARP","heard_utc":"2026-11-20T07:06:48Z","eta_utc":"2026-11-19T09:00Z","len":139,"dest":"DEHAM"}
+{"mmsi":305472000,"name":"BBC EDGE","heard_utc":"2026-11-20T07:13:06Z","eta_utc":"2026-11-19T23:00Z","len":139,"dest":"DEHAM"}
+{"mmsi":441399000,"name":"HMM COLOMBO","heard_utc":"2026-11-20T07:03:03Z","eta_utc":"2026-11-20T20:00Z","len":304,"dest":"NLRTM>DEHAM"}
+{"mmsi":477154700,"name":"COSCO GEMINI","heard_utc":"2026-11-20T07:09:00Z","eta_utc":"2026-11-19T15:30Z","len":399,"dest":"DEHAM"}
+{"mmsi":538010949,"name":"EVONA","heard_utc":"2026-11-20T07:11:05Z","eta_utc":"2026-11-17T17:30Z","len":197,"dest":"DE HAM"}
+{"mmsi":563279200,"name":"SEASPAN BENEFACTOR","heard_utc":"2026-11-20T07:11:41Z","eta_utc":"2026-11-16T17:00Z","len":337,"dest":"DEHAM"}
+{"mmsi":636022169,"name":"OCEAN SCALLION","heard_utc":"2026-11-20T07:12:41Z","eta_utc":"2026-11-10T10:00Z","len":229,"dest":"DE HAM"}
+{"mmsi":636025011,"name":"MSC SAN FRANCISCO","heard_utc":"2026-11-20T07:08:16Z","eta_utc":"2026-11-19T11:30Z","len":366,"dest":"DEHAM"}
+{"mmsi":636093160,"name":"AL SAFAT","heard_utc":"2026-11-20T07:08:39Z","eta_utc":"2026-11-18T23:30Z","len":307,"dest":"DEHAM"}
