@@ -126,3 +126,5 @@
 {"mmsi":636023310,"name":"ONE INTELLIGENCE","heard_utc":"2026-11-20T16:10:49Z","eta_utc":"2026-11-18T01:00Z","len":399,"dest":"DEHAM"}
 {"mmsi":636023421,"name":"MSC NAIROBI X","heard_utc":"2026-11-20T16:08:09Z","eta_utc":"2026-11-22T10:00Z","len":300,"dest":"DEHAM"}
 {"mmsi":636093159,"name":"AS CLAUDIA","heard_utc":"2026-11-20T16:10:54Z","eta_utc":"2026-11-21T07:00Z","len":222,"dest":"DEWVN-DEHAM"}
+{"mmsi":219019094,"name":"MARIBO MAERSK","heard_utc":"2026-11-20T22:47:09Z","eta_utc":"2026-11-22T06:30Z","len":399,"dest":"DEBRV>>DEHAM"}
+{"mmsi":563274400,"name":"EVER ECO","heard_utc":"2026-11-20T22:47:10Z","eta_utc":"2026-11-20T16:30Z","len":369,"dest":"NLRTM > DEHAM"}
