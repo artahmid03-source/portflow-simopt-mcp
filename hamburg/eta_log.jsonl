@@ -148,3 +148,10 @@
 {"mmsi":563339900,"name":"MAERSK FLINDERS","heard_utc":"2026-11-21T12:42:02Z","eta_utc":"2026-11-21T06:30Z","len":265,"dest":"DEHAM"}
 {"mmsi":636022169,"name":"OCEAN SCALLION","heard_utc":"2026-11-21T12:43:00Z","eta_utc":"2026-11-10T10:00Z","len":229,"dest":"DE HAM"}
 {"mmsi":636093159,"name":"AS CLAUDIA","heard_utc":"2026-11-21T12:34:21Z","eta_utc":"2026-11-21T08:15Z","len":222,"dest":"DEWVN-DEHAM"}
+{"mmsi":229630000,"name":"X-PRESS MULHACEN","heard_utc":"2026-11-21T19:49:57Z","eta_utc":"2026-11-25T05:00Z","len":142,"dest":"DEHAM"}
+{"mmsi":255806165,"name":"WEC FRANS HALS","heard_utc":"2026-11-21T19:47:18Z","eta_utc":"2026-11-21T15:00Z","len":135,"dest":"DEHAM-NLMOE"}
+{"mmsi":256641000,"name":"YORK","heard_utc":"2026-11-21T19:52:28Z","eta_utc":"2026-11-19T12:30Z","len":179,"dest":"PTAVE-DEHAM"}
+{"mmsi":256981000,"name":"CMA CGM NANSHA","heard_utc":"2026-11-21T19:54:13Z","eta_utc":"2026-11-21T12:30Z","len":300,"dest":"DEHAM"}
+{"mmsi":305654000,"name":"ALEXANDER B","heard_utc":"2026-11-21T19:54:58Z","eta_utc":"2026-11-21T18:00Z","len":155,"dest":"DEHAM VIA NOK"}
+{"mmsi":538004361,"name":"HALKI","heard_utc":"2026-11-21T19:52:38Z","eta_utc":"2026-11-21T10:00Z","len":186,"dest":"DEHAM"}
+{"mmsi":636093159,"name":"AS CLAUDIA","heard_utc":"2026-11-21T19:53:41Z","eta_utc":"2026-11-27T05:00Z","len":222,"dest":"DEHAM-BEANR"}
