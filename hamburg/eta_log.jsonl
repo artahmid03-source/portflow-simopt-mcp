@@ -141,3 +141,10 @@
 {"mmsi":564398000,"name":"MAERSK BATUR","heard_utc":"2026-11-21T04:06:41Z","eta_utc":"2026-11-20T21:30Z","len":223,"dest":"HAMBURG"}
 {"mmsi":636023310,"name":"ONE INTELLIGENCE","heard_utc":"2026-11-21T04:05:01Z","eta_utc":"2026-11-18T01:00Z","len":399,"dest":"DEHAM"}
 {"mmsi":636023421,"name":"MSC NAIROBI X","heard_utc":"2026-11-21T03:59:56Z","eta_utc":"2026-11-22T10:00Z","len":300,"dest":"DEHAM"}
+{"mmsi":210028000,"name":"CONTSHIPS BOREALIS","heard_utc":"2026-11-21T12:40:53Z","eta_utc":"2026-11-20T01:30Z","len":170,"dest":"DEHAM"}
+{"mmsi":212302000,"name":"HERCULES J","heard_utc":"2026-11-21T12:37:30Z","eta_utc":"2026-11-21T21:00Z","len":151,"dest":"DEHAM VIA NOK"}
+{"mmsi":477321000,"name":"OOCL MONTREAL","heard_utc":"2026-11-21T12:33:14Z","eta_utc":"2026-11-25T13:00Z","len":294,"dest":"BE ANR > DE HAM"}
+{"mmsi":538010071,"name":"HONORSHIP","heard_utc":"2026-11-21T12:39:06Z","eta_utc":"2026-11-15T03:00Z","len":289,"dest":"DE HAM"}
+{"mmsi":563339900,"name":"MAERSK FLINDERS","heard_utc":"2026-11-21T12:42:02Z","eta_utc":"2026-11-21T06:30Z","len":265,"dest":"DEHAM"}
+{"mmsi":636022169,"name":"OCEAN SCALLION","heard_utc":"2026-11-21T12:43:00Z","eta_utc":"2026-11-10T10:00Z","len":229,"dest":"DE HAM"}
+{"mmsi":636093159,"name":"AS CLAUDIA","heard_utc":"2026-11-21T12:34:21Z","eta_utc":"2026-11-21T08:15Z","len":222,"dest":"DEWVN-DEHAM"}

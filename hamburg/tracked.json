@@ -11,17 +11,17 @@
  },
  "210028000": {
   "first_seen": "2026-11-20T07:11:03Z",
-  "last_seen": "2026-11-21T04:05:06Z",
+  "last_seen": "2026-11-21T12:40:53Z",
   "name": "CONTSHIPS BOREALIS",
   "imo": 9866249,
   "dest": "DEHAM",
   "draught": 8.5,
   "len": 170,
-  "eta_utc": null
+  "eta_utc": "2026-11-20T01:30Z"
  },
  "210332000": {
   "first_seen": "2026-11-20T22:50:02Z",
-  "last_seen": "2026-11-21T04:02:31Z",
+  "last_seen": "2026-11-21T12:39:15Z",
   "name": "DP WORLD LIMASSOL",
   "imo": 9432232,
   "dest": "DEHAM",
@@ -41,7 +41,7 @@
  },
  "211130180": {
   "first_seen": "2026-11-20T07:13:00Z",
-  "last_seen": "2026-11-21T04:06:59Z",
+  "last_seen": "2026-11-21T12:43:00Z",
   "name": "GENOVA EXPRESS",
   "imo": 9943906,
   "dest": "DEHAM",
@@ -78,6 +78,16 @@
   "draught": 8.2,
   "len": 170,
   "eta_utc": "2026-11-14T05:00Z"
+ },
+ "212302000": {
+  "first_seen": "2026-11-21T12:37:30Z",
+  "last_seen": "2026-11-21T12:37:30Z",
+  "name": "HERCULES J",
+  "imo": 9430193,
+  "dest": "DEHAM VIA NOK",
+  "draught": 8.5,
+  "len": 151,
+  "eta_utc": "2026-11-21T21:00Z"
  },
  "215134000": {
   "first_seen": "2026-11-18T06:49:29Z",
@@ -161,7 +171,7 @@
  },
  "228401800": {
   "first_seen": "2026-11-17T09:10:22Z",
-  "last_seen": "2026-11-21T04:04:51Z",
+  "last_seen": "2026-11-21T12:41:28Z",
   "name": "CMA CGM CONCORDE",
   "imo": 9839208,
   "dest": "NLRTM>>DEHAM",
@@ -411,7 +421,7 @@
  },
  "256641000": {
   "first_seen": "2026-11-19T17:28:03Z",
-  "last_seen": "2026-11-21T04:06:42Z",
+  "last_seen": "2026-11-21T12:42:25Z",
   "name": "YORK",
   "imo": 1020514,
   "dest": "PTAVE-DEHAM",
@@ -441,13 +451,13 @@
  },
  "304688000": {
   "first_seen": "2026-11-20T22:46:45Z",
-  "last_seen": "2026-11-21T04:05:14Z",
+  "last_seen": "2026-11-21T12:39:56Z",
   "name": "ARCTIC TRADER",
   "imo": 9123324,
   "dest": "DEHAM",
-  "draught": 6.9,
+  "draught": 6.1,
   "len": 117,
-  "eta_utc": null
+  "eta_utc": "2026-11-20T18:00Z"
  },
  "305287000": {
   "first_seen": "2026-11-19T23:55:42Z",
@@ -501,13 +511,13 @@
  },
  "305472000": {
   "first_seen": "2026-11-19T23:54:46Z",
-  "last_seen": "2026-11-21T04:06:00Z",
+  "last_seen": "2026-11-21T12:43:11Z",
   "name": "BBC EDGE",
   "imo": 9407598,
   "dest": "DEHAM",
   "draught": 5,
   "len": 139,
-  "eta_utc": "2026-11-19T23:00Z"
+  "eta_utc": null
  },
  "305543000": {
   "first_seen": "2026-11-15T17:02:58Z",
@@ -541,7 +551,7 @@
  },
  "310750000": {
   "first_seen": "2026-11-18T06:43:43Z",
-  "last_seen": "2026-11-21T04:01:43Z",
+  "last_seen": "2026-11-21T12:43:42Z",
   "name": "MONTREAL EXPRESS",
   "imo": 9253741,
   "dest": "DEHAM",
@@ -558,6 +568,16 @@
   "draught": 10.2,
   "len": 269,
   "eta_utc": null
+ },
+ "311001831": {
+  "first_seen": "2026-11-21T12:38:21Z",
+  "last_seen": "2026-11-21T12:38:21Z",
+  "name": "WILSON SAGA",
+  "imo": 8918461,
+  "dest": "HAMBURG",
+  "draught": 7.1,
+  "len": 113,
+  "eta_utc": "2026-11-22T20:00Z"
  },
  "314292000": {
   "first_seen": "2026-11-20T07:13:25Z",
@@ -621,13 +641,13 @@
  },
  "477154700": {
   "first_seen": "2026-11-19T23:57:02Z",
-  "last_seen": "2026-11-21T04:03:00Z",
+  "last_seen": "2026-11-21T12:39:02Z",
   "name": "COSCO GEMINI",
   "imo": 9783526,
   "dest": "DEHAM",
   "draught": 13,
   "len": 399,
-  "eta_utc": "2026-11-19T15:30Z"
+  "eta_utc": null
  },
  "477157800": {
   "first_seen": "2026-11-15T14:16:02Z",
@@ -641,7 +661,7 @@
  },
  "477321000": {
   "first_seen": "2026-11-20T16:09:14Z",
-  "last_seen": "2026-11-20T16:09:14Z",
+  "last_seen": "2026-11-21T12:33:14Z",
   "name": "OOCL MONTREAL",
   "imo": 9253739,
   "dest": "BE ANR > DE HAM",
@@ -671,13 +691,13 @@
  },
  "538010071": {
   "first_seen": "2026-11-20T16:15:05Z",
-  "last_seen": "2026-11-21T04:03:08Z",
+  "last_seen": "2026-11-21T12:39:06Z",
   "name": "HONORSHIP",
   "imo": 9489845,
   "dest": "DE HAM",
   "draught": 14.7,
   "len": 289,
-  "eta_utc": null
+  "eta_utc": "2026-11-15T03:00Z"
  },
  "538010949": {
   "first_seen": "2026-11-18T06:53:02Z",
@@ -759,6 +779,16 @@
   "len": 336,
   "eta_utc": "2026-11-14T08:30Z"
  },
+ "563339900": {
+  "first_seen": "2026-11-21T12:42:02Z",
+  "last_seen": "2026-11-21T12:42:02Z",
+  "name": "MAERSK FLINDERS",
+  "imo": 1041532,
+  "dest": "DEHAM",
+  "draught": 12.8,
+  "len": 265,
+  "eta_utc": "2026-11-21T06:30Z"
+ },
  "564398000": {
   "first_seen": "2026-11-19T00:18:13Z",
   "last_seen": "2026-11-21T04:06:41Z",
@@ -811,7 +841,7 @@
  },
  "636022169": {
   "first_seen": "2026-11-16T09:33:38Z",
-  "last_seen": "2026-11-20T22:42:58Z",
+  "last_seen": "2026-11-21T12:43:00Z",
   "name": "OCEAN SCALLION",
   "imo": 9592094,
   "dest": "DE HAM",
@@ -831,7 +861,7 @@
  },
  "636023310": {
   "first_seen": "2026-11-17T00:52:44Z",
-  "last_seen": "2026-11-21T04:05:01Z",
+  "last_seen": "2026-11-21T12:40:43Z",
   "name": "ONE INTELLIGENCE",
   "imo": 9933121,
   "dest": "DEHAM",
@@ -911,13 +941,13 @@
  },
  "636093159": {
   "first_seen": "2026-11-20T16:10:54Z",
-  "last_seen": "2026-11-20T16:10:54Z",
+  "last_seen": "2026-11-21T12:34:21Z",
   "name": "AS CLAUDIA",
   "imo": 9330549,
   "dest": "DEWVN-DEHAM",
-  "draught": 9.8,
+  "draught": 9.6,
   "len": 222,
-  "eta_utc": "2026-11-21T07:00Z"
+  "eta_utc": "2026-11-21T08:15Z"
  },
  "636093160": {
   "first_seen": "2026-11-17T09:11:33Z",
