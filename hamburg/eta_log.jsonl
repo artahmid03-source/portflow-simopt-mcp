@@ -128,3 +128,16 @@
 {"mmsi":636093159,"name":"AS CLAUDIA","heard_utc":"2026-11-20T16:10:54Z","eta_utc":"2026-11-21T07:00Z","len":222,"dest":"DEWVN-DEHAM"}
 {"mmsi":219019094,"name":"MARIBO MAERSK","heard_utc":"2026-11-20T22:47:09Z","eta_utc":"2026-11-22T06:30Z","len":399,"dest":"DEBRV>>DEHAM"}
 {"mmsi":563274400,"name":"EVER ECO","heard_utc":"2026-11-20T22:47:10Z","eta_utc":"2026-11-20T16:30Z","len":369,"dest":"NLRTM > DEHAM"}
+{"mmsi":210332000,"name":"DP WORLD LIMASSOL","heard_utc":"2026-11-21T04:02:31Z","eta_utc":"2026-11-20T21:00Z","len":168,"dest":"DEHAM"}
+{"mmsi":211130180,"name":"GENOVA EXPRESS","heard_utc":"2026-11-21T04:06:59Z","eta_utc":"2026-11-20T01:30Z","len":400,"dest":"DEHAM"}
+{"mmsi":228401800,"name":"CMA CGM CONCORDE","heard_utc":"2026-11-21T04:04:51Z","eta_utc":"2026-11-19T15:30Z","len":400,"dest":"NLRTM>>DEHAM"}
+{"mmsi":305472000,"name":"BBC EDGE","heard_utc":"2026-11-21T04:06:00Z","eta_utc":"2026-11-19T23:00Z","len":139,"dest":"DEHAM"}
+{"mmsi":305994000,"name":"BF  PERCH","heard_utc":"2026-11-21T04:05:33Z","eta_utc":"2026-11-20T11:00Z","len":139,"dest":"DEHAM"}
+{"mmsi":309901000,"name":"MOL CELEBRATION","heard_utc":"2026-11-21T03:57:40Z","eta_utc":"2026-11-26T05:00Z","len":316,"dest":"DEHAM"}
+{"mmsi":310750000,"name":"MONTREAL EXPRESS","heard_utc":"2026-11-21T04:01:43Z","eta_utc":"2026-11-20T06:00Z","len":294,"dest":"DEHAM"}
+{"mmsi":477154700,"name":"COSCO GEMINI","heard_utc":"2026-11-21T04:03:00Z","eta_utc":"2026-11-19T15:30Z","len":399,"dest":"DEHAM"}
+{"mmsi":563051400,"name":"MAERSK MONTE ROSA","heard_utc":"2026-11-21T03:57:54Z","eta_utc":"2026-11-21T21:30Z","len":272,"dest":"GBSOU - DEHAM"}
+{"mmsi":563274400,"name":"EVER ECO","heard_utc":"2026-11-21T03:59:10Z","eta_utc":"2026-11-20T16:30Z","len":369,"dest":"NLRTM > DEHAM"}
+{"mmsi":564398000,"name":"MAERSK BATUR","heard_utc":"2026-11-21T04:06:41Z","eta_utc":"2026-11-20T21:30Z","len":223,"dest":"HAMBURG"}
+{"mmsi":636023310,"name":"ONE INTELLIGENCE","heard_utc":"2026-11-21T04:05:01Z","eta_utc":"2026-11-18T01:00Z","len":399,"dest":"DEHAM"}
+{"mmsi":636023421,"name":"MSC NAIROBI X","heard_utc":"2026-11-21T03:59:56Z","eta_utc":"2026-11-22T10:00Z","len":300,"dest":"DEHAM"}
