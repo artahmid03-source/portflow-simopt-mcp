@@ -47,17 +47,36 @@ def rules_for(site: str):
     return nct
 
 
-def tower(site: str, loader=None) -> Dict[str, Any]:
+class PlanMismatch(Exception):
+    """The page shows a plan this server does not hold (an embedded fallback plan, or a page loaded before the latest run)."""
+
+
+def tower(site: str, loader=None, last_ok: bool = False) -> Dict[str, Any]:
+    key = site + (":last_ok" if last_ok else "")
     now = time.time()
-    if site in _cache and now - _cache[site][0] < TTL_S:
-        return _cache[site][1]
+    if key in _cache and now - _cache[key][0] < TTL_S:
+        return _cache[key][1]
     if loader is not None:
-        doc = loader(site)
+        doc = loader(key)
     else:
-        with urllib.request.urlopen(RAW.format(site=site), timeout=20) as r:   # noqa: S310 (fixed https URL)
+        url = RAW.format(site=site).replace("tower.json", "tower_last_ok.json") if last_ok else RAW.format(site=site)
+        with urllib.request.urlopen(url, timeout=20) as r:   # noqa: S310 (fixed https URL)
             doc = json.loads(r.read().decode("utf-8"))
-    _cache[site] = (now, doc)
+    _cache[key] = (now, doc)
     return doc
+
+
+def pick(site: str, want: Optional[str], loader=None) -> Dict[str, Any]:
+    """The plan the page is showing: the latest run, or the last run that had ships; never a different one."""
+    docs = [tower(site, loader)]
+    try:
+        docs.append(tower(site, loader, last_ok=True))
+    except Exception:  # noqa: BLE001  (no last good plan yet)
+        pass
+    for d in docs:
+        if d.get("status") == "ok" and d.get("optimised", {}).get("schedule") and (not want or d.get("generated_utc") == want):
+            return d
+    raise PlanMismatch("this server holds no live plan matching the one on the page" + (f" ({want})" if want else ""))
 
 
 def _int(x: Any, lo: int, hi: int) -> int:
@@ -101,10 +120,10 @@ def to_page(res: Dict[str, Any]) -> Dict[str, Any]:
             "yardTrace": None}
 
 
-def plan(site: str, scenario: Dict[str, Any], loader=None) -> Dict[str, Any]:
+def plan(site: str, scenario: Dict[str, Any], loader=None, want: Optional[str] = None) -> Dict[str, Any]:
     if site not in SITES:
         raise ValueError(f"site must be one of {SITES}")
-    doc = tower(site, loader)
+    doc = pick(site, want, loader)
     args = clean(scenario or {}, doc)
     hint = {r["vessel_id"]: r for r in doc["optimised"]["schedule"]}
     t0 = time.time()
@@ -167,7 +186,9 @@ class Handler(BaseHTTPRequestHandler):
         if not _busy.acquire(timeout=60.0):          # wait for a job in progress (or the start-up warm-up) to finish
             return self._json(429, {"error": "the planner is busy with another request; the page will re-plan in the browser"})
         try:
-            self._json(200, plan(site, req.get("scenario") or {}))
+            self._json(200, plan(site, req.get("scenario") or {}, want=req.get("generated_utc")))
+        except PlanMismatch as e:
+            self._json(409, {"error": str(e)})
         except ValueError as e:
             self._json(400, {"error": str(e)})
         except Exception as e:  # noqa: BLE001  (report, do not crash the server)

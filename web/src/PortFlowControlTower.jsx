@@ -40,8 +40,8 @@ async function solveServer(data, opt, onLog) {
   const ctl = typeof AbortController !== 'undefined' ? new AbortController() : null, tm = ctl && setTimeout(() => ctl.abort(), 100000), t0 = Date.now();
   try {
     const r = await fetch(`${api}/plan`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, signal: ctl ? ctl.signal : undefined,
-      body: JSON.stringify({ site: data.site_kind, scenario: { etaShift: opt.etaShift, qgcOutages: opt.qgcOutages, rtgOutages: opt.rtgOutages, icd: opt.icd, occ: opt.occ, tugSets: opt.tugSets } }) });
-    if (!r.ok) { onLog(`server CP-SAT: HTTP ${r.status}; re-planning in the browser instead`); return null; }
+      body: JSON.stringify({ site: data.site_kind, generated_utc: data.generated_utc, scenario: { etaShift: opt.etaShift, qgcOutages: opt.qgcOutages, rtgOutages: opt.rtgOutages, icd: opt.icd, occ: opt.occ, tugSets: opt.tugSets } }) });
+    if (!r.ok) { onLog(r.status === 409 ? 'server CP-SAT holds a different plan from the one on this page; re-planning in the browser instead' : `server CP-SAT: HTTP ${r.status}; re-planning in the browser instead`); return null; }
     const res = await r.json();
     (res.trace || []).forEach((it) => onLog(`server CP-SAT iteration ${it.iteration}: objective ${it.master_objective ?? it.objective ?? '-'}, turnaround ${it.avg_turnaround_days ?? '-'} d${it.cuts_added && Object.keys(it.cuts_added).length ? `, yard cuts ${Object.entries(it.cuts_added).map(([k, v]) => `${k}=${Number(v).toFixed(3)}`).join(' ')}` : ''}`));
     onLog(`server CP-SAT answered in ${((Date.now() - t0) / 1000).toFixed(1)} s (solve ${res.runtime_s} s, data of ${res.data_generated_utc || 'today'})`);

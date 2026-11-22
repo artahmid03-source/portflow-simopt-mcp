@@ -12,8 +12,10 @@ import app  # noqa: E402
 FIX = ROOT / "web" / "fixtures"
 
 
-def loader(site):
-    return json.loads((FIX / f"{site}_tower.json").read_text(encoding="utf-8"))
+def loader(key):
+    if key.endswith(":last_ok"):
+        raise FileNotFoundError(key)
+    return json.loads((FIX / f"{key}_tower.json").read_text(encoding="utf-8"))
 
 
 def test_scenario_is_clamped_and_unknown_ships_dropped():
@@ -40,3 +42,23 @@ def test_nominal_server_plan_matches_the_daily_reference(site):
     assert r["kpis"]["turnaround"] == doc["optimised"]["kpis"]["avg_turnaround_days"]
     assert {"objective", "wait", "hold", "beta", "peak"} <= set(r["kpis"])
     assert len(r["schedule"]) == len(doc["optimised"]["schedule"])
+
+
+def test_server_only_plans_the_plan_on_the_page():
+    app._cache.clear()
+    doc = loader("hamburg")
+    with pytest.raises(app.PlanMismatch):
+        app.plan("hamburg", {}, loader=loader, want="2026-01-01T00:00:00+00:00")
+    assert app.plan("hamburg", {}, loader=loader, want=doc["generated_utc"])["feasible"]
+
+
+def test_empty_live_run_falls_back_to_the_last_good_plan():
+    app._cache.clear()
+    good = loader("chattogram")
+    empty = {"status": "no_queue", "site_kind": "chattogram", "generated_utc": "2026-11-22T03:28:10+00:00", "live": {}}
+    ld = lambda key: good if key.endswith(":last_ok") else empty  # noqa: E731
+    assert app.plan("chattogram", {}, loader=ld, want=good["generated_utc"])["feasible"]
+    app._cache.clear()
+    with pytest.raises(app.PlanMismatch):
+        app.plan("chattogram", {}, loader=lambda key: empty if not key.endswith(":last_ok") else (_ for _ in ()).throw(FileNotFoundError()))
+    app._cache.clear()
