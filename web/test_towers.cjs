@@ -75,9 +75,31 @@ const send = async (page, text) => {
   {
     const { page, errors } = await open(browser, 'chattogram.html', null);
     assert.ok((await page.textContent('.pf-banner')).includes('could not be loaded'), 'fallback banner'); n++;
-    assert.ok((await page.textContent('.pf-lamps')).includes('SNAPSHOT'), 'snapshot lamp'); n++;
+    assert.ok((await page.textContent('.pf-lamps')).includes('SAVED PLAN'), 'saved-plan lamp, not LIVE'); n++;
     assert.ok((await page.$$eval('.pf-mk', (e) => e.length)) >= 8, 'snapshot ships on the real map'); n++;
     assert.deepStrictEqual(errors, [], 'no errors on fallback'); n++;
+    await page.close();
+  }
+  // Chattogram: the live run found no ship -> the last plan that had ships, or the embedded 13 Nov plan, with an information banner
+  for (const lastOk of [true, false]) {
+    const page = await browser.newPage({ viewport: { width: 1440, height: 1000 } });
+    const errors = [];
+    page.on('pageerror', (e) => errors.push(`pageerror: ${e.message}`));
+    await page.route(/tile\.openstreetmap|openseamap|fonts\.g/, (r) => r.abort());
+    const empty = JSON.stringify({ status: 'no_queue', site_kind: 'chattogram', reason: 'no ship bound for Chattogram was heard', generated_utc: '2026-11-22T03:28:10+00:00', live: {} });
+    await page.route(/raw\.githubusercontent\.com/, (r) => {
+      const u = r.request().url(), h = { 'access-control-allow-origin': '*' };
+      if (/tower_last_ok\.json/.test(u)) return lastOk ? r.fulfill({ status: 200, contentType: 'application/json', headers: h, body: fs.readFileSync(ctgFile) }) : r.fulfill({ status: 404, headers: h, body: 'no' });
+      return r.fulfill({ status: 200, contentType: 'application/json', headers: h, body: empty });
+    });
+    await page.goto('file://' + path.join(docs, 'chattogram.html') + '?api=off');
+    await page.waitForSelector('.pf-banner', { timeout: 20000 }); await page.waitForTimeout(800);
+    const banner = await page.textContent('.pf-banner'), cls = await page.getAttribute('.pf-banner', 'class');
+    assert.ok(/ok/.test(cls), 'an empty queue is shown as information, not as an error'); n++;
+    if (lastOk) { assert.ok(banner.includes('Showing the last live plan'), `last good plan banner: ${banner}`); n++; assert.ok((await page.textContent('.pf-lamps')).includes('LIVE DATA'), 'last plan is live data'); n++; }
+    else { assert.ok(banner.includes('Showing the plan for the queue read'), `embedded plan banner: ${banner}`); n++; assert.ok((await page.textContent('.pf-brand')).includes('engine v6.5'), 'embedded fallback is the current engine, not the v6.0 snapshot'); n++; }
+    assert.ok((await page.$$eval('.pf-mk', (e) => e.length)) >= 8, 'ships on the map'); n++;
+    assert.deepStrictEqual(errors, [], 'no page errors'); n++;
     await page.close();
   }
   await browser.close();

@@ -66,7 +66,7 @@ jobs:
         run: node test_page.cjs
       - name: Public tower pages (live feed mocked with the committed fixtures)
         run: |
-          python3 build_pages.py --hamburg-default fixtures/hamburg_tower.json
+          python3 build_pages.py --hamburg-default fixtures/hamburg_tower.json --chattogram-default fixtures/chattogram_tower.json
           node test_towers.cjs fixtures/chattogram_tower.json fixtures/hamburg_tower.json
       - uses: astral-sh/setup-uv@v6
         with:

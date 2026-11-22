@@ -53,7 +53,7 @@ SITES: Dict[str, Dict[str, Any]] = {
                 "feeder_box": [[48.0, -6.0], [58.5, 9.0]],             # Channel and North Sea
                 "dest_re": re.compile(r"HAMBURG|\bDE\s?HAM\b", re.I), "zone": zone_hamburg},
     "chattogram": {"near_box": [[19.5, 89.5], [22.7, 92.4]], "feeder_box": [[0.5, 78.0], [19.5, 105.0]],
-                   "dest_re": re.compile(r"CHITT?AGON|CHATT?OGRA|\bBD\s?CGP\b|\bCGP\b|\bCTG\b", re.I), "zone": area_of},
+                   "dest_re": re.compile(r"CHITT?AGON|CHATT?OGRA|CHATTAGRAM|CHOTTOGRAM|\bBD\s?CGP\b|\bCGP\b|\bCTG\b|\bBD\s?CTG\b|BDCTG", re.I), "zone": area_of},
 }
 DEFAULT_SITE = os.environ.get("PORTFLOW_SITE", "hamburg")                # AISStream hears nothing at Chattogram (measured 15 Nov 2026)
 MIN_LEN_M = 100.0                                # positions are kept for cargo ships (AIS type 70-79) at least this long
@@ -127,7 +127,7 @@ async def collect(key: str, minutes: float, tracked: Iterable[int] = (), url: st
     stats: Dict[str, Any] = Counter()
     stats["errors"] = []
     known = {int(m) for m in tracked}
-    extra = {s: {"known": {int(m) for m in ms}, "feeder_static": {}, "track_pos": {}} for s, ms in (extra_sites or {}).items()}
+    extra = {s: {"known": {int(m) for m in ms}, "feeder_static": {}, "track_pos": {}, "dest_seen": Counter()} for s, ms in (extra_sites or {}).items()}
 
     def on_record(name: str, phase: int, rec: Dict[str, Any]) -> None:
         rec["rx"] = iso(datetime.now(timezone.utc))
@@ -146,7 +146,9 @@ async def collect(key: str, minutes: float, tracked: Iterable[int] = (), url: st
             x, re_x = extra[name[2:]], SITES[name[2:]]["dest_re"]
             if rec["kind"] == "PositionReport":
                 x["track_pos"][rec["mmsi"]] = rec
-            elif re_x.search(declared_port(rec.get("destination"))) and is_cargo({"type": rec.get("ship_type"), "len": rec.get("length_m"), "imo": rec.get("imo")}):
+                return
+            x["dest_seen"][declared_port(rec.get("destination")).strip().upper()[:24] or "(blank)"] += 1
+            if re_x.search(declared_port(rec.get("destination"))) and is_cargo({"type": rec.get("ship_type"), "len": rec.get("length_m"), "imo": rec.get("imo")}):
                 x["feeder_static"][rec["mmsi"]] = rec
         elif name == "near":
             (near_pos if rec["kind"] == "PositionReport" else near_static)[rec["mmsi"]] = rec
@@ -189,7 +191,7 @@ async def collect(key: str, minutes: float, tracked: Iterable[int] = (), url: st
     coverage = {n: {"msgs": c["msgs"], "ships": len(c["ships"]), "moving": len(c["moving"]), "cargo": len(c["cargo"])} for n, c in probe.items()}
     return {"near_pos": near_pos, "near_static": near_static, "feeder_static": feeder_static, "track_pos": track_pos, "coverage": coverage, "site": site,
             "probe_seconds": round(probe_frac * minutes * 60.0) if probe_ports else 0, "stats": dict(stats), "started": started, "ended": datetime.now(timezone.utc),
-            "extra": {xs: {"near_pos": {}, "near_static": {}, "feeder_static": x["feeder_static"], "track_pos": x["track_pos"], "site": xs,
+            "extra": {xs: {"near_pos": {}, "near_static": {}, "feeder_static": x["feeder_static"], "track_pos": x["track_pos"], "site": xs, "dest_seen": dict(x["dest_seen"]),
                            "stats": {"near_msgs": 0, "feeder_msgs": stats.get(f"x:{xs}_msgs", 0), "errors": [e for e in stats["errors"] if e.startswith(f"x:{xs}")]},
                            "started": started} for xs, x in extra.items()}}
 
@@ -215,6 +217,20 @@ def declared_port(dest: Optional[str]) -> str:
 def is_cargo(s: Dict[str, Any]) -> bool:
     """Sea-going cargo ship: AIS type 70-79, long enough, and with an IMO number (inland vessels have none)."""
     return 70 <= (s.get("type") or 0) <= 79 and (s.get("len") or 0) >= MIN_LEN_M and (s.get("imo") or 0) > 0
+
+
+def note_destinations(site_dir: Path, seen: Dict[str, int], now: datetime, keep: int = 400) -> None:
+    """Running count of the destinations ships declared in the feeder region, so the destination match can be checked."""
+    if not seen:
+        return
+    site_dir.mkdir(parents=True, exist_ok=True)
+    f = site_dir / "destinations_seen.json"
+    doc = _load(f, {"since": iso(now), "counts": {}})
+    for k, n in seen.items():
+        doc["counts"][k] = doc["counts"].get(k, 0) + n
+    doc["counts"] = dict(sorted(doc["counts"].items(), key=lambda kv: -kv[1])[:keep])
+    doc["updated"] = iso(now)
+    f.write_text(json.dumps(doc, indent=0, ensure_ascii=False), encoding="utf-8")
 
 
 def write_store(root: Path, got: Dict[str, Any]) -> Dict[str, Any]:
@@ -320,6 +336,7 @@ def run_once(key: str, a: argparse.Namespace, store: Path) -> int:
     md = f"Site: {a.site}\n\n" + summary_markdown(run, _load(store / a.site / "tracked.json", {}), got.get("coverage"))
     for s, g in got["extra"].items():
         g["ended"] = got["ended"]
+        note_destinations(store / s, g.get("dest_seen") or {}, got["ended"])
         md += f"\n\nSite: {s} (bound ships followed across the feeder region)\n\n" + summary_markdown(write_store(store, g), _load(store / s / "tracked.json", {}))
     print(md)
     if os.environ.get("GITHUB_STEP_SUMMARY"):

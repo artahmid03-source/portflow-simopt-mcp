@@ -684,10 +684,23 @@ export default function PortFlowControlTower() {
   useEffect(() => {
     if (!url) return undefined;
     let on = true; const ac = typeof AbortController !== 'undefined' ? new AbortController() : null, to = setTimeout(() => ac && ac.abort(), 10000);
-    fetch(url, { cache: 'no-store', signal: ac ? ac.signal : undefined }).then((r) => (r.ok ? r.json() : Promise.reject(new Error(`HTTP ${r.status}`))))
-      .then((d) => { if (!on) return; if (d.status === 'ok' && d.optimised && d.optimised.schedule && d.optimised.schedule.length) setSt({ data: d, src: 'live', note: '' });
-        else setSt((x) => ({ ...x, src: 'embedded', note: `Today's live run found ${d.status === 'no_queue' ? 'no ship in the queue' : 'no feasible plan'}${d.reason ? ` (${d.reason})` : ''}; showing the plan embedded in the page instead.` })); })
-      .catch((e) => on && setSt((x) => ({ ...x, src: 'embedded', note: `The live plan could not be loaded (${e.name === 'AbortError' ? 'timed out' : e.message}); showing the plan embedded in the page instead.` })))
+    const get = (u) => fetch(u, { cache: 'no-store', signal: ac ? ac.signal : undefined }).then((r) => (r.ok ? r.json() : Promise.reject(new Error(`HTTP ${r.status}`))));
+    const usable = (d) => d && d.status === 'ok' && d.optimised && d.optimised.schedule && d.optimised.schedule.length;
+    const when = (s) => (s ? `${String(s).slice(0, 16).replace('T', ' ')} UTC` : 'the latest run');
+    const emb = DEFAULT_MCP_DATA.live && DEFAULT_MCP_DATA.live.retrieved ? `the plan for the queue read ${DEFAULT_MCP_DATA.live.retrieved}` : 'the plan embedded in the page';
+    get(url)
+      .then((d) => {
+        if (!on) return null;
+        if (usable(d)) { setSt({ data: d, src: 'live', note: '' }); return null; }
+        const why = d.status === 'no_queue' ? `found no ship in the queue${d.reason ? ` (${d.reason})` : ''}` : 'found no feasible plan';
+        // the last live run that had a plan, kept by run_tower.py next to tower.json
+        return get(url.replace(/tower\.json(\?.*)?$/, 'tower_last_ok.json')).catch(() => null).then((p) => {
+          if (!on) return;
+          if (usable(p)) setSt({ data: p, src: 'live', info: true, note: `The live run of ${when(d.generated_utc)} ${why}. Showing the last live plan, from ${when(p.generated_utc)}.` });
+          else setSt((x) => ({ ...x, src: 'embedded', info: true, note: `The live run of ${when(d.generated_utc)} ${why}. Showing ${emb} instead.` }));
+        });
+      })
+      .catch((e) => on && setSt((x) => ({ ...x, src: 'embedded', note: `The live plan could not be loaded (${e.name === 'AbortError' ? 'timed out' : e.message}); showing ${emb} instead.` })))
       .finally(() => clearTimeout(to));
     return () => { on = false; clearTimeout(to); };
   }, [url]);
@@ -790,7 +803,7 @@ function Tower({ data, feed }) {
         <div className="pf-clock num">{clk.label}<small>plan hour {fmt(t, 1)} of {tMax} · {HH ? 'UTC' : 'Bangladesh time'}</small></div>
         <div className="pf-lamps">
           <span className="pf-lamp" style={{ '--c': plan.source === 'CP-SAT reference' ? C.ok : C.tele }}><i />PLAN: {plan.source.toUpperCase()}</span>
-          <span className="pf-lamp" style={{ '--c': isLive ? C.ok : C.amber }}><i />{isLive ? `LIVE DATA ${data.live.retrieved}` : `SNAPSHOT ${data.live.retrieved}`}</span>
+          <span className="pf-lamp" style={{ '--c': isLive && !(feed && feed.src === 'embedded') ? C.ok : C.amber }}><i />{feed && feed.src === 'embedded' ? `SAVED PLAN ${data.live.retrieved}` : isLive ? `LIVE DATA ${data.live.retrieved}` : `SNAPSHOT ${data.live.retrieved}`}</span>
           <span className="pf-lamp" style={{ '--c': C.blue }}><i />{HH ? `ST. PAULI +${fmt(tideNow, 2)} m MLW` : `TIDE ${fmt(tideNow, 2)} m`}</span>
           {!HH && <span className="pf-lamp" style={{ '--c': night ? C.amber : C.ok }}><i />{night ? 'NIGHT RULE ON' : 'DAYLIGHT'}</span>}
           {windNow != null && <span className="pf-lamp" style={{ '--c': windNow >= cfg.wind_limit_ms ? C.red : C.ok }}><i />WIND {fmt(windNow)} m/s{windNow >= cfg.wind_limit_ms ? ': BIG SHIPS HOLD' : ''}</span>}
@@ -802,7 +815,7 @@ function Tower({ data, feed }) {
         <a href="chattogram.html" className={HH ? '' : 'on'}>Chattogram control tower</a><a href="hamburg.html" className={HH ? 'on' : ''}>Hamburg control tower</a><a href="../index.html">Hamburg live AIS and tide</a>
         <a href="https://github.com/artahmid03-source/portflow-simopt-mcp">Source on GitHub</a>
       </nav>}
-      {feed && feed.note && <div className="pf-banner" role="status">{feed.note}</div>}
+      {feed && feed.note && <div className={`pf-banner${feed.info ? ' ok' : ''}`} role="status">{feed.note}</div>}
 
       <div className="pf-scrub">
         <button className="pf-btn" onClick={() => { if (t >= tMax) setT(0); setPlaying(!playing); }} aria-label={playing ? 'Pause' : 'Play'}>{playing ? '❚❚ Pause' : '▶ Play'}</button>

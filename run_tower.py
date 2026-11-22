@@ -217,6 +217,13 @@ def plan_site(site: str, live: Dict[str, Any], cfg: Dict[str, Any], rules: Any, 
     return payload
 
 
+def empty_reason(site: str, live: Dict[str, Any]) -> str:
+    if site == "chattogram":
+        return ("no ship bound for Chattogram was heard on AIS in the last 21 days (AIS reaches only Singapore, the Malacca Strait and Colombo), "
+                "the carrier schedule of 13 Nov has no ship still to come, and the port's due list (data/chattogram_due.csv) is older than 3 days or empty")
+    return "no container ship declaring Hamburg on AIS or on the port's expected-vessel list"
+
+
 def empty_payload(site: str, live: Dict[str, Any], why: str) -> Dict[str, Any]:
     return {"status": "no_queue", "site_kind": site, "reason": why, "generated_utc": datetime.now(timezone.utc).isoformat(timespec="seconds"),
             "live": {k: live.get(k) for k in ("port", "retrieved", "plan_epoch_local", "what_is_live", "what_is_not_live", "excluded", "fixed_occupants")}}
@@ -249,12 +256,15 @@ def main() -> int:
     out = Path(a.out) if a.out else store / a.site / "tower.json"
     live, cfg, rules = site_setup(a.site, store)
     if len(live["vessels"]) == 0:
-        p = empty_payload(a.site, live, "no ship in the live queue")
+        p = empty_payload(a.site, live, empty_reason(a.site, live))
     else:
         p = plan_site(a.site, live, cfg, rules, a.reps, store)
         archive_plan(store, a.site, p)
     out.parent.mkdir(parents=True, exist_ok=True)
-    out.write_text(json.dumps(p, separators=(",", ":"), ensure_ascii=False), encoding="utf-8")
+    text = json.dumps(p, separators=(",", ":"), ensure_ascii=False)
+    out.write_text(text, encoding="utf-8")
+    if p.get("status") == "ok":            # the pages fall back to the last plan that had ships when a run finds none
+        (out.parent / "tower_last_ok.json").write_text(text, encoding="utf-8")
     md = summary(p)
     print(md)
     if os.environ.get("GITHUB_STEP_SUMMARY"):

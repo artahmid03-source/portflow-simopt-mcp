@@ -1,5 +1,11 @@
 # Changelog
 
+## 6.5.1 · 22 Nov 2026 · Empty live queues
+
+- When a live run finds no ship (Chattogram since 17 Nov: AIS hears no ship declaring it, the 13 Nov schedule has run out and the due list is not updated), the tower pages show the last plan that had ships (`<site>/tower_last_ok.json`, kept by `run_tower.py`) or the embedded 13 Nov plan, with an information banner that says why, instead of an error-style banner and the old v6.0 snapshot. The lamp reads SAVED PLAN for embedded plans.
+- Collector: more spellings of Chattogram matched (BDCTG, BD CTG, CHATTAGRAM), and a running count of destinations declared in the feeder region (`chattogram/destinations_seen.json`) to check the match.
+- 108 tests; tower page test 33 checks.
+
 ## 6.5.0 · 16 Nov 2026 · Server engine for the copilot, yard ledger, learned arrival times
 
 - Planning API (`api/app.py`, standard library over the engine): `POST /plan` runs the CP-SAT + yard-simulation Benders loop for a page scenario on that day's data; Dockerfile and Render blueprint. The tower pages use it first when configured and fall back to the in-browser planner.
