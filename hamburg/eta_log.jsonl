@@ -187,3 +187,6 @@
 {"mmsi":477321000,"name":"OOCL MONTREAL","heard_utc":"2026-11-22T15:39:14Z","eta_utc":"2026-11-25T13:00Z","len":294,"dest":"BE ANR > DE HAM"}
 {"mmsi":563051400,"name":"MAERSK MONTE ROSA","heard_utc":"2026-11-22T15:45:54Z","eta_utc":"2026-11-24T05:30Z","len":272,"dest":"DEHAM -  DEBRV"}
 {"mmsi":563342800,"name":"EVER ECLAT","heard_utc":"2026-11-22T15:40:17Z","eta_utc":"2026-11-25T00:00Z","len":369,"dest":"GBFXT > DEHAM"}
+{"mmsi":247078800,"name":"GRANDE FRANCIA","heard_utc":"2026-11-22T21:45:25Z","eta_utc":"2026-11-23T06:00Z","len":214,"dest":"BEANR>DEHAM"}
+{"mmsi":305530000,"name":"FITNES","heard_utc":"2026-11-22T21:53:30Z","eta_utc":"2026-11-22T18:30Z","len":176,"dest":"DEHAM"}
+{"mmsi":636024999,"name":"MSC RUBY","heard_utc":"2026-11-22T21:49:13Z","eta_utc":"2026-11-18T05:20Z","len":366,"dest":"DEHAM"}
