@@ -173,3 +173,9 @@
 {"mmsi":636023310,"name":"ONE INTELLIGENCE","heard_utc":"2026-11-22T00:28:43Z","eta_utc":"2026-11-18T01:00Z","len":399,"dest":"DEHAM"}
 {"mmsi":636023421,"name":"MSC NAIROBI X","heard_utc":"2026-11-22T00:23:21Z","eta_utc":"2026-11-23T22:00Z","len":300,"dest":"DEHAM"}
 {"mmsi":636093159,"name":"AS CLAUDIA","heard_utc":"2026-11-22T00:23:53Z","eta_utc":"2026-11-27T05:00Z","len":222,"dest":"DEHAM-BEANR"}
+{"mmsi":215804000,"name":"ATLANTIC SKY","heard_utc":"2026-11-22T07:30:12Z","eta_utc":"2026-11-23T14:00Z","len":296,"dest":"GBLIV>DEHAM"}
+{"mmsi":244742000,"name":"EXPERT","heard_utc":"2026-11-22T07:29:56Z","eta_utc":"2026-11-22T06:00Z","len":158,"dest":"DEHAM"}
+{"mmsi":256981000,"name":"CMA CGM NANSHA","heard_utc":"2026-11-22T07:35:07Z","eta_utc":"2026-11-21T12:30Z","len":300,"dest":"DEHAM"}
+{"mmsi":441399000,"name":"HMM COLOMBO","heard_utc":"2026-11-22T07:33:03Z","eta_utc":"2026-11-22T08:00Z","len":304,"dest":"NLRTM>DEHAM"}
+{"mmsi":477154700,"name":"COSCO GEMINI","heard_utc":"2026-11-22T07:33:01Z","eta_utc":"2026-11-19T15:30Z","len":399,"dest":"DEHAM"}
+{"mmsi":636022169,"name":"OCEAN SCALLION","heard_utc":"2026-11-22T07:31:01Z","eta_utc":"2026-11-10T10:00Z","len":229,"dest":"DE HAM"}
