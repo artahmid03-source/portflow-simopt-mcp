@@ -763,7 +763,7 @@ function Tower({ data, feed }) {
     await reveal([`parsed: ${said.join('; ')}`]);
     const lines = [], t0 = performance.now();
     const opt = { etaShift: next.etaShift, qgcOutages: next.qgcOutages, rtgOutages: next.rtgOutages, icd: next.icd ?? undefined, occ: next.occ ?? undefined, tugSets: next.tugSets ?? undefined, reps: 8 };
-    const srvLines = [], srv = scChips(next, cfg).length ? await solveServer(data, opt, (l) => srvLines.push(l)) : null;
+    const srvLines = [], srv = scChips(next, cfg).length && !(feed && feed.src === 'embedded') ? await solveServer(data, opt, (l) => srvLines.push(l)) : null;   // the server holds only live plans
     if (srvLines.length) await reveal(srvLines);
     const res = srv || await solveAsync(data, opt, (l) => lines.push(l));
     await reveal(lines);
@@ -778,7 +778,7 @@ function Tower({ data, feed }) {
     say('a', `${reply ? `${reply}\n` : ''}Re-planned: average turnaround ${fmt(k0.turnaround, 2)} → ${fmt(kk.turnaround, 2)} days, ${HH ? 'wait before the Elbe' : 'anchorage wait'} ${fmt(k0.wait, 0)} → ${fmt(kk.wait, 0)} h, peak yard ${fmt(k0.peak)} → ${fmt(kk.peak)}%, backpressure ${fmt(k0.beta, 2)} → ${fmt(kk.beta, 2)}.${moved.length && !isNominal ? `\nMoved: ${moved.slice(0, 4).map((r) => `${r.vessel_id} to ${berthLabel(data, r)} at hour ${r.berth_start_hr} with ${r.assigned_qcs} quay cranes`).join('; ')}${moved.length > 4 ? `; and ${moved.length - 4} more` : ''}.` : ''}\nPlaying the new plan on the chart.`);
     if (!(typeof window !== 'undefined' && window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches)) { setSpeed(16); setPlaying(true); }
     setBusy(false);
-  }, [busy, mode, sc, plan, t, data, names, cfg, nominal, HH]);
+  }, [busy, mode, sc, plan, t, data, names, cfg, nominal, HH, feed]);
 
   const clk = planClock(data.live.plan_epoch_local, t), hr = Math.min(Math.floor(t), cfg.horizon_hrs), tideNow = data.tide_hourly[hr] + (data.tide_hourly[Math.min(hr + 1, cfg.horizon_hrs)] - data.tide_hourly[hr]) * (t - hr);
   const night = !(site.clock(hr) >= cfg.daylight_hours[0] && site.clock(hr) < cfg.daylight_hours[1]);
