@@ -190,3 +190,19 @@
 {"mmsi":247078800,"name":"GRANDE FRANCIA","heard_utc":"2026-11-22T21:45:25Z","eta_utc":"2026-11-23T06:00Z","len":214,"dest":"BEANR>DEHAM"}
 {"mmsi":305530000,"name":"FITNES","heard_utc":"2026-11-22T21:53:30Z","eta_utc":"2026-11-22T18:30Z","len":176,"dest":"DEHAM"}
 {"mmsi":636024999,"name":"MSC RUBY","heard_utc":"2026-11-22T21:49:13Z","eta_utc":"2026-11-18T05:20Z","len":366,"dest":"DEHAM"}
+{"mmsi":218854000,"name":"SANTOS EXPRESS","heard_utc":"2026-11-23T02:39:13Z","eta_utc":"2026-11-25T09:00Z","len":333,"dest":"GB LGP>DE HAM"}
+{"mmsi":229947000,"name":"CMA CGM LOIRE","heard_utc":"2026-11-23T02:42:56Z","eta_utc":"2026-11-21T10:30Z","len":300,"dest":"DEHAM"}
+{"mmsi":247078800,"name":"GRANDE FRANCIA","heard_utc":"2026-11-23T02:39:28Z","eta_utc":"2026-11-23T06:00Z","len":214,"dest":"BEANR>DEHAM"}
+{"mmsi":255805899,"name":"ANINA","heard_utc":"2026-11-23T02:43:44Z","eta_utc":"2026-11-22T11:00Z","len":149,"dest":"DEHAM"}
+{"mmsi":255916314,"name":"DP WORLD LONDON","heard_utc":"2026-11-23T02:38:58Z","eta_utc":"2026-11-23T07:00Z","len":148,"dest":"DEHAM"}
+{"mmsi":256641000,"name":"YORK","heard_utc":"2026-11-23T02:42:57Z","eta_utc":"2026-11-19T12:30Z","len":179,"dest":"PTAVE-DEHAM"}
+{"mmsi":256981000,"name":"CMA CGM NANSHA","heard_utc":"2026-11-23T02:45:54Z","eta_utc":"2026-11-21T12:30Z","len":300,"dest":"DEHAM"}
+{"mmsi":305530000,"name":"FITNES","heard_utc":"2026-11-23T02:41:32Z","eta_utc":"2026-11-22T18:30Z","len":176,"dest":"DEHAM"}
+{"mmsi":305654000,"name":"ALEXANDER B","heard_utc":"2026-11-23T02:45:24Z","eta_utc":"2026-11-22T18:00Z","len":155,"dest":"DEHAM VIA NOK"}
+{"mmsi":305978000,"name":"MARBURG","heard_utc":"2026-11-23T02:47:37Z","eta_utc":"2026-11-23T02:00Z","len":158,"dest":"DEHAM"}
+{"mmsi":477154700,"name":"COSCO GEMINI","heard_utc":"2026-11-23T02:45:02Z","eta_utc":"2026-11-19T15:30Z","len":399,"dest":"DEHAM"}
+{"mmsi":538004361,"name":"HALKI","heard_utc":"2026-11-23T02:40:41Z","eta_utc":"2026-11-21T10:00Z","len":186,"dest":"DEHAM"}
+{"mmsi":538010071,"name":"HONORSHIP","heard_utc":"2026-11-23T02:45:08Z","eta_utc":"2026-11-15T03:00Z","len":289,"dest":"DE HAM"}
+{"mmsi":563051400,"name":"MAERSK MONTE ROSA","heard_utc":"2026-11-23T02:45:54Z","eta_utc":"2026-11-24T05:30Z","len":272,"dest":"DEHAM -  DEBRV"}
+{"mmsi":636023310,"name":"ONE INTELLIGENCE","heard_utc":"2026-11-23T02:40:43Z","eta_utc":"2026-11-18T01:00Z","len":399,"dest":"DEHAM"}
+{"mmsi":636025327,"name":"MSC ALESSIA","heard_utc":"2026-11-23T02:42:11Z","eta_utc":"2026-11-26T05:00Z","len":366,"dest":"DEHAM"}
