@@ -1,36 +1,36 @@
 {
- "checked_utc": "2026-11-24T07:57:35+00:00",
+ "checked_utc": "2026-11-24T08:12:47+00:00",
  "overall": "warn",
  "checks": [
   {
    "name": "collector",
    "state": "ok",
-   "detail": "last AIS run ended 2026-11-24T07:07:53Z: 2226 messages near Hamburg, 118 ships tracked, 4 connection errors, 0 s offline",
-   "age_h": 0.8
+   "detail": "last AIS run ended 2026-11-24T08:07:42Z: 1513 messages near Hamburg, 119 ships tracked, 0 connection errors, 0 s offline",
+   "age_h": 0.1
   },
   {
    "name": "plan_hamburg",
    "state": "ok",
-   "detail": "14 ships planned at 2026-11-24T04:27, 1.31 days average turnaround",
-   "age_h": 3.5
+   "detail": "14 ships planned at 2026-11-24T08:09, 1.08 days average turnaround",
+   "age_h": 0.0
   },
   {
    "name": "plan_chattogram",
    "state": "warn",
-   "detail": "no_queue: no ship bound for Chattogram was heard on AIS in the last 21 days (AIS reaches only Singapore, the Malacca Strait and Colombo), the carrier schedule of 13 Nov has no ship still to come, and the port's due list (data/chat; pages show the saved 13 Nov plan",
-   "age_h": 3.5
+   "detail": "no_queue: no ship bound for Chattogram was heard on AIS in the last 21 days (AIS reaches only Singapore, the Malacca Strait and Colombo), the carrier port schedule is not set up (needs the MAERSK_CONSUMER_KEY secret), and the port; pages show the saved 13 Nov plan",
+   "age_h": 0.0
   },
   {
    "name": "tide_forecast",
    "state": "ok",
-   "detail": "Elbe tide forecast from 6 gauges, made 2026-11-24T04:25",
-   "age_h": 3.5
+   "detail": "Elbe tide forecast from 6 gauges, made 2026-11-24T08:07",
+   "age_h": 0.1
   },
   {
    "name": "port_list",
    "state": "ok",
    "detail": "24 ships on the Port of Hamburg's expected list",
-   "age_h": 0.8
+   "age_h": 0.1
   },
   {
    "name": "carrier_schedule",
