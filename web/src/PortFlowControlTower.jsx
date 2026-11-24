@@ -704,8 +704,16 @@ export default function PortFlowControlTower() {
       .finally(() => clearTimeout(to));
     return () => { on = false; clearTimeout(to); };
   }, [url]);
+  // the pipeline's own health (tools/health.py writes status.json next to the site folders on the data branch)
+  const [health, setHealth] = useState(null);
+  useEffect(() => {
+    if (!url || !/\/tower\.json(\?.*)?$/.test(url)) return undefined;
+    let on = true;
+    fetch(url.replace(/[^/]+\/tower\.json(\?.*)?$/, 'status.json'), { cache: 'no-store' }).then((r) => (r.ok ? r.json() : null)).then((h) => { if (on && h && h.checks) setHealth(h); }).catch(() => {});
+    return () => { on = false; };
+  }, [url]);
   if (st.src === 'loading') return <div className="pf"><style>{CSS}</style><div className="pf-brand">PortFlow Control Tower<small>loading today's live plan…</small></div></div>;
-  return <Tower key={`${st.src}-${st.data.generated_utc || ''}`} data={st.data} feed={st} />;
+  return <Tower key={`${st.src}-${st.data.generated_utc || ''}`} data={st.data} feed={{ ...st, health }} />;
 }
 
 function Tower({ data, feed }) {
@@ -803,7 +811,10 @@ function Tower({ data, feed }) {
         <div className="pf-clock num">{clk.label}<small>plan hour {fmt(t, 1)} of {tMax} · {HH ? 'UTC' : 'Bangladesh time'}</small></div>
         <div className="pf-lamps">
           <span className="pf-lamp" style={{ '--c': plan.source === 'CP-SAT reference' ? C.ok : C.tele }}><i />PLAN: {plan.source.toUpperCase()}</span>
-          <span className="pf-lamp" style={{ '--c': isLive && !(feed && feed.src === 'embedded') ? C.ok : C.amber }}><i />{feed && feed.src === 'embedded' ? `SAVED PLAN ${data.live.retrieved}` : isLive ? `LIVE DATA ${data.live.retrieved}` : `SNAPSHOT ${data.live.retrieved}`}</span>
+          {feed && feed.health && (() => { const bad = feed.health.checks.filter((c) => c.state === 'fail' || c.state === 'warn'); const f = feed.health.overall;
+            return <span className="pf-lamp" title={bad.length ? bad.map((c) => `${c.name}: ${c.detail}`).join('\n') : `all checks passed at ${feed.health.checked_utc.slice(0, 16)} UTC`}
+              style={{ '--c': f === 'ok' ? C.ok : f === 'warn' ? C.amber : C.red }}><i />{f === 'ok' ? 'PIPELINE OK' : `PIPELINE: ${bad.length} ${f === 'fail' ? 'FAULT' : 'NOTICE'}${bad.length > 1 ? 'S' : ''}`}</span>; })()}
+          <span className="pf-lamp" style={{ '--c': isLive && !(feed && feed.src === 'embedded') && !(data.generated_utc && Date.now() - Date.parse(data.generated_utc) > 8 * 3600e3) ? C.ok : C.amber }}><i />{feed && feed.src === 'embedded' ? `SAVED PLAN ${data.live.retrieved}` : isLive ? `LIVE DATA ${data.live.retrieved}` : `SNAPSHOT ${data.live.retrieved}`}</span>
           <span className="pf-lamp" style={{ '--c': C.blue }}><i />{HH ? `ST. PAULI +${fmt(tideNow, 2)} m MLW` : `TIDE ${fmt(tideNow, 2)} m`}</span>
           {!HH && <span className="pf-lamp" style={{ '--c': night ? C.amber : C.ok }}><i />{night ? 'NIGHT RULE ON' : 'DAYLIGHT'}</span>}
           {windNow != null && <span className="pf-lamp" style={{ '--c': windNow >= cfg.wind_limit_ms ? C.red : C.ok }}><i />WIND {fmt(windNow)} m/s{windNow >= cfg.wind_limit_ms ? ': BIG SHIPS HOLD' : ''}</span>}

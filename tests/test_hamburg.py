@@ -87,3 +87,16 @@ def test_plan_respects_terminals_pools_and_gates():
     for t, cap in hh.STS.items():
         for h in range(hh.HAM["horizon_hrs"]):
             assert sum(x["assigned_qcs"] for x in r["schedule"] if x["quay"] == t and x["berth_start_hr"] <= h < x["cargo_done_hr"]) <= cap
+
+
+def test_moored_ships_stay_alongside_between_sparse_ais_reports():
+    """The collector runs irregularly: a ship heard moored 30 h ago is still alongside while its estimated working
+    time lasts, and counted as sailed (not as a new arrival) once that time is over."""
+    from datetime import timedelta
+    later = hh.build_live(STORE, NOW + timedelta(hours=30))
+    names = {o["name"] for o in later["fixed_occupants"]}
+    assert "EVER APEX" in names                                    # long call: still working
+    sailed = [e for e in later["excluded"] if "estimated to have sailed" in e["reason"]]
+    assert sailed and not ({e["name"] for e in sailed} & {v["name"] for v in later["vessels"]})
+    gone = hh.build_live(STORE, NOW + timedelta(hours=60))
+    assert gone["fixed_occupants"] == []                           # beyond 48 h nothing is assumed

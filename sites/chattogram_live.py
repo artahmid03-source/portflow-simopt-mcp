@@ -286,6 +286,59 @@ def load_due(path: Path, epoch: datetime) -> List[Dict[str, Any]]:
     return out
 
 
+SCHEDULE_MAX_AGE_H = 36.0
+ASSUMED_FEEDER = {"loa_m": 180.0, "beam_m": 28.0, "draught_m": 9.2}     # a typical Chattogram feeder; the carrier schedule gives no size
+
+
+def load_carrier_schedule(store: Path, epoch: datetime, now: datetime) -> List[Dict[str, Any]]:
+    """Calls from the carrier's port schedule (ingest/carrier_schedule.py), used while the file is under 36 h old."""
+    f = store / "chattogram" / "schedule" / "latest.json"
+    if not f.exists():
+        return []
+    try:
+        doc = json.loads(f.read_text(encoding="utf-8"))
+        if doc.get("status") not in ("ok", "partial") or now - _utc(doc["fetched_utc"]) > timedelta(hours=SCHEDULE_MAX_AGE_H):
+            return []
+    except (ValueError, KeyError):
+        return []
+    out = []
+    for c in doc.get("ships", []):
+        try:
+            eta = _utc(c["eta_utc"])
+        except (KeyError, ValueError):
+            continue
+        if eta < epoch - timedelta(hours=24):
+            continue
+        loa, beam, dr = ASSUMED_FEEDER["loa_m"], ASSUMED_FEEDER["beam_m"], ASSUMED_FEEDER["draught_m"]
+        teu = teu_estimate(loa, beam)
+        eta_hr = max(0, int(round((eta - epoch).total_seconds() / 3600.0)))
+        out.append({"name": c["name"], "imo": c.get("imo"), "mmsi": None, "flag": None, "built": None, "loa_m": loa, "beam_m": beam,
+                    "gt": None, "dwt_t": None, "teu_est": teu, "moves_est": int(round(MOVES_PER_TEU * teu)), "draught_reported_m": None,
+                    "draught_used_m": dr, **advice.cost_weights(teu),
+                    "status": f"on the {c.get('carrier') or 'carrier'} port schedule read {doc['fetched_utc'][:16].replace('T', ' ')}Z"
+                              + (f", service {c['service']}" if c.get("service") else ""),
+                    "area": "ANCHORAGE" if eta_hr == 0 else "BAY_NEAR" if eta_hr < 24 else "BAY_MID" if eta_hr < 72 else "BAY_FAR",
+                    "last_port": "not stated", "eta_hr": eta_hr, "waited_before_epoch_hr": 0.0,
+                    "eta_basis": f"{(c.get('eta_kind') or 'planned').lower()} arrival {c['eta_utc'][:16].replace('T', ' ')}Z on the carrier's port schedule; "
+                                 f"size assumed ({loa:.0f} m x {beam:.0f} m, {dr} m draught, a typical feeder)",
+                    "source": "carrier port schedule"})
+    return out
+
+
+def carrier_schedule_status(store: Path, now: datetime) -> str:
+    f = store / "chattogram" / "schedule" / "last_attempt.json"
+    if not f.exists():
+        return "not set up (needs the MAERSK_CONSUMER_KEY secret)"
+    try:
+        d = json.loads(f.read_text(encoding="utf-8"))
+    except ValueError:
+        return "unreadable"
+    st = d.get("status")
+    if st == "off":
+        return "off (needs the MAERSK_CONSUMER_KEY secret)"
+    return f"{st} at {str(d.get('fetched_utc'))[:16].replace('T', ' ')}Z" + (f" ({d['errors'][0]})" if d.get("errors") else "")
+
+
 def high_water_windows(epoch: datetime, hourly: Sequence[float], window=HW_WINDOW) -> List[List[int]]:
     """Plan hours in which river movements may run: from 5 h before to 1 h after each predicted high water."""
     out = []
@@ -307,7 +360,8 @@ def build_live(store: Path, now: Optional[datetime] = None, fetch: Optional[Call
     for d in load_due(DUE_CSV, epoch):
         vessels.append(d)
         seen.update({str(d["imo"]), d["name"].upper()})
-    for a in ais_vessels(store, now):
+    ais_all = ais_vessels(store, now)
+    for a in ais_all:
         if {str(a["mmsi"]), str(a["imo"]), (a["name"] or "").upper()} & seen:
             continue
         v, why = from_ais(a, epoch)
@@ -316,6 +370,11 @@ def build_live(store: Path, now: Optional[datetime] = None, fetch: Optional[Call
             seen.update({str(a["mmsi"]), str(a["imo"]), a["name"].upper()})
         else:
             excluded.append({"name": a["name"], "mmsi": a["mmsi"], "reason": why})
+    for c in load_carrier_schedule(store, epoch, now):
+        if {str(c["imo"]), c["name"].upper()} & seen:
+            continue
+        vessels.append(c)
+        seen.update({str(c["imo"]), c["name"].upper()})
     for sv in snap["vessels"]:
         if {str(sv["mmsi"]), str(sv["imo"]), sv["name"].upper()} & seen:
             continue
@@ -335,9 +394,10 @@ def build_live(store: Path, now: Optional[datetime] = None, fetch: Optional[Call
         "what_is_not_live": "AISStream has no receiver at Chattogram, so ships are heard in Singapore, the Malacca Strait or Colombo and dead-reckoned from there; "
                             "berth occupancy at the plan start, terminal assignment, box counts and the yard level are not published and are estimated or assumed.",
         "sources": {"ais": "AISStream.io websocket, collected hourly by GitHub Actions", "tide": "Open-Meteo marine API (sea_level_height_msl), calibrated to the Chittagong tide table",
-                    "carrier_schedule": f"CNC / CMA CGM schedule for BDCGP read {snap['retrieved']} (ships AIS has not picked up)"},
+                    "carrier_schedule": f"Maersk port schedule (DCSA API) when MAERSK_CONSUMER_KEY is set; CNC / CMA CGM schedule for BDCGP read {snap['retrieved']} (ships AIS has not picked up)"},
         "estimates": {"teu_capacity": f"{TEU_A} x (LOA x beam)^{TEU_B}", "moves_per_call": f"{MOVES_PER_TEU} x estimated TEU", "draught_used": "AIS draught capped at 9.5 m; 9.0 m if not reported",
                       "berth_occupancy": "quay assumed free at the plan start (not observable)"},
+        "carrier_schedule_status": carrier_schedule_status(store, now),
         "fixed_occupants": [], "also_in_port_not_modelled": [], "excluded": excluded[:30],
         "vessels": vessels, "tides": turning_points(epoch, tb["hourly_m"]), "tide_hourly_m": tb["hourly_m"], "tide_margin_m": TIDE_CAL["rmse_m"],
         "hw_windows": high_water_windows(epoch, tb["hourly_m"]), "rules": dict(RULES_2023, hw_window_h=list(HW_WINDOW),

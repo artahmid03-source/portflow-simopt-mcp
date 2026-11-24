@@ -72,10 +72,15 @@ async def stream(name: str, url: str, key: str, phases: List, t_end: float, on_r
     """One connection. `phases` is [(start_time, subscription_builder), ...]; a builder may return None to keep the current subscription."""
     import websockets  # optional dependency: uv sync --extra ais
 
+    import random
+
     loop, backoff, idx = asyncio.get_running_loop(), 1.0, 0
+    # AISStream times out the opening handshake when several connections arrive at once: stagger the starts
+    await asyncio.sleep(min(STAGGER_S.get(name.split(":")[0], 0.0), 0.02 * max(0.0, t_end - loop.time())))
     while loop.time() < t_end:
+        t_try = loop.time()
         try:
-            async with websockets.connect(url, open_timeout=10, max_size=2 ** 20) as ws:      # permessage-deflate is on by default
+            async with websockets.connect(url, open_timeout=OPEN_TIMEOUT_S, max_size=2 ** 20) as ws:   # permessage-deflate is on by default
                 await ws.send(json.dumps({"APIKey": key, **phases[idx][1]()}))                 # must arrive within 3 s
                 stats[f"{name}_connects"] += 1
                 backoff = 1.0
@@ -100,10 +105,17 @@ async def stream(name: str, url: str, key: str, phases: List, t_end: float, on_r
                         stats[f"{name}_msgs"] += 1
                         on_record(name, idx, rec)
         except (OSError, asyncio.TimeoutError, websockets.WebSocketException) as e:
+            stats[f"{name}_retries"] += 1
             if len(stats["errors"]) < 10:
                 stats["errors"].append(f"{name}: {type(e).__name__}: {e}"[:160])
-            await asyncio.sleep(max(0.0, min(backoff, t_end - loop.time())))                   # exponential backoff, as AISStream advises
+            wait = max(0.0, min(backoff * (0.5 + random.random()), t_end - loop.time()))      # exponential backoff with jitter, as AISStream advises
+            stats[f"{name}_offline_s"] += round(loop.time() - t_try + wait, 1)
+            await asyncio.sleep(wait)
             backoff = min(backoff * 2, 30.0)
+
+
+OPEN_TIMEOUT_S = 30.0
+STAGGER_S = {"near": 0.0, "feeder": 4.0, "x": 8.0, "probe": 12.0}
 
 
 def port_of(lat: Optional[float], lon: Optional[float], ports: List[Dict[str, Any]]) -> Optional[str]:
@@ -192,7 +204,8 @@ async def collect(key: str, minutes: float, tracked: Iterable[int] = (), url: st
     return {"near_pos": near_pos, "near_static": near_static, "feeder_static": feeder_static, "track_pos": track_pos, "coverage": coverage, "site": site,
             "probe_seconds": round(probe_frac * minutes * 60.0) if probe_ports else 0, "stats": dict(stats), "started": started, "ended": datetime.now(timezone.utc),
             "extra": {xs: {"near_pos": {}, "near_static": {}, "feeder_static": x["feeder_static"], "track_pos": x["track_pos"], "site": xs, "dest_seen": dict(x["dest_seen"]),
-                           "stats": {"near_msgs": 0, "feeder_msgs": stats.get(f"x:{xs}_msgs", 0), "errors": [e for e in stats["errors"] if e.startswith(f"x:{xs}")]},
+                           "stats": {"near_msgs": 0, "feeder_msgs": stats.get(f"x:{xs}_msgs", 0), "errors": [e for e in stats["errors"] if e.startswith(f"x:{xs}")],
+                                     f"x:{xs}_offline_s": stats.get(f"x:{xs}_offline_s", 0), f"x:{xs}_retries": stats.get(f"x:{xs}_retries", 0)},
                            "started": started} for xs, x in extra.items()}}
 
 
@@ -296,7 +309,8 @@ def write_store(root: Path, got: Dict[str, Any]) -> Dict[str, Any]:
     run = {"t_start": iso(got["started"]), "t_end": iso(now), "near_msgs": st.get("near_msgs", 0), "feeder_msgs": st.get("feeder_msgs", 0),
            "near_ships": len(got["near_pos"]), "near_static": len(got["near_static"]), "bound_static": len(got["feeder_static"]),
            "tracked_heard": len(got["track_pos"]), "tracked_total": len(tracked), "rows_positions": len(pos_rows), "rows_static": len(static_rows),
-           "not_cargo_or_unknown": skipped, "errors": st.get("errors", [])}
+           "not_cargo_or_unknown": skipped, "errors": st.get("errors", []),
+           "offline_s": {k[:-10]: v for k, v in st.items() if k.endswith("_offline_s")}, "retries": sum(v for k, v in st.items() if k.endswith("_retries"))}
     _append(store / "positions" / f"{day}.jsonl", pos_rows)
     _append(store / "static" / f"{day}.jsonl", static_rows)
     _append(store / "runs.jsonl", [run])

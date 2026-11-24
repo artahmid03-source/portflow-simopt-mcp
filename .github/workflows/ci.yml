@@ -28,6 +28,8 @@ jobs:
         run: uv sync --extra ais --locked
       - name: Lint
         run: uv run ruff check .
+      - name: Lint the workflows
+        run: uvx --from actionlint-py actionlint .github/workflows/*.yml
       - name: Tests
         run: uv run pytest -q
       - name: Re-run the pipeline and compare with the committed results

@@ -127,3 +127,14 @@ def test_backtest_scores_only_the_first_plan_of_each_day(tmp_path):
     (plans / "2026-11-14T08.json").write_text(json.dumps(later))       # a later run the same day (new name style)
     doc = run_backtest.run(tmp_path, datetime(2026, 11, 17, tzinfo=timezone.utc))
     assert doc["plans_archived"] == 2 and doc["plan"]["n"] == 1 and doc["records"][0]["berth_err_h"] == 3.0
+
+
+def test_backtest_ignores_calls_that_began_before_the_plan(tmp_path):
+    test_backtest_matches_plans_with_ais_moorings(tmp_path)
+    plans = tmp_path / "hamburg" / "plans"
+    late = json.loads((plans / "2026-11-14.json").read_text())
+    late["generated_utc"] = "2026-11-15T20:00:00+00:00"                 # made after the ship had already berthed (09:00)
+    late["rows"][0]["berth_start_utc"] = "2026-11-16T02:00Z"
+    (plans / "2026-11-15.json").write_text(json.dumps(late))
+    doc = run_backtest.run(tmp_path, datetime(2026, 11, 17, tzinfo=timezone.utc))
+    assert doc["plan"]["n"] == 1                                       # only the 14 Nov plan is scored; the old call is not its outcome

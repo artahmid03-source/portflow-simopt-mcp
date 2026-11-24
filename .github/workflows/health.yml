@@ -1,0 +1,60 @@
+name: Health check
+
+# After every collector and planning run, and once an hour: check that each data source arrived and is fresh, that
+# both plans were made, that the planning API and the pages answer. Writes status.json to the data branch (the
+# tower pages show it), restarts a stale collector or planning run, opens a "PortFlow health alert" issue when a
+# check fails twice in a row (GitHub emails the owner) and closes it when everything passes again. Also keeps the
+# scheduled workflows alive: GitHub disables schedules in repositories with no activity for 60 days.
+
+on:
+  workflow_run:
+    workflows: ["Collect AIS", "Control-tower plans (every 4 hours)"]
+    types: [completed]
+  schedule:
+    - cron: "41 * * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  issues: write
+  actions: write
+
+concurrency:
+  group: health
+  cancel-in-progress: false
+
+jobs:
+  health:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          fetch-depth: 1
+      - uses: actions/checkout@v5
+        with:
+          ref: data
+          path: store
+      - uses: actions/setup-python@v6
+        with:
+          python-version: "3.13"
+      - name: Check, heal and alert
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+        run: python tools/health.py --store store --act
+      - name: Save status
+        if: always()
+        run: bash tools/push_store.sh store "health $(date -u +%Y-%m-%dT%H:%MZ)"
+      - name: Keep the schedules alive
+        continue-on-error: true
+        run: |
+          last=$(git log -1 --format=%ct origin/main 2>/dev/null || git log -1 --format=%ct)
+          age_days=$(( ( $(date +%s) - last ) / 86400 ))
+          echo "last commit on main: $age_days days ago"
+          if [ "$age_days" -ge 45 ]; then
+            git config user.name "portflow-collector"
+            git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+            git commit --allow-empty -q -m "keepalive: scheduled workflows stay enabled"
+            git push -q origin HEAD:main
+          fi

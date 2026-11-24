@@ -403,6 +403,26 @@ A review of the running system and of the literature (16 Nov 2026) found two dat
 
 **Learned arrival times.** The collector now logs every ETA a ship declares on AIS with the time it was heard (`<site>/eta_log.jsonl`). `run_eta_model.py` (daily) matches each logged ETA with the call AIS later saw and fits a small ridge regression of the error on lead time, lead time squared and ship length, with 5-fold cross-validation. The Hamburg plan applies the correction only when the model has at least 20 matched calls and beats the declared ETAs by 10% or more out of sample; until then the ship's basis says "ETA declared on AIS", and afterwards it states the correction and the error before and after.
 
+## Keeping it running: health checks, self-healing and alerts
+
+The live system has five moving parts (the AIS collector, the 4-hourly planning run, the outside data sources, the planning API and the pages), and any of them can fail for reasons outside the code: GitHub skips scheduled runs under load, AISStream times out connections, a port website is down, a free host is asleep. Since v6.6 these are handled as normal events rather than errors:
+
+| What can go wrong | What happens now |
+|---|---|
+| A data source is down (port list, tide gauges, wind, carrier schedule) | Each input step may fail on its own; the plan uses the last good copy, and the health check reports the age of each source. |
+| AISStream times out a connection | The three connections start a few seconds apart, wait 30 s for the handshake and retry with jittered backoff; time offline is logged per run. |
+| GitHub skips scheduled runs | The collector is scheduled every 15 minutes, the planning run listens to AIS for 8 minutes before it plans, and the health check restarts a collector that is more than 90 minutes stale or a plan more than 5 hours stale (at most once per 2 hours each, never while one is running). |
+| Two runs push to the data branch at once | `tools/push_store.sh` rebases and retries up to six times. |
+| A live run finds no ship (Chattogram) | Pages show the last plan that had ships, or the saved 13 Nov plan, with a note that says why. |
+| Ships moored between sparse AIS reports | A ship heard moored at a container quay within 48 h stays alongside until its estimated working time runs out, and is then counted as sailed rather than as a new arrival. The backtest no longer scores a plan against a call that began before the plan was made. |
+| The planning API is asleep | The planning run wakes it after each plan; the page waits up to 100 s and otherwise re-plans in the browser. |
+| GitHub disables schedules after 60 quiet days | The health workflow makes an empty "keepalive" commit on `main` after 45 days without one. |
+| Something stays broken | `.github/workflows/health.yml` runs after every collector and planning run and hourly. It writes `status.json` (the tower pages show it as the PIPELINE lamp), and when a check fails twice in a row it opens a "PortFlow health alert" issue that mentions the owner, so GitHub sends an email; it closes the issue when everything passes again. |
+
+`python tools/health.py --store store` prints the same report locally.
+
+**Chattogram's live queue** needs a source that is not AIS (no receiver reaches the Bay of Bengal) and not the port authority's portal (automated fetching is not allowed). `ingest/carrier_schedule.py` reads the DCSA Commercial Schedules `port-schedules` endpoint that Maersk publishes. It switches on when the repository secret `MAERSK_CONSUMER_KEY` exists (a self-service key from developer.maersk.com); until then the health check lists it as not set up. Ship sizes are not in that schedule, so a typical feeder size is assumed and labelled. The hand-entered due list (`data/chattogram_due.csv`) remains the other option.
+
 ## Continuous AIS collection
 
 AIS is the one input that cannot be fetched after the fact, so it is collected on a timer. `.github/workflows/collect.yml` runs `ingest/collect.py` twice an hour (scheduled; GitHub skips some runs) for twelve minutes and commits what it heard to the `data` branch as plain text. The plans are rebuilt every 4 hours from whatever has been collected.

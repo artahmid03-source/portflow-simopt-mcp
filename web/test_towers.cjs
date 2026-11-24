@@ -102,6 +102,19 @@ const send = async (page, text) => {
     assert.deepStrictEqual(errors, [], 'no page errors'); n++;
     await page.close();
   }
+  // the pipeline health lamp reads status.json from the data branch
+  {
+    const page = await browser.newPage({ viewport: { width: 1440, height: 1000 } });
+    await page.route(/tile\.openstreetmap|openseamap|fonts\.g/, (r) => r.abort());
+    const status = { checked_utc: '2026-11-24T08:00:00+00:00', overall: 'warn', checks: [{ name: 'collector', state: 'ok', detail: 'fine' }, { name: 'plan_chattogram', state: 'warn', detail: 'no_queue' }] };
+    await page.route(/raw\.githubusercontent\.com/, (r) => r.fulfill({ status: 200, contentType: 'application/json', headers: { 'access-control-allow-origin': '*' },
+      body: /status\.json/.test(r.request().url()) ? JSON.stringify(status) : fs.readFileSync(hamFile) }));
+    await page.goto('file://' + path.join(docs, 'hamburg.html') + '?api=off');
+    await page.waitForSelector('.pf-kpi', { timeout: 20000 }); await page.waitForTimeout(1200);
+    assert.ok((await page.textContent('.pf-lamps')).includes('PIPELINE: 1 NOTICE'), 'pipeline health lamp'); n++;
+    assert.ok((await page.getAttribute('.pf-lamp[title*="plan_chattogram"]', 'title')).includes('no_queue'), 'lamp lists the notice'); n++;
+    await page.close();
+  }
   await browser.close();
   console.log(`OK: tower pages passed (${n} checks)`);
 })().catch((e) => { console.error(e); process.exit(1); });

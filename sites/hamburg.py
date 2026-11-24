@@ -351,9 +351,13 @@ def build_live(store: Path, now: Optional[datetime] = None, max_ships: int = 14)
                 "beam": s.get("beam"), "draught": t.get("draught"), "dest": t.get("dest"), "eta_utc": t.get("eta_utc")}
 
     occupants, vessels, excluded, used = [], [], [], set()
+    recent_call: Dict[str, str] = {}                         # moored at a container quay in the last 48 h, estimated to have sailed
     for m, rows in hist.items():                              # ships moored at a container quay now
         last = rows[-1]
-        if _utc(last["t"]) < fresh or (last.get("sog") or 0) > 0.6 or last.get("zone") != "PORT":
+        age_h = (now - _utc(last["t"])).total_seconds() / 3600.0
+        # the collector re-logs a moored ship only when it moves or every 6 h, and runs are irregular: a ship last
+        # heard moored up to 48 h ago is still alongside unless its estimated working time has run out (below)
+        if age_h > 48 or (last.get("sog") or 0) > 0.6 or last.get("zone") != "PORT":
             continue
         where = locate(last["lat"], last["lon"])
         if not where:
@@ -374,6 +378,9 @@ def build_live(store: Path, now: Optional[datetime] = None, max_ships: int = 14)
         moves = moves_estimate(s["len"], teu)
         work = moves / (HAM["qgc_gmph"] * nct.eng.crane_effect(min(4, max_cranes(s["len"], q["terminal"])), False))
         rel = int(round((_utc(since) - epoch).total_seconds() / 3600.0 + work + 4))
+        if age_h > 8 and rel <= 0:                         # not heard for a while and its estimated working time is over
+            recent_call[m] = f"moored at {q['name']} from {since[:16].replace('T', ' ')}Z; estimated to have sailed"
+            continue
         L = int(math.ceil(s["len"]))
         b0 = int(max(q["axis_lo"], min(q["axis_hi"] - L, q["axis_lo"] + along - L / 2)))
         occupants.append({"name": s["name"], "imo": s["imo"], "mmsi": int(m), "loa_m": float(s["len"]), "beam_m": beam, "terminal": q["terminal"], "quay": qid,
@@ -445,6 +452,10 @@ def build_live(store: Path, now: Optional[datetime] = None, max_ships: int = 14)
             continue
         s = static(m)
         if not s["name"] or not s["len"] or s["len"] < 120:
+            continue
+        if m in recent_call:                                   # this call is over; a declared ETA still pointing at it is stale
+            excluded.append({"name": s["name"], "mmsi": int(m), "reason": recent_call[m]})
+            done_names.add(_norm(s["name"]))
             continue
         beam = s["beam"] or round(s["len"] / 7.0, 1)
         e = expected.get(_norm(s["name"]))

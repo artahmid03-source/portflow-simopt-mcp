@@ -1,6 +1,6 @@
 name: Control-tower plans (every 4 hours)
 
-# Every 4 hours (03:40, 07:40, ... UTC): fit the tide model to the official Elbe gauges and summarise the collected AIS
+# Every 4 hours (03:40, 07:40, ... UTC): listen to AIS for 8 minutes, read the port lists and the carrier schedule, fit the tide model to the official Elbe gauges and summarise the collected AIS
 # (hamburg/latest.json, hamburg/daily/DATE.json), then plan both ports on today's data with CP-SAT and
 # the yard simulation (hamburg/tower.json, chattogram/tower.json), check the in-page engine against
 # those plans, and save everything to the `data` branch. The tower pages load the tower files.
@@ -20,7 +20,7 @@ concurrency:
 jobs:
   daily:
     runs-on: ubuntu-latest
-    timeout-minutes: 45
+    timeout-minutes: 60
     steps:
       - uses: actions/checkout@v5
       - uses: actions/checkout@v5
@@ -32,10 +32,24 @@ jobs:
           python-version: "3.13"
           enable-cache: true
       - name: Install
-        run: uv sync --locked --no-dev
+        run: uv sync --extra ais --locked --no-dev
+      # every input step may fail on its own (a site down, a slow network): the plan then uses the last good copy
+      - name: Listen to AIS before planning
+        continue-on-error: true
+        timeout-minutes: 12
+        env:
+          AISSTREAM_API_KEY: ${{ secrets.AISSTREAM_API_KEY }}
+        run: uv run --no-dev python ingest/collect.py --store store --minutes 8
       - name: Port of Hamburg expected-vessel list
+        continue-on-error: true
         run: uv run --no-dev python ingest/hamburg_expected.py --store store
-      - name: Build the daily update
+      - name: Carrier port schedule (Chattogram)
+        continue-on-error: true
+        env:
+          MAERSK_CONSUMER_KEY: ${{ secrets.MAERSK_CONSUMER_KEY }}
+        run: uv run --no-dev python ingest/carrier_schedule.py --store store --locode BDCGP
+      - name: Tide and wind forecast, vessel picture
+        continue-on-error: true
         run: uv run --no-dev python run_daily.py --store store
       - name: Plan against reality (Hamburg)
         continue-on-error: true
@@ -63,18 +77,18 @@ jobs:
         run: |
           for s in hamburg chattogram; do
             if [ -f store/$s/tower.json ]; then node web/validate.mjs --data store/$s/tower.json --write; fi
+            # keep the validated copy as the last plan with ships
+            python3 -c "import json,shutil,sys; p='store/$s/tower.json'; d=json.load(open(p)); d.get('status')=='ok' and shutil.copyfile(p,'store/$s/tower_last_ok.json')" || true
           done
       - name: Save to the data branch
         if: always()
-        working-directory: store
+        run: bash tools/push_store.sh store "plans $(date -u +%Y-%m-%dT%H:%MZ)"
+      - name: Wake the planning API so the copilot is quick on the new plans
+        if: always()
+        continue-on-error: true
         run: |
-          git config user.name "portflow-collector"
-          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add -A
-          if git diff --cached --quiet; then
-            echo "Nothing new to save."
-          else
-            git commit -q -m "plans $(date -u +%Y-%m-%dT%H:%MZ)"
-            git pull -q --rebase
-            git push -q
-          fi
+          sleep 30   # raw.githubusercontent.com caches for a few minutes
+          for s in hamburg chattogram; do
+            curl -s -m 120 -o /dev/null -w "$s %{http_code}\n" -X POST https://portflow-api.onrender.com/plan \
+              -H 'Content-Type: application/json' -d "{\"site\":\"$s\",\"scenario\":{}}" || true
+          done

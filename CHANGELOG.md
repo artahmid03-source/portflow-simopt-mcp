@@ -1,5 +1,17 @@
 # Changelog
 
+## 6.6.0 · 24 Nov 2026 · Operations: fewer failure points, self-healing, alerts
+
+An audit of the live system (runs of 18-24 Nov) found: the collector ran 3-4 times a day instead of every 30 minutes; most runs had AISStream handshake timeouts; a failed port-list download would have skipped saving the AIS data; ships moored between sparse AIS reports were planned as new arrivals, and the backtest scored plans against calls that began before the plan (Hamburg plan error 20 h, of which the "seen moored" group alone was 34 h with a -34 h bias); Chattogram had no automatic source.
+
+- Hamburg: ships heard moored within 48 h stay alongside until their estimated working time ends, then count as sailed; backtest ignores calls that began before the plan.
+- Collector: staggered connections, 30 s handshake timeout, jittered backoff, offline time per run; every 15 minutes; the planning run listens for 8 minutes first.
+- Workflows: every input step may fail without stopping the run; data is always saved, with a retrying push (`tools/push_store.sh`); the planning API is woken after each plan; workflows are linted in CI.
+- Health workflow (`tools/health.py`): freshness of every source, both plans, the API and the pages; `status.json` and a PIPELINE lamp on the tower pages; restarts stale runs; opens and closes a GitHub issue alert; keeps schedules alive.
+- Chattogram: carrier port schedule (Maersk DCSA `port-schedules`), active once the `MAERSK_CONSUMER_KEY` secret is set; its status is shown in the empty-queue note and the health report.
+- Plan lamp turns amber when the plan is more than 8 hours old.
+- 123 tests; tower page test 35 checks.
+
 ## 6.5.1 · 22 Nov 2026 · Empty live queues
 
 - When a live run finds no ship (Chattogram since 17 Nov: AIS hears no ship declaring it, the 13 Nov schedule has run out and the due list is not updated), the tower pages show the last plan that had ships (`<site>/tower_last_ok.json`, kept by `run_tower.py`) or the embedded 13 Nov plan, with an information banner that says why, instead of an error-style banner and the old v6.0 snapshot. The lamp reads SAVED PLAN for embedded plans.

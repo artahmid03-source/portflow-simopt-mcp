@@ -60,9 +60,13 @@ def observed_calls(site: Path, since: datetime, until: datetime) -> Dict[str, Li
     return calls
 
 
-def _match(calls: List[Dict[str, Any]], planned: datetime, window_h: float = 72.0) -> Optional[Dict[str, Any]]:
+def _match(calls: List[Dict[str, Any]], planned: datetime, window_h: float = 72.0, made: Optional[datetime] = None) -> Optional[Dict[str, Any]]:
+    """The observed call nearest the planned time. A call that began before the plan was made (minus 2 h of AIS lag)
+    is an earlier visit, not the outcome of this plan."""
     best = None
     for c in calls:
+        if made is not None and _utc(c["alongside_utc"]) < made - timedelta(hours=2):
+            continue
         dt = abs((_utc(c["alongside_utc"]) - planned).total_seconds()) / 3600.0
         if dt <= window_h and (best is None or dt < best[0]):
             best = (dt, c)
@@ -119,7 +123,7 @@ def run(store: Path, now: Optional[datetime] = None) -> Dict[str, Any]:
             planned = _utc(r["berth_start_utc"])
             if not m or planned > now - timedelta(hours=6):
                 continue
-            c = _match(calls.get(m, []), planned)
+            c = _match(calls.get(m, []), planned, made=made)
             if not c:
                 continue
             dep_err = None
@@ -145,7 +149,7 @@ def run(store: Path, now: Optional[datetime] = None) -> Dict[str, Any]:
             key = (e["name"], e["time_utc"])
             if not m or key in seen or planned > now - timedelta(hours=6):
                 continue
-            c = _match(calls.get(m, []), planned)
+            c = _match(calls.get(m, []), planned, made=made)
             if not c:
                 continue
             seen.add(key)

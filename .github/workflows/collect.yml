@@ -1,13 +1,14 @@
 name: Collect AIS
 
-# Listens to AISStream for 12 minutes every half hour and appends what it heard to the `data` branch, together with
-# the port of Hamburg's list of expected ships. GitHub may skip scheduled runs under load; for continuous collection
-# run the same script in always-on mode on any small server (see deploy/README.md).
+# Listens to AISStream for 12 minutes and appends what it heard to the `data` branch, together with the Port of
+# Hamburg's list of expected ships. Scheduled every 15 minutes; GitHub runs far fewer under load, so the health
+# workflow also restarts it when the last run is more than 90 minutes old, and the plans workflow listens before
+# planning. For continuous collection run the same script in always-on mode on a server (see deploy/README.md).
 # Needs one repository secret: AISSTREAM_API_KEY (Settings > Secrets and variables > Actions).
 
 on:
   schedule:
-    - cron: "7,37 * * * *"
+    - cron: "4,19,34,49 * * * *"
   workflow_dispatch:
     inputs:
       minutes:
@@ -38,21 +39,13 @@ jobs:
       - name: Install
         run: uv sync --extra ais --locked --no-dev
       - name: Listen
+        continue-on-error: true
         env:
           AISSTREAM_API_KEY: ${{ secrets.AISSTREAM_API_KEY }}
         run: uv run --no-dev python ingest/collect.py --store store --minutes "${{ inputs.minutes || '12' }}"
       - name: Port of Hamburg expected-vessel list
+        continue-on-error: true
         run: uv run --no-dev python ingest/hamburg_expected.py --store store
       - name: Save to the data branch
-        working-directory: store
-        run: |
-          git config user.name "portflow-collector"
-          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add -A
-          if git diff --cached --quiet; then
-            echo "Nothing new to save."
-          else
-            git commit -q -m "collect $(date -u +%Y-%m-%dT%H:%MZ)"
-            git pull -q --rebase
-            git push -q
-          fi
+        if: always()
+        run: bash tools/push_store.sh store "collect $(date -u +%Y-%m-%dT%H:%MZ)"
