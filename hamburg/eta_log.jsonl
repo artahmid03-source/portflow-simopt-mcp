@@ -241,3 +241,7 @@
 {"mmsi":636025672,"name":"NETA A.","heard_utc":"2026-11-24T07:07:00Z","eta_utc":"2026-11-23T21:00Z","len":158,"dest":"DEHAM"}
 {"mmsi":636093159,"name":"AS CLAUDIA","heard_utc":"2026-11-24T06:56:19Z","eta_utc":"2026-11-29T21:00Z","len":222,"dest":"DEHAM-BEANR"}
 {"mmsi":636093172,"name":"ALULA EXPRESS","heard_utc":"2026-11-24T06:56:24Z","eta_utc":"2026-11-25T08:00Z","len":368,"dest":"DEHAM"}
+{"mmsi":255916314,"name":"DP WORLD LONDON","heard_utc":"2026-11-24T08:02:56Z","eta_utc":"2026-11-24T07:00Z","len":148,"dest":"DEHAM"}
+{"mmsi":256641000,"name":"YORK","heard_utc":"2026-11-24T08:00:37Z","eta_utc":"2026-11-19T12:30Z","len":179,"dest":"PTAVE-DEHAM"}
+{"mmsi":305978000,"name":"MARBURG","heard_utc":"2026-11-24T08:02:24Z","eta_utc":"2026-11-23T02:00Z","len":158,"dest":"DEHAM"}
+{"mmsi":538005733,"name":"SAN FELIX","heard_utc":"2026-11-24T08:03:36Z","eta_utc":"2026-11-26T14:30Z","len":300,"dest":"DEHAM"}

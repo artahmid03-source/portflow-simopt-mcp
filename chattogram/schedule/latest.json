@@ -1,0 +1,10 @@
+{
+ "fetched_utc": "2026-11-24T08:07:44+00:00",
+ "locode": "BDCGP",
+ "source": "Maersk port schedule (DCSA Commercial Schedules 1.0)",
+ "ships": [],
+ "errors": [
+  "no MAERSK_CONSUMER_KEY secret: carrier schedule not read"
+ ],
+ "status": "off"
+}
