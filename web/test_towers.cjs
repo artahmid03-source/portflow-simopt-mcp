@@ -1,11 +1,11 @@
 // Browser test of the public tower pages (docs/tower/*.html) with the live feed mocked.
-//   node test_towers.cjs <chattogram tower.json> <hamburg tower.json>
+//   node test_towers.cjs <hamburg tower.json>
 const { chromium } = require('playwright');
 const fs = require('fs');
 const path = require('path');
 const assert = require('assert');
 
-const [ctgFile, hamFile] = process.argv.slice(2);
+const [hamFile] = process.argv.slice(2);
 const docs = path.join(__dirname, '..', 'docs', 'tower');
 const workers = [];
 const fmt = (x, d) => Number(x).toLocaleString('en-US', { minimumFractionDigits: d, maximumFractionDigits: d });
@@ -57,62 +57,50 @@ const send = async (page, text) => {
     assert.deepStrictEqual(errors, [], 'no errors on the Hamburg page'); n++;
     await page.close();
   }
-  // Chattogram: live feed replaces the snapshot
+  // Hamburg: feed missing -> the plan embedded in the page, with a banner and a SAVED PLAN lamp
   {
-    const d = JSON.parse(fs.readFileSync(ctgFile, 'utf8'));
-    const { page, errors } = await open(browser, 'chattogram.html', ctgFile);
-    assert.ok((await page.textContent('.pf-lamps')).includes('LIVE DATA'), 'live lamp'); n++;
-    assert.strictEqual((await kpis(page))[0], `${fmt(d.optimised.kpis.avg_turnaround_days, 2)}days`, 'live turnaround tile'); n++;
-    assert.strictEqual(await page.$$eval('.pf-gbar', (e) => e.length), d.optimised.schedule.length, 'Gantt bars'); n++;
-    assert.ok(await page.$('.pf-map.leaflet-container'), 'Chattogram Leaflet map'); n++;
-    assert.ok((await page.$$eval('.pf-mk', (e) => e.length)) >= d.optimised.schedule.length, 'a marker per planned ship'); n++;
-    await page.click('.pf-btn:has-text("Karnaphuli and NCT")'); await page.fill('.pf-scrub input', '30'); await page.waitForTimeout(900);
-    assert.ok((await page.textContent('.pf-card')).length > 0, 'ship card under the map'); n++;
-    assert.deepStrictEqual(errors, [], 'no errors on the Chattogram page'); n++;
-    await page.close();
-  }
-  // Chattogram: feed missing -> embedded snapshot with a banner
-  {
-    const { page, errors } = await open(browser, 'chattogram.html', null);
+    const { page, errors } = await open(browser, 'hamburg.html', null);
     assert.ok((await page.textContent('.pf-banner')).includes('could not be loaded'), 'fallback banner'); n++;
     assert.ok((await page.textContent('.pf-lamps')).includes('SAVED PLAN'), 'saved-plan lamp, not LIVE'); n++;
-    assert.ok((await page.$$eval('.pf-mk', (e) => e.length)) >= 8, 'snapshot ships on the real map'); n++;
+    assert.ok((await page.$$eval('.pf-mk', (e) => e.length)) >= 5, 'saved plan ships on the real map'); n++;
     assert.deepStrictEqual(errors, [], 'no errors on fallback'); n++;
     await page.close();
   }
-  // Chattogram: the live run found no ship -> the last plan that had ships, or the embedded 13 Nov plan, with an information banner
+  // Hamburg: the live run found no ship -> the last plan that had ships, or the embedded plan, with an information banner
   for (const lastOk of [true, false]) {
     const page = await browser.newPage({ viewport: { width: 1440, height: 1000 } });
     const errors = [];
     page.on('pageerror', (e) => errors.push(`pageerror: ${e.message}`));
     await page.route(/tile\.openstreetmap|openseamap|fonts\.g/, (r) => r.abort());
-    const empty = JSON.stringify({ status: 'no_queue', site_kind: 'chattogram', reason: 'no ship bound for Chattogram was heard', generated_utc: '2026-11-22T03:28:10+00:00', live: {} });
+    const empty = JSON.stringify({ status: 'no_queue', site_kind: 'hamburg', reason: 'no container ship declaring Hamburg', generated_utc: '2026-11-22T03:28:10+00:00', live: {} });
     await page.route(/raw\.githubusercontent\.com/, (r) => {
       const u = r.request().url(), h = { 'access-control-allow-origin': '*' };
-      if (/tower_last_ok\.json/.test(u)) return lastOk ? r.fulfill({ status: 200, contentType: 'application/json', headers: h, body: fs.readFileSync(ctgFile) }) : r.fulfill({ status: 404, headers: h, body: 'no' });
+      if (/tower_last_ok\.json/.test(u)) return lastOk ? r.fulfill({ status: 200, contentType: 'application/json', headers: h, body: fs.readFileSync(hamFile) }) : r.fulfill({ status: 404, headers: h, body: 'no' });
       return r.fulfill({ status: 200, contentType: 'application/json', headers: h, body: empty });
     });
-    await page.goto('file://' + path.join(docs, 'chattogram.html') + '?api=off');
+    await page.goto('file://' + path.join(docs, 'hamburg.html') + '?api=off');
     await page.waitForSelector('.pf-banner', { timeout: 20000 }); await page.waitForTimeout(800);
     const banner = await page.textContent('.pf-banner'), cls = await page.getAttribute('.pf-banner', 'class');
     assert.ok(/ok/.test(cls), 'an empty queue is shown as information, not as an error'); n++;
     if (lastOk) { assert.ok(banner.includes('Showing the last live plan'), `last good plan banner: ${banner}`); n++; assert.ok((await page.textContent('.pf-lamps')).includes('LIVE DATA'), 'last plan is live data'); n++; }
-    else { assert.ok(banner.includes('Showing the plan for the queue read'), `embedded plan banner: ${banner}`); n++; assert.ok((await page.textContent('.pf-brand')).includes('engine v6.5'), 'embedded fallback is the current engine, not the v6.0 snapshot'); n++; }
-    assert.ok((await page.$$eval('.pf-mk', (e) => e.length)) >= 8, 'ships on the map'); n++;
+    else { assert.ok(banner.includes('Showing the plan for the queue read'), `embedded plan banner: ${banner}`); n++; assert.ok((await page.textContent('.pf-lamps')).includes('SAVED PLAN'), 'embedded plan lamp'); n++; }
+    assert.ok((await page.$$eval('.pf-mk', (e) => e.length)) >= 5, 'ships on the map'); n++;
     assert.deepStrictEqual(errors, [], 'no page errors'); n++;
     await page.close();
   }
+  // the retired Chattogram tower is gone from the public pages
+  assert.ok(!fs.existsSync(path.join(docs, 'chattogram.html')), 'no chattogram.html'); n++;
   // the pipeline health lamp reads status.json from the data branch
   {
     const page = await browser.newPage({ viewport: { width: 1440, height: 1000 } });
     await page.route(/tile\.openstreetmap|openseamap|fonts\.g/, (r) => r.abort());
-    const status = { checked_utc: '2026-11-24T08:00:00+00:00', overall: 'warn', checks: [{ name: 'collector', state: 'ok', detail: 'fine' }, { name: 'plan_chattogram', state: 'warn', detail: 'no_queue' }] };
+    const status = { checked_utc: '2026-11-24T08:00:00+00:00', overall: 'warn', checks: [{ name: 'collector', state: 'ok', detail: 'fine' }, { name: 'port_list', state: 'warn', detail: 'list is 9 h old' }] };
     await page.route(/raw\.githubusercontent\.com/, (r) => r.fulfill({ status: 200, contentType: 'application/json', headers: { 'access-control-allow-origin': '*' },
       body: /status\.json/.test(r.request().url()) ? JSON.stringify(status) : fs.readFileSync(hamFile) }));
     await page.goto('file://' + path.join(docs, 'hamburg.html') + '?api=off');
     await page.waitForSelector('.pf-kpi', { timeout: 20000 }); await page.waitForTimeout(1200);
     assert.ok((await page.textContent('.pf-lamps')).includes('PIPELINE: 1 NOTICE'), 'pipeline health lamp'); n++;
-    assert.ok((await page.getAttribute('.pf-lamp[title*="plan_chattogram"]', 'title')).includes('no_queue'), 'lamp lists the notice'); n++;
+    assert.ok((await page.getAttribute('.pf-lamp[title*="port_list"]', 'title')).includes('9 h old'), 'lamp lists the notice'); n++;
     await page.close();
   }
   await browser.close();

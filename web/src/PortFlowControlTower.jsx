@@ -400,81 +400,6 @@ const ElbeMap = React.memo(function ElbeMap({ data, site, schedule, t, sel, onSe
     </div>
   );
 });
-// ------------------------------------------------------------------ Chattogram: real map of the Bay of Bengal, the outer anchorage and the Karnaphuli (Leaflet, OpenStreetMap)
-// Quay lines are the water side of the OpenStreetMap quay outlines (way 1074952516 for NCT, 1074952517 for CCT and the general
-// cargo berths); the river line is OSM's Karnaphuli centre line. Which end of the NCT quay holds the barge berth is not published:
-// the planner's 0-1000 m axis is laid on the northern 1,000 m of the outline, barge berth upstream.
-const NCT_LINE = [[22.28917, 91.79354], [22.29073, 91.79363], [22.29242, 91.79369], [22.29334, 91.79386], [22.29525, 91.79427], [22.29738, 91.79478], [22.29785, 91.7949], [22.29829, 91.7951], [22.29927, 91.79561], [22.30175, 91.79674]];
-const CCT_LINE = [[22.30332, 91.79751], [22.30486, 91.7986], [22.30609, 91.79953], [22.30754, 91.80096], [22.30918, 91.80284], [22.31084, 91.80517], [22.31271, 91.80779], [22.31412, 91.80983], [22.31529, 91.81145], [22.31639, 91.81299]];
-const KARNAPHULI = [[22.2249, 91.80495], [22.24215, 91.82622], [22.24493, 91.82969], [22.25606, 91.83605], [22.26039, 91.83707], [22.26485, 91.83635], [22.268, 91.83321], [22.2705, 91.82876], [22.27148, 91.8196], [22.27287, 91.81295], [22.27483, 91.80756], [22.27699, 91.80365], [22.28003, 91.79987], [22.28354, 91.79733], [22.28708, 91.79612]];
-const SEA_BUOY = [22.19, 91.77], BAY_ENTRY = [21.0, 91.55];
-const ROUTE_SG = [[1.25, 103.85], [2.6, 101.4], [4.2, 99.8], [5.9, 97.6], [6.0, 94.6], BAY_ENTRY];
-const ROUTE_CMB = [[6.95, 79.85], [5.85, 80.6], BAY_ENTRY];
-const CTG_VIEWS = { bay: [[0.5, 78.5], [23.2, 104.5]], approach: [[21.55, 91.25], [22.45, 92.05]], port: [[22.22, 91.765], [22.32, 91.845]] };
-const lineLen = (line) => { let s = 0; for (let i = 1; i < line.length; i++) s += segM(line[i - 1], line[i]); return s; };
-const NCT_LEN = lineLen(NCT_LINE);
-const nctPoint = (axisM) => along(NCT_LINE, (NCT_LEN - 1000 + clamp(axisM, 0, 1000)) / NCT_LEN);
-function seaPath(v) {                                           // from where the ship is (AIS) or its last port (schedule) to the Bay entry
-  if (v && v.lat != null) {
-    const { lat, lon } = v;
-    const ahead = lon >= 97 && lat < 6.5 ? ROUTE_SG.filter((p) => p[1] < lon) : lon >= 94 && lat < 6.5 ? [[6.0, 94.6], BAY_ENTRY] : lon < 82 && lat < 10 ? (lon < 80.6 ? [[5.85, 80.6], BAY_ENTRY] : [BAY_ENTRY]) : [];
-    return { path: [[lat, lon], ...ahead], live: true };
-  }
-  return { path: /Colombo/.test((v && v.last_port) || '') ? ROUTE_CMB : ROUTE_SG, live: false };
-}
-function ctgShipAt(row, v, t, idx, T) {
-  const slot = [22.035 + 0.032 * (idx % 3), 91.665 + 0.038 * (Math.floor(idx / 3) % 3)];
-  const bp = nctPoint((row.berth_start_m + row.berth_end_m) / 2), sea = seaPath(v), inbound = [...sea.path, slot];
-  if (t < row.eta_hr) {
-    const k0 = sea.live ? 0 : START_K[(v && v.area) || ''] ?? 0.2, k = k0 + (1 - k0) * (row.eta_hr > 0 ? t / row.eta_hr : 1), s = along(inbound, k);
-    return { phase: 'INBOUND', p: s.p, ang: s.ang, text: `Inbound, ${fmt(row.eta_hr - t, 0)} h to the anchorage` };
-  }
-  if (t < row.transit_in_hr) return { phase: 'ANCHOR', p: slot, ang: 0.6, text: `At anchor, pilot booked in ${fmt(row.transit_in_hr - t, 0)} h` };
-  const river = [slot, SEA_BUOY, ...KARNAPHULI, bp.p];
-  if (t < row.berth_start_hr) { const s = along(river, (t - row.transit_in_hr) / T); return { phase: 'CHANNEL', p: s.p, ang: s.ang, text: 'Under pilotage, inbound on the Karnaphuli' }; }
-  if (t < row.tidal_depart_hr) return { phase: 'BERTH', p: bp.p, ang: bp.ang, text: t < row.cargo_done_hr ? `Working cargo with ${row.assigned_qcs} quay cranes` : 'Cargo complete, holding for tide or daylight' };
-  const out = [...river].reverse();
-  if (t < row.tidal_depart_hr + T) { const s = along(out, (t - row.tidal_depart_hr) / T); return { phase: 'CHANNEL', p: s.p, ang: s.ang, text: 'Under pilotage, outbound' }; }
-  const u = (t - row.tidal_depart_hr - T) / 10;
-  return u < 1 ? { ...along([slot, BAY_ENTRY], u), phase: 'SAILED', text: 'Sailed', fade: 1 - u } : null;
-}
-
-const KarnaphuliMap = React.memo(function KarnaphuliMap({ data, site, schedule, t, sel, onSel, tide }) {
-  const box = useRef(null), [zoomed, setZoomed] = useState('bay');
-  const T = data.config.transit_hrs, Lf = typeof window !== 'undefined' ? window.L : null;
-  const vmap = useMemo(() => Object.fromEntries(data.live.vessels.map((v) => [v.name, v])), [data]);
-  const order = useMemo(() => [...schedule].sort((a, b) => a.eta_hr - b.eta_hr).map((r) => r.vessel_id), [schedule]);
-  const { map, mk } = useBaseMap(box, Lf, CTG_VIEWS.bay, (m) => {
-    [ROUTE_SG, ROUTE_CMB].forEach((r) => Lf.polyline([...r, [22.08, 91.7]], { color: '#4aa3ff', weight: 1.2, opacity: 0.45, dashArray: '4 7' }).addTo(m));
-    Lf.rectangle([[22.02, 91.645], [22.13, 91.775]], { color: '#ffb224', weight: 1, opacity: 0.6, fill: false, dashArray: '3 4' }).addTo(m).bindTooltip('Outer anchorage (approximate)');
-    Lf.polyline([SEA_BUOY, ...KARNAPHULI, NCT_LINE[NCT_LINE.length - 1]], { color: '#5ef2c8', weight: 1.4, opacity: 0.6, dashArray: '6 6' }).addTo(m).bindTooltip('Karnaphuli channel (OpenStreetMap river line)');
-    const n0 = (NCT_LEN - 1000) / NCT_LEN, n820 = (NCT_LEN - 180) / NCT_LEN, part = (a, b) => Array.from({ length: 25 }, (_, i) => along(NCT_LINE, a + ((b - a) * i) / 24).p);
-    Lf.polyline(part(n0, n820), { color: '#5ef2c8', weight: 6, opacity: 0.95 }).addTo(m).bindTooltip('NCT ocean quay, 0-820 m on the plan axis', { sticky: true });
-    Lf.polyline(part(n820, 1), { color: '#8097a9', weight: 6, opacity: 0.9 }).addTo(m).bindTooltip('NCT barge berth, 820-1000 m (not planned)', { sticky: true });
-    Lf.polyline(CCT_LINE, { color: '#3a4b5b', weight: 6, opacity: 0.9 }).addTo(m).bindTooltip('CCT and general cargo berths (not modelled)', { sticky: true });
-    if (data.live.tide_detail) Lf.circleMarker([22.208, 91.792], { radius: 4, color: '#4aa3ff', weight: 1, fillOpacity: 1 }).addTo(m).bindTooltip('Open-Meteo sea-level grid cell used for the tide forecast');
-  }, [data, Lf]);
-  const ships = [
-    ...schedule.map((r) => ({ id: r.vessel_id, r, v: vmap[r.vessel_id], s: ctgShipAt(r, vmap[r.vessel_id], t, order.indexOf(r.vessel_id), T) })),
-    ...(data.live.fixed_occupants || []).map((f) => { const r = { vessel_id: f.name, berth_start_m: f.berth_start_m, berth_end_m: f.berth_start_m + Math.ceil(f.loa_m), eta_hr: -99, transit_in_hr: -98, berth_start_hr: -97, cargo_done_hr: f.release_hr, tidal_depart_hr: f.release_hr, assigned_qcs: 0 };
-      return { id: f.name, r, v: f, fixed: true, tip: `${f.name} (alongside)`, s: ctgShipAt(r, f, t, 0, T) }; }),
-    ...(data.live.also_in_port_not_modelled || []).map((o, i) => { const s = along(CCT_LINE, 0.25 + 0.3 * i); return { id: o.name, v: o, fixed: true, tip: `${o.name}: in port, terminal not published, not in the plan`, s: { ...s, phase: 'BERTH' } }; }),
-  ].filter((x) => x.s);
-  useEffect(() => syncShips(Lf, map, mk, ships, sel, onSel));
-  const go = (w) => { const m = map.current; if (!m) return; setZoomed(w); m.flyToBounds(CTG_VIEWS[w], { duration: 0.8 }); };
-  const cur = ships.find((x) => x.id === sel && !x.fixed), dc = cur && (data.draught_check || []).find((d) => d.vessel === sel);
-  const hr = Math.floor(t), gate = cur && site.transitOk(hr, cur.r.loa_m, cur.r.draft_m);
-  return (
-    <div>
-      <div className="pf-seg" style={{ marginBottom: 6 }}>
-        {[['bay', 'Bay of Bengal'], ['approach', 'Approach and anchorage'], ['port', 'Karnaphuli and NCT']].map(([k, l]) => <button key={k} className={`pf-btn${zoomed === k ? ' on' : ''}`} onClick={() => go(k)}>{l}</button>)}
-      </div>
-      {Lf ? <div ref={box} className="pf-map" role="application" aria-label="Map of the Bay of Bengal, the Chattogram outer anchorage and the Karnaphuli river to the NCT quay, with each ship at its planned position" /> : <div className="pf-map pf-read">The map library did not load; the plan is still in the berth chart and the table below.</div>}
-      {cur && <NctCard cur={cur} gate={gate} tide={tide} dc={dc} />}
-    </div>
-  );
-});
-
 const GAUGE_LL = { 'CUXHAVEN STEUBENHÖFT': [53.8677, 8.7174], 'BRUNSBÜTTEL MPM': [53.8878, 9.1487], 'GLÜCKSTADT': [53.7844, 9.4094], 'STADERSAND': [53.6297, 9.5266], 'SCHULAU': [53.5679, 9.7029], 'HAMBURG ST. PAULI': [53.5454, 9.97] };
 function berthLabel(data, r) {
   if (!data.live.quays) return `${r.berth_start_m}–${r.berth_end_m} m`;
@@ -719,7 +644,6 @@ export default function PortFlowControlTower() {
 function Tower({ data, feed }) {
   const cfg = data.config, site = useMemo(() => makeSite(data), [data]), HH = data.site_kind === 'hamburg';
   const isLive = data.status === 'ok';
-  const hasLeaflet = typeof window !== 'undefined' && !!window.L;   // the public pages load Leaflet; elsewhere the schematic chart is used
   const nominal = useMemo(() => ({ schedule: data.optimised.schedule, kpis: pyKpis(data.optimised.kpis) }), [data]);
   const baseK = useMemo(() => pyKpis(data.baseline.kpis), [data]);
   const [plan, setPlan] = useState({ ...nominal, source: 'CP-SAT reference', yardTrace: null });
@@ -823,7 +747,7 @@ function Tower({ data, feed }) {
         </div>
       </header>
       {typeof window !== 'undefined' && window.PORTFLOW_NAV && <nav className="pf-nav" aria-label="Ports" style={{ marginTop: 8 }}>
-        <a href="chattogram.html" className={HH ? '' : 'on'}>Chattogram control tower</a><a href="hamburg.html" className={HH ? 'on' : ''}>Hamburg control tower</a><a href="../index.html">Hamburg live AIS and tide</a>
+        <a href="hamburg.html" className={HH ? 'on' : ''}>Hamburg control tower</a><a href="../index.html">Hamburg live AIS and tide</a>
         <a href="https://github.com/artahmid03-source/portflow-simopt-mcp">Source on GitHub</a>
       </nav>}
       {feed && feed.note && <div className={`pf-banner${feed.info ? ' ok' : ''}`} role="status">{feed.note}</div>}
@@ -839,11 +763,9 @@ function Tower({ data, feed }) {
           <div className="pf-head"><div><div className="pf-tag">{HH ? 'German Bight, Elbe and port' : 'Approach and channel'}</div><h2>Vessel traffic</h2></div>
             <div><span className="pf-key" style={{ '--c': C.blue }}><i />inbound</span><span className="pf-key" style={{ '--c': C.amber }}><i />{HH ? 'waiting' : 'at anchor'}</span><span className="pf-key" style={{ '--c': C.tele }}><i />{HH ? 'on the Elbe' : 'under pilotage'}</span><span className="pf-key" style={{ '--c': C.ok }}><i />alongside</span></div></div>
           {HH ? <ElbeMap data={data} site={site} schedule={plan.schedule} t={t} sel={sel} onSel={setSel} />
-            : hasLeaflet ? <KarnaphuliMap data={data} site={site} schedule={plan.schedule} t={t} sel={sel} onSel={setSel} tide={tideNow} />
-              : <Radar data={data} site={site} schedule={plan.schedule} t={t} sel={sel} onSel={setSel} tide={tideNow} />}
+            : <Radar data={data} site={site} schedule={plan.schedule} t={t} sel={sel} onSel={setSel} tide={tideNow} />}
           <p className="pf-note">{HH
             ? `OpenStreetMap with OpenSeaMap sea marks. At hour 0 each ship is where AIS last heard it (moored ships at their quay); from there it moves as the plan says: waiting off Elbe-1, a ${cfg.transit_hrs}-hour passage, alongside, and out. Grey: ships already alongside at the plan start. Click a ship for its details.`
-            : hasLeaflet ? `OpenStreetMap with OpenSeaMap sea marks; quay and river lines from OpenStreetMap. ${isLive ? 'At hour 0 each ship is where AIS last heard it (Singapore, the Malacca Strait or Colombo; AIS does not reach Chattogram)' : `Ship details were read from public sources on ${data.live.retrieved} without positions, so each ship starts on the sea route from its last port at a point matching its reported area`}; from there it moves as the plan says: outer anchorage, pilotage up the Karnaphuli, the NCT quay, and out. Grey: ships alongside at the start, or in port at a terminal not modelled. Click a ship for its details.`
             : isLive ? 'Schematic, not to scale. Ships are drawn from the region where AIS last heard them (Singapore and the Malacca Strait, or Colombo) and then move according to the plan. Click a ship for its details.'
               : `Schematic, not to scale. Ship names, numbers, sizes and status were read from public sources on ${data.live.retrieved}; no source gave latitude, longitude, speed or course, so each ship is drawn from its reported area and then moves according to the plan. Click a ship for its details.`}</p>
         </section>

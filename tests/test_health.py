@@ -12,14 +12,12 @@ NOW = datetime(2026, 11, 24, 8, 0, tzinfo=timezone.utc)
 OK_NET = lambda u: (True, "HTTP 200")  # noqa: E731
 
 
-def _store(tmp: Path, collector_h: float = 1.0, plan_h: float = 2.0, ctg_status: str = "ok") -> Path:
+def _store(tmp: Path, collector_h: float = 1.0, plan_h: float = 2.0, status: str = "ok") -> Path:
     t = lambda h: (NOW - timedelta(hours=h)).isoformat(timespec="seconds")  # noqa: E731
     (tmp / "hamburg" / "expected").mkdir(parents=True)
-    (tmp / "chattogram").mkdir()
     (tmp / "hamburg" / "runs.jsonl").write_text(json.dumps({"t_end": t(collector_h), "near_msgs": 2000, "tracked_total": 100, "errors": []}) + "\n")
     tower = {"status": "ok", "generated_utc": t(plan_h), "live": {"vessels": [{}] * 5}, "optimised": {"kpis": {"avg_turnaround_days": 1.3}}}
-    (tmp / "hamburg" / "tower.json").write_text(json.dumps(tower))
-    (tmp / "chattogram" / "tower.json").write_text(json.dumps(tower if ctg_status == "ok" else {"status": "no_queue", "generated_utc": t(plan_h), "reason": "no ship"}))
+    (tmp / "hamburg" / "tower.json").write_text(json.dumps(tower if status == "ok" else {"status": "no_queue", "generated_utc": t(plan_h), "reason": "no ship"}))
     (tmp / "hamburg" / "latest.json").write_text(json.dumps({"generated_utc": t(plan_h), "tide": {"gauges": [{}] * 6}}))
     (tmp / "hamburg" / "expected" / "latest.json").write_text(json.dumps({"fetched_utc": t(collector_h), "ships": [{}] * 20}))
     return tmp
@@ -31,7 +29,7 @@ def _state(st, name):
 
 def test_all_fresh_is_ok(tmp_path):
     st = health.check(_store(tmp_path), NOW, net=OK_NET)
-    assert st["overall"] == "ok" and _state(st, "carrier_schedule") == "info"
+    assert st["overall"] == "ok" and {c["name"] for c in st["checks"]} >= {"collector", "plan_hamburg", "tide_forecast", "port_list", "planning_api", "page_hamburg", "page_live"}
 
 
 def test_stale_data_and_down_pages_are_graded(tmp_path):
@@ -41,8 +39,8 @@ def test_stale_data_and_down_pages_are_graded(tmp_path):
 
 
 def test_empty_queue_is_a_warning_not_an_outage(tmp_path):
-    st = health.check(_store(tmp_path, ctg_status="no_queue"), NOW, net=OK_NET)
-    assert _state(st, "plan_chattogram") == "warn" and st["overall"] == "warn"
+    st = health.check(_store(tmp_path, status="no_queue"), NOW, net=OK_NET)
+    assert _state(st, "plan_hamburg") == "warn" and st["overall"] == "warn"
 
 
 def test_missing_files_do_not_crash(tmp_path):

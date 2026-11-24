@@ -61,15 +61,14 @@ jobs:
       - name: Yard ledger and explanations match Python (daily-tower fixtures)
         run: |
           node validate.mjs --data fixtures/hamburg_tower.json --parity
-          node validate.mjs --data fixtures/chattogram_tower.json --parity
       - name: Install the test browser
         run: npx playwright install --with-deps chromium
       - name: Browser test
         run: node test_page.cjs
       - name: Public tower pages (live feed mocked with the committed fixtures)
         run: |
-          python3 build_pages.py --hamburg-default fixtures/hamburg_tower.json --chattogram-default fixtures/chattogram_tower.json
-          node test_towers.cjs fixtures/chattogram_tower.json fixtures/hamburg_tower.json
+          python3 build_pages.py --hamburg-default fixtures/hamburg_tower.json
+          node test_towers.cjs fixtures/hamburg_tower.json
       - uses: astral-sh/setup-uv@v6
         with:
           python-version: "3.13"

@@ -31,13 +31,13 @@ import chattogram_nct as nct  # noqa: E402
 
 RAW = os.environ.get("PORTFLOW_DATA_URL", "https://raw.githubusercontent.com/artahmid03-source/portflow-simopt-mcp/data/{site}/tower.json")
 ORIGINS = [o.strip() for o in os.environ.get("PORTFLOW_ORIGINS", "https://artahmid03-source.github.io,http://localhost:8000,null").split(",")]
-SITES = ("hamburg", "chattogram")
+SITES = ("hamburg",)            # the live Chattogram tower was retired on 24 Nov 2026
 TTL_S = 600
 _cache: Dict[str, Tuple[float, Dict[str, Any]]] = {}
 _sims: Dict[str, Dict[str, Any]] = {}          # per site and data version: yard simulations already run (see run_nct_benders)
 REPS = int(os.environ.get("PORTFLOW_API_REPS", "4"))
 _busy = threading.Semaphore(int(os.environ.get("PORTFLOW_API_JOBS", "1")))
-VERSION = "6.5"
+VERSION = "6.7"
 
 
 def rules_for(site: str):

@@ -1,5 +1,14 @@
 # Changelog
 
+## 6.7.0 · 24 Nov 2026 · Hamburg only: the live Chattogram tower is retired
+
+The live Chattogram tower had found no ship since 17 Nov: no AIS receiver reaches the Bay of Bengal (a week of listening across Sri Lanka to the South China Sea heard no ship declaring Chattogram), the port authority does not allow automated reading of its due list, and the only carrier schedule API with Chattogram calls (Maersk DCSA) is a 30-day trial, then from USD 1,000 a month. The live system now runs for the Port of Hamburg only.
+
+- Removed: `sites/chattogram_live.py`, `ingest/carrier_schedule.py`, the Chattogram tower page and its saved plan, its fixture, screenshots and tests, its steps in the planning workflow, its checks in the health workflow, the planning API's Chattogram site, the collector's third (Chattogram) connection, the Karnaphuli map in the page bundle, and the hand-entered due list.
+- Kept: the NCT model (`sites/chattogram_nct.py`, on which the Hamburg site is built), the 13 Nov 2026 Chattogram snapshot study (`run_nct_pipeline.py`, `nct_control_tower_data.json`, re-run in CI), the MCP tools, and the retired tower's history on the data branch.
+- README, case study and Notion page rewritten around the Hamburg tower; the snapshot study is presented as where the method was validated.
+- 109 tests; tower page test 29 checks.
+
 ## 6.6.0 · 24 Nov 2026 · Operations: fewer failure points, self-healing, alerts
 
 An audit of the live system (runs of 18-24 Nov) found: the collector ran 3-4 times a day instead of every 30 minutes; most runs had AISStream handshake timeouts; a failed port-list download would have skipped saving the AIS data; ships moored between sparse AIS reports were planned as new arrivals, and the backtest scored plans against calls that began before the plan (Hamburg plan error 20 h, of which the "seen moored" group alone was 34 h with a -34 h bias); Chattogram had no automatic source.

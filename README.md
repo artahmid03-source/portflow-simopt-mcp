@@ -1,4 +1,4 @@
-# PortFlow-SimOpt-MCP · Chattogram NCT and the Port of Hamburg
+# PortFlow-SimOpt-MCP · live control tower for the Port of Hamburg
 
 ![Python](https://img.shields.io/badge/python-3.10%2B-3776AB?logo=python&logoColor=white)
 ![OR-Tools CP-SAT](https://img.shields.io/badge/OR--Tools-CP--SAT-4285F4)
@@ -10,32 +10,34 @@
 ![Deterministic](https://img.shields.io/badge/output-byte--reproducible-5EF2C8)
 ![License](https://img.shields.io/badge/license-MIT-lightgrey)
 
-A simulation-optimisation digital twin of two container ports, **Chattogram (New Mooring Container Terminal, Bangladesh)** and **the Port of Hamburg**. It is pure software. A constraint-programming planner (OR-Tools CP-SAT) decides where and when each ship berths, how many quay cranes it gets, and when the tide (and at Chattogram, daylight) lets it cross the bar or sail the Elbe. A discrete-event simulation of the yard (SimPy) measures how much those cranes slow down once the yard fills. The two exchange logic-based Benders cuts until the plan is optimal for the yard it creates.
+A simulation-optimisation digital twin of a container port, running live for **the Port of Hamburg**. It is pure software. A constraint-programming planner (OR-Tools CP-SAT) decides where and when each ship berths, at which terminal, how many quay cranes it gets, and when the Elbe tide lets it sail. A discrete-event simulation of the yard (SimPy) measures how much those cranes slow down once the yard fills. The two exchange logic-based Benders cuts until the plan is optimal for the yard it creates.
 
-Every 4 hours, GitHub Actions re-plans both ports from live AIS ship positions, the Port of Hamburg's expected-vessel list, tide and wind forecasts, and compares earlier plans with what the ships actually did. The public control-tower pages show the plan on a real map, and their copilot sends typed disruptions to the same CP-SAT engine running on a server ([planning API](https://portflow-api.onrender.com/health)), with an in-browser planner as fallback. The engine is also served over the Model Context Protocol, so an AI assistant can call it.
+Every 4 hours, GitHub Actions re-plans the port from live AIS ship positions, the Port of Hamburg's expected-vessel list, tide and wind forecasts, and compares earlier plans with what the ships actually did. The public control-tower page shows the plan on a real map, and its copilot sends typed disruptions to the same CP-SAT engine running on a server ([planning API](https://portflow-api.onrender.com/health)), with an in-browser planner as fallback. A health workflow checks every data source and restarts or reports what fails. The engine is also served over the Model Context Protocol, so an AI assistant can call it.
 
-> **Live control towers:** [Hamburg](https://artahmid03-source.github.io/portflow-simopt-mcp/tower/hamburg.html) · [Chattogram](https://artahmid03-source.github.io/portflow-simopt-mcp/tower/chattogram.html) · [Hamburg live AIS and tide forecast](https://artahmid03-source.github.io/portflow-simopt-mcp/) · **Design file:** [Figma](https://www.figma.com/design/u2uDIWNSOxIM0IFEvztXZ8)
+The method was first built and validated on **Chattogram's New Mooring Container Terminal** (Bangladesh), on the real queue of 13 Nov 2026: that snapshot study is kept below and is reproduced by CI. A live Chattogram tower ran from 16 to 24 Nov 2026 and was retired: no AIS receiver reaches the Bay of Bengal, the port authority does not allow automated reading of its due list, and the only carrier schedule API with Chattogram calls is a 30-day trial.
+
+> **Live:** [Hamburg control tower](https://artahmid03-source.github.io/portflow-simopt-mcp/tower/hamburg.html) · [Hamburg live AIS and tide forecast](https://artahmid03-source.github.io/portflow-simopt-mcp/) · **Design file:** [Figma](https://www.figma.com/design/u2uDIWNSOxIM0IFEvztXZ8)
 >
 > ![Hamburg control tower on live data](docs/screenshots/hamburg_tower.png)
 
 | | |
 |---|---|
-| ![Copilot re-planning on the server](docs/screenshots/hamburg_copilot_server.png) | ![Chattogram control tower](docs/screenshots/chattogram_tower.png) |
-| **Copilot.** A typed crane outage re-planned by the CP-SAT engine on the server; the log shows each Benders iteration. | **Chattogram.** The 13 Nov queue on the Bay of Bengal map: ships from Singapore, the Malacca Strait and Colombo. |
-| ![Yard ledger](docs/screenshots/chattogram_yard_ledger.png) | ![Berth plan](docs/screenshots/hamburg_berth_plan.png) |
-| **Yard ledger.** The yard carried across the whole plan. At Chattogram it sits above 80%, so the realistic turnaround is 4.25 days, not 3.32. | **Berth plan.** Quay position against time per terminal, with the Elbe tide. |
+| ![Copilot re-planning on the server](docs/screenshots/hamburg_copilot_server.png) | ![Phone view](docs/screenshots/hamburg_mobile.png) |
+| **Copilot.** A typed crane outage re-planned by the CP-SAT engine on the server; the log shows each Benders iteration. | **Phone.** The same tower at phone width. |
+| ![Yard ledger](docs/screenshots/hamburg_yard_ledger.png) | ![Berth plan](docs/screenshots/hamburg_berth_plan.png) |
+| **Yard ledger.** Each terminal's yard carried hour by hour across the whole plan, with the 80% line above which yard cranes slow sharply. | **Berth plan.** Quay position against time per terminal, with the Elbe tide. |
 
 ![Queue table with cost, just-in-time advice, tide risk and the reason each ship waits](docs/screenshots/hamburg_queue_table.png)
 
-### What the live towers show (examples)
+### What the live tower shows (examples)
 
 | Run | Ships | First come, first served → PortFlow | Notes |
 |---|---:|---|---|
 | Hamburg, 15 Nov 14:30 UTC | 11 | 1.42 → **1.22 days**, wait before the Elbe 75 → 30 h | the port's own list added five ships |
 | Hamburg, 16 Nov 18:56 UTC | 13 | 1.15 → 1.15 days; peak yard 81% → **58%**; queue cost 584k → 576k USD | a light day: the gain is in the yard, not in waiting |
-| Chattogram, 13 Nov queue | 8 | no first-come plan fits the horizon; PortFlow 3.32 days | yard ledger peaks at 84%, so 4.25 days is the realistic figure |
+| Hamburg, 24 Nov 08:09 UTC | 14 | 1.18 → **1.08 days**, waiting before the Elbe 65 → 31 h, queue cost 497k → 467k USD | 11 ships alongside at the start (kept between sparse AIS reports since v6.6) |
 
-The 13 Nov snapshot study below (one-off, with stated assumptions) is where the method was first validated.
+The Chattogram snapshot study below (13 Nov 2026, one-off, with stated assumptions) is where the method was first validated.
 
 ---
 
@@ -297,25 +299,25 @@ sites/chattogram_nct.py      NCT site model: config, tide curve, bar gates, pilo
 server.py                    MCP entry point (stdio)
 data/live_chattogram_2026-11-13.json   the live queue and tides, with source and basis of every field
 ingest/aisstream_ingest.py   AIS message parsing and one-off merge into the live file
-ingest/collect.py            scheduled collector (runs hourly in GitHub Actions, writes to the data branch)
+ingest/collect.py            scheduled collector (GitHub Actions, several times a day and before every plan; writes to the data branch)
 ingest/build_db.py           loads the collected store into SQLite
 sites/tides.py               tide forecast from official gauge records (harmonic fit, surge carry-over, hold-out skill)
 docs/index.html              public Hamburg live page (GitHub Pages); docs/sample_latest.json is its fallback sample
-docs/tower/                  public control towers: hamburg.html, chattogram.html (load the daily tower.json; app.js is the page bundle)
+docs/tower/                  public control tower: hamburg.html (loads the latest tower.json; app.js is the page bundle)
 sites/hamburg.py             Hamburg site model: quays from OSM outlines, terminal pools, Elbe tide rule, live input from AIS + gauges
-sites/chattogram_live.py     Chattogram live input: AIS heard in Singapore/Malacca/Colombo, carrier schedule, calibrated Open-Meteo tide
 run_backtest.py              plan against reality (Hamburg): archived plans vs AIS moorings, and the port's own list as a benchmark
 sites/advice.py              cost of the queue, just-in-time speed and fuel, tide-window risk (mirrored in web/src/engine.js)
 ingest/hamburg_expected.py   the Port of Hamburg's expected-vessel list (terminal, berth, time; from HVCC via hafen-hamburg.de)
 deploy/                      always-on collector: Dockerfile, Windows Task Scheduler script, instructions
-run_tower.py                 daily plan for one site → <store>/<site>/tower.json (CP-SAT + Benders + yard + reefer + reference cases)
+run_tower.py                 Hamburg plan → <store>/hamburg/tower.json (CP-SAT + Benders + yard + reefer + reference cases), every 4 h
+tools/health.py              health check, self-healing restarts and issue alerts (health.yml); tools/push_store.sh saves to the data branch
 run_daily.py                 daily Hamburg update: tide forecast for six Elbe gauges + vessel picture from the collected AIS
 tools/compare_runs.py        compares two pipeline outputs (used by CI)
-.github/workflows/           ci.yml (lint, tests, reproducibility, page builds and browser tests) · collect.yml (hourly AIS) · daily.yml (every 4 h: tide forecast, both towers' plans)
+.github/workflows/           ci.yml (lint, tests, reproducibility, page builds and browser tests) · collect.yml (AIS) · daily.yml (every 4 h: AIS, port list, tide, Hamburg plan) · health.yml
 run_nct_pipeline.py          live-queue pipeline → nct_control_tower_data.json
-tests/                       test_invariants.py (19) · test_nct.py (25) · test_ais_ingest.py (4) · test_collect.py (11) · test_tides.py (6) · test_chattogram_live.py (7) · test_hamburg.py (7) · test_realism.py (9)
+tests/                       109 tests: engine invariants, NCT snapshot, AIS ingest and collector, tides, Hamburg rules and live input, realism, ledger, API, ETA model, health, fallbacks
 web/                         HMI: src/engine.js, src/PortFlowControlTower.template.jsx, build.py, build_pages.py, validate.mjs, test_page.cjs, test_towers.cjs, fixtures/
-docs/screenshots/            control-tower captures (Hamburg and Chattogram, v6.5)
+docs/screenshots/            Hamburg control-tower captures
 ```
 
 ---
@@ -356,19 +358,19 @@ Every day the same CP-SAT + yard-simulation loop as Chattogram plans the ships d
 - **Ships alongside** at the plan start come from AIS: a moored ship within 160 m of a quay line is placed on that segment at its projected position. The AIS antenna is not at the hull's centre, so neighbours are packed apart by the berth gap. Their departure is estimated from their size.
 - **Terminal of an inbound ship:** where AIS has seen it moored before, otherwise a carrier-to-terminal map (Hapag-Lloyd's *... Express* ships to Altenwerder, COSCO to Tollerort, Maersk to Eurogate, the rest to Burchardkai). Cargo ships with no carrier name that have never been seen at a container quay are left out and listed.
 - **The Elbe tide rule.** Since the 2019-2022 deepening, a ship of up to 13.80 m (13.10 m for the largest class) sails at any state of tide; deeper ships ride the tide up to 16.10 m inbound and 14.80 m outbound (15.40 / 14.10 m), less 0.20 m because the channel does not yet give the full design depth. A tide-dependent ship needs, at every hour it spends between Waltershof and Brunsbüttel, the forecast level at its position (interpolated between the six gauges by Elbe kilometre) above mean low water by its extra draught plus the forecast error at that lead time (18 cm at 6 h, 35 cm at 48 h). The planner reads the result as hour masks.
-- **Map.** Both tower pages draw the plan on OpenStreetMap (Chattogram: sea routes, outer anchorage, the Karnaphuli river line and the NCT quay traced from OpenStreetMap). For Hamburg: ships start where AIS last heard them, wait off Elbe-1, sail the six-hour passage, lie at their quay and leave.
+- **Map.** The tower page draws the plan on OpenStreetMap: ships start where AIS last heard them, wait off Elbe-1, sail the six-hour passage, lie at their quay and leave.
 
 On the 15 Nov 2026 data (6 ships declaring Hamburg, 8 alongside), the plan is uncongested: every ship berths on arrival, and only the 399 m MAYVIEW MAERSK at 14.5 m is tide-dependent; it is held 2 h for the tide. The baseline and the optimised plan coincide, which is the correct answer for a quiet day. The copilot stresses it (crane outages per terminal, delays, the yard level), and the in-page planner matched CP-SAT exactly on 6 of 7 reference cases.
 
-## Chattogram on live data (`sites/chattogram_live.py`, `run_tower.py --site chattogram`)
+## The live Chattogram tower (16-24 Nov 2026, retired)
 
-AISStream has no receiver near Chattogram, so the Chattogram tower is fed from three other free sources, every day:
+From v6.3 a second live tower planned Chattogram from ships heard on AIS in Singapore, the Malacca Strait and Colombo, the 13 Nov carrier schedule, and an Open-Meteo sea level calibrated to the Chittagong tide table (0.11 m RMSE). It was retired in v6.7 because its queue could not be kept live for free:
 
-- **Ships, from AIS heard elsewhere.** The collector's third connection reads static data across the sea from Sri Lanka to the South China Sea (`[[0.5, 78], [19.5, 105]]`), keeps cargo ships that declare Chattogram as their destination, and then follows them by MMSI while Singapore, the Malacca Strait, Port Klang and Colombo can hear them. The declared ETA is used; when it is missing or stale, the arrival is dead-reckoned along the sea route (Malacca Strait, the Great Channel, or round Dondra Head from Colombo) at the last reported speed. Ships longer than the NCT limit are left out as probable bulk carriers for the outer anchorage.
-- **Ships, from the carrier schedule.** Ships on the 13 Nov carrier schedule whose ETA is still ahead and that AIS has not picked up.
-- **Tide, from a global model calibrated to the port.** Open-Meteo's marine API (free, no key) gives an hourly sea-level forecast for the grid cell off the Karnaphuli mouth. A linear map and a 0.65 h lag, fitted to the 35 published highs and lows of 13-23 Nov 2026, convert it to the Chittagong chart datum: RMSE 0.11 m over the 35, 0.20 m when fitted on the first half and tested on the second. The bar gates keep a 0.11 m margin for that error. If the API is down, a five-constituent harmonic fit (M2, S2, K1, O1, M4) to the same table is used instead, and every day the two are compared (0.17 m RMS apart over the first plan). Sunrise and sunset are computed for the plan date, so the daylight rule follows the season.
+- **AIS:** a week of the collector's third connection (about 100 static messages per run across Sri Lanka to the South China Sea, `chattogram/destinations_seen.json` on the data branch) heard no ship declaring Chattogram.
+- **The port authority's due list:** its portal forbids automated reading (robots.txt), so it could only be typed in by hand.
+- **Carrier schedules:** Maersk's DCSA port-schedule API is a 30-day trial, then from USD 1,000 a month; Hapag-Lloyd's free tier gives point-to-point routes only for its own services.
 
-On the 13 Nov epoch with the calibrated tide, the eight-ship queue needs 2.82 days of average turnaround against 2.01 days on the published table: the tide gates fall during the neap days of 16-19 Nov, holding ships for 177 hours in all. No first-come-first-served plan fits the eight-day horizon at all; that alone shows why the tide has to be inside the optimisation.
+After 17 Nov every run found an empty queue. The code, page and tests for it were removed; the NCT model (`sites/chattogram_nct.py`), on which the Hamburg site is built, and the 13 Nov snapshot study remain.
 
 ## v6.4: more realistic, faster, more useful
 
@@ -413,15 +415,13 @@ The live system has five moving parts (the AIS collector, the 4-hourly planning 
 | AISStream times out a connection | The three connections start a few seconds apart, wait 30 s for the handshake and retry with jittered backoff; time offline is logged per run. |
 | GitHub skips scheduled runs | The collector is scheduled every 15 minutes, the planning run listens to AIS for 8 minutes before it plans, and the health check restarts a collector that is more than 90 minutes stale or a plan more than 5 hours stale (at most once per 2 hours each, never while one is running). |
 | Two runs push to the data branch at once | `tools/push_store.sh` rebases and retries up to six times. |
-| A live run finds no ship (Chattogram) | Pages show the last plan that had ships, or the saved 13 Nov plan, with a note that says why. |
+| A live run finds no ship | The page shows the last plan that had ships, or the plan saved in the page, with a note that says why. |
 | Ships moored between sparse AIS reports | A ship heard moored at a container quay within 48 h stays alongside until its estimated working time runs out, and is then counted as sailed rather than as a new arrival. The backtest no longer scores a plan against a call that began before the plan was made. |
 | The planning API is asleep | The planning run wakes it after each plan; the page waits up to 100 s and otherwise re-plans in the browser. |
 | GitHub disables schedules after 60 quiet days | The health workflow makes an empty "keepalive" commit on `main` after 45 days without one. |
 | Something stays broken | `.github/workflows/health.yml` runs after every collector and planning run and hourly. It writes `status.json` (the tower pages show it as the PIPELINE lamp), and when a check fails twice in a row it opens a "PortFlow health alert" issue that mentions the owner, so GitHub sends an email; it closes the issue when everything passes again. |
 
 `python tools/health.py --store store` prints the same report locally.
-
-**Chattogram's live queue** needs a source that is not AIS (no receiver reaches the Bay of Bengal) and not the port authority's portal (automated fetching is not allowed). `ingest/carrier_schedule.py` reads the DCSA Commercial Schedules `port-schedules` endpoint that Maersk publishes. It switches on when the repository secret `MAERSK_CONSUMER_KEY` exists (a self-service key from developer.maersk.com); until then the health check lists it as not set up. Ship sizes are not in that schedule, so a typical feeder size is assumed and labelled. The hand-entered due list (`data/chattogram_due.csv`) remains the other option.
 
 ## Continuous AIS collection
 
@@ -438,7 +438,7 @@ AIS is the one input that cannot be fetched after the fact, so it is collected o
 | `runs.jsonl` | messages heard, ships seen and errors for every run: the coverage log |
 | `tower.json` | the latest control-tower plan (rewritten every 4 hours) |
 
-Files live under `hamburg/` and `chattogram/` on the `data` branch. Three connections run side by side (AISStream allows three per key). One listens to the port and its approaches. The second first reads static data across the wider sea region to find cargo ships declaring the port as destination, then re-subscribes with an MMSI filter to follow only those. The third does the same for Chattogram (`--also chattogram`). The site (boxes, destination pattern, zones) is one entry in `ingest/collect.py`. Tide predictions are not collected because they can be looked up for any past date.
+Files live under `hamburg/` on the `data` branch (`chattogram/` holds the retired tower's history). Two connections run side by side. One listens to the port and its approaches. The second first reads static data across the wider sea region to find cargo ships declaring the port as destination, then re-subscribes with an MMSI filter to follow only those. A third connection can follow another port (`--also <site>`); none does since v6.7. The site (boxes, destination pattern, zones) is one entry in `ingest/collect.py`. Tide predictions are not collected because they can be looked up for any past date.
 
 Setup: create a free key at aisstream.io and add it as the repository secret `AISSTREAM_API_KEY`. Without the secret the job skips with a warning. To analyse:
 
@@ -451,9 +451,8 @@ The collector is tested offline against a stand-in server that follows the AISSt
 
 ## Limitations
 
-- The 13 Nov snapshot had no positions, speeds or courses. The daily Chattogram plan has them only where AIS hears the ships (Singapore, Malacca, Colombo); arrival there is dead-reckoned or taken from the declared ETA.
+- The 13 Nov Chattogram snapshot had no positions, speeds or courses.
 - Hamburg: terminal assignment of inbound ships, the departure of ships already alongside, Eurogate's crane count and all yard figures are estimates or assumptions; the Elbe tide rule is a simplification of the pilots' tide windows, applied over Waltershof to Brunsbüttel only.
-- Chattogram's calibrated tide misplaces low water by about 50 minutes (the model's lows come early); one lag for both highs and lows is the simplest map that fits.
 - Box counts per call, the starting yard level, channel depth, clearance and pilot/tug capacity are assumptions, and the terminals of the ships are not published. Every ship in the queue is treated as an NCT call.
 - The 33% off-dock share and the 18.5 moves/h crane rate come from the project brief, not from a public source.
 - The yard congestion curve has an assumed shape, and each berth's yard cluster is simulated separately.

@@ -29,24 +29,24 @@ def test_destinations_seen_accumulate(tmp_path):
 
 
 def test_empty_queue_reason_names_the_sources():
-    r = run_tower.empty_reason("chattogram", {})
-    assert "AIS" in r and "due list" in r and "schedule" in r
-    p = run_tower.empty_payload("chattogram", {"port": "x"}, r)
+    r = run_tower.empty_reason("hamburg", {})
+    assert "AIS" in r and "expected-vessel list" in r
+    p = run_tower.empty_payload("hamburg", {"port": "x"}, r)
     assert p["status"] == "no_queue" and p["reason"] == r
 
 
 def test_last_good_plan_is_kept(tmp_path, monkeypatch):
     store = tmp_path / "store"
-    (store / "chattogram").mkdir(parents=True)
-    good = {"status": "ok", "site_kind": "chattogram", "generated_utc": "2026-11-16T03:00:00+00:00", "live": {"vessels": [{}]}}
+    (store / "hamburg").mkdir(parents=True)
+    good = {"status": "ok", "site_kind": "hamburg", "generated_utc": "2026-11-16T03:00:00+00:00", "live": {"vessels": [{}]}}
     monkeypatch.setattr(run_tower, "site_setup", lambda site, st: ({"vessels": [{"name": "A"}]}, {}, None))
     monkeypatch.setattr(run_tower, "plan_site", lambda *a, **k: good)
     monkeypatch.setattr(run_tower, "archive_plan", lambda *a, **k: None)
     monkeypatch.setattr(run_tower, "summary", lambda p: "")
-    monkeypatch.setattr(sys, "argv", ["run_tower.py", "--site", "chattogram", "--store", str(store)])
+    monkeypatch.setattr(sys, "argv", ["run_tower.py", "--site", "hamburg", "--store", str(store)])
     run_tower.main()
-    assert json.loads((store / "chattogram" / "tower_last_ok.json").read_text())["generated_utc"] == good["generated_utc"]
+    assert json.loads((store / "hamburg" / "tower_last_ok.json").read_text())["generated_utc"] == good["generated_utc"]
     monkeypatch.setattr(run_tower, "site_setup", lambda site, st: ({"vessels": []}, {}, None))
     run_tower.main()
-    assert json.loads((store / "chattogram" / "tower.json").read_text())["status"] == "no_queue"
-    assert json.loads((store / "chattogram" / "tower_last_ok.json").read_text())["status"] == "ok"      # kept
+    assert json.loads((store / "hamburg" / "tower.json").read_text())["status"] == "no_queue"
+    assert json.loads((store / "hamburg" / "tower_last_ok.json").read_text())["status"] == "ok"      # kept

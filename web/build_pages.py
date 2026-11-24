@@ -1,9 +1,9 @@
 """Builds the public Control Tower pages for GitHub Pages:
     docs/tower/app.js            the page bundle (React included), shared by both pages
-    docs/tower/chattogram.html   loads data/chattogram/tower.json from the data branch; then the last plan with ships
-                                 (tower_last_ok.json); then docs/tower/chattogram_default.js (the 13 Nov queue)
-    docs/tower/hamburg.html      loads data/hamburg/tower.json; falls back to docs/tower/hamburg_default.js
-Run after `python build.py` (which writes dist/app.full.js).   python build_pages.py [--hamburg-default <tower.json>] [--chattogram-default <tower.json>]
+    docs/tower/hamburg.html      loads data/hamburg/tower.json from the data branch; then the last plan with ships
+                                 (tower_last_ok.json); then docs/tower/hamburg_default.js
+(The live Chattogram tower was retired on 24 Nov 2026.)
+Run after `python build.py` (which writes dist/app.full.js).   python build_pages.py [--hamburg-default <tower.json>]
 """
 import argparse
 import json
@@ -20,12 +20,11 @@ RAW = "https://raw.githubusercontent.com/artahmid03-source/portflow-simopt-mcp/d
 
 ap = argparse.ArgumentParser()
 ap.add_argument("--hamburg-default", default=None, help="a validated hamburg tower.json to embed as the fallback")
-ap.add_argument("--chattogram-default", default=None, help="a validated chattogram tower.json to embed as the fallback")
 a = ap.parse_args()
 docs.mkdir(parents=True, exist_ok=True)
 shutil.copyfile(root / "dist" / "app.full.js", docs / "app.js")
 ver = hashlib.sha1((docs / "app.js").read_bytes()).hexdigest()[:10]       # cache-busting: browsers keep app.js otherwise
-for site, src in (("hamburg", a.hamburg_default), ("chattogram", a.chattogram_default)):
+for site, src in (("hamburg", a.hamburg_default),):
     if src:
         d = json.loads(pathlib.Path(src).read_text())
         (docs / f"{site}_default.js").write_text("window.PORTFLOW_DEFAULT = " + json.dumps(d, separators=(",", ":"), ensure_ascii=False) + ";\n", encoding="utf-8")
@@ -51,6 +50,5 @@ def head(site):
     return leaflet + f'<script src="{f.name}?v={hashlib.sha1(f.read_bytes()).hexdigest()[:10]}"></script>\n'
 
 
-(docs / "chattogram.html").write_text(page("chattogram", "Chattogram NCT · PortFlow Control Tower", head("chattogram")) + f'<script src="app.js?v={ver}"></script>\n</body></html>\n', encoding="utf-8")
 (docs / "hamburg.html").write_text(page("hamburg", "Port of Hamburg · PortFlow Control Tower", head("hamburg")) + f'<script src="app.js?v={ver}"></script>\n</body></html>\n', encoding="utf-8")
 print("pages:", sorted(p.name for p in docs.iterdir()), round((docs / "app.js").stat().st_size / 1024), "KB app")

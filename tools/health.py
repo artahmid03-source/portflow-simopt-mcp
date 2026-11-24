@@ -90,7 +90,7 @@ def check(store: Path, now: datetime, net: Callable[[str], Tuple[bool, str]] = h
     else:
         add("collector", "fail", "no collector run recorded")
 
-    for site in ("hamburg", "chattogram"):
+    for site in ("hamburg",):
         t = _load(store / site / "tower.json")
         if not t:
             add(f"plan_{site}", "fail", "no tower.json")
@@ -104,7 +104,7 @@ def check(store: Path, now: datetime, net: Callable[[str], Tuple[bool, str]] = h
             last = _load(store / site / "tower_last_ok.json")
             st = "warn" if st == "ok" else st                     # an empty queue is reported, not an outage of the system
             add(f"plan_{site}", st, f"{t.get('status')}: {t.get('reason', '')[:220]}"
-                                    + (f"; pages show the last plan with ships, from {last['generated_utc'][:16]}" if last else "; pages show the saved 13 Nov plan"), age)
+                                    + (f"; the page shows the last plan with ships, from {last['generated_utc'][:16]}" if last else "; the page shows its saved plan"), age)
 
     lat = _load(store / "hamburg" / "latest.json")
     if lat:
@@ -122,16 +122,9 @@ def check(store: Path, now: datetime, net: Callable[[str], Tuple[bool, str]] = h
     else:
         add("port_list", "warn", "no expected-vessel list stored")
 
-    sched = _load(store / "chattogram" / "schedule" / "last_attempt.json")
-    if sched is None or sched.get("status") == "off":
-        add("carrier_schedule", "info", "Chattogram carrier schedule not set up (needs the MAERSK_CONSUMER_KEY secret)")
-    else:
-        add("carrier_schedule", {"ok": "ok", "partial": "warn"}.get(sched.get("status"), "warn"),
-            f"{sched.get('status')} at {str(sched.get('fetched_utc'))[:16]}" + (f": {sched['errors'][0]}" if sched.get("errors") else ""))
-
     ok, why = net(API.rstrip("/") + "/health")
     add("planning_api", "ok" if ok else "warn", why)              # a free host can be slow to wake: warn, do not alarm
-    for page in ("tower/hamburg.html", "tower/chattogram.html", ""):
+    for page in ("tower/hamburg.html", ""):
         ok, why = net(PAGES + page)
         add(f"page_{page.split('/')[-1].split('.')[0] or 'live'}", "ok" if ok else "fail", why)
 

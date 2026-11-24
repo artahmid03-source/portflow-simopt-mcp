@@ -33,7 +33,7 @@ def test_unknown_site_is_rejected():
         app.plan("rotterdam", {}, loader=loader)
 
 
-@pytest.mark.parametrize("site", ["hamburg", "chattogram"])
+@pytest.mark.parametrize("site", ["hamburg"])
 def test_nominal_server_plan_matches_the_daily_reference(site):
     doc = loader(site)
     app._cache.pop(site, None)
@@ -54,11 +54,16 @@ def test_server_only_plans_the_plan_on_the_page():
 
 def test_empty_live_run_falls_back_to_the_last_good_plan():
     app._cache.clear()
-    good = loader("chattogram")
-    empty = {"status": "no_queue", "site_kind": "chattogram", "generated_utc": "2026-11-22T03:28:10+00:00", "live": {}}
+    good = loader("hamburg")
+    empty = {"status": "no_queue", "site_kind": "hamburg", "generated_utc": "2026-11-22T03:28:10+00:00", "live": {}}
     ld = lambda key: good if key.endswith(":last_ok") else empty  # noqa: E731
-    assert app.plan("chattogram", {}, loader=ld, want=good["generated_utc"])["feasible"]
+    assert app.plan("hamburg", {}, loader=ld, want=good["generated_utc"])["feasible"]
     app._cache.clear()
     with pytest.raises(app.PlanMismatch):
-        app.plan("chattogram", {}, loader=lambda key: empty if not key.endswith(":last_ok") else (_ for _ in ()).throw(FileNotFoundError()))
+        app.plan("hamburg", {}, loader=lambda key: empty if not key.endswith(":last_ok") else (_ for _ in ()).throw(FileNotFoundError()))
     app._cache.clear()
+
+
+def test_retired_site_is_rejected():
+    with pytest.raises(ValueError):
+        app.plan("chattogram", {}, loader=loader)

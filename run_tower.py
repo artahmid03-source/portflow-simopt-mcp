@@ -1,7 +1,9 @@
-"""Daily control-tower plan for one site, from live data.
+"""Control-tower plan for the Port of Hamburg from live data (run every 4 hours by .github/workflows/daily.yml).
 
-    uv run python run_tower.py --site chattogram --store store      # AIS + Open-Meteo tide -> store/chattogram/tower.json
     uv run python run_tower.py --site hamburg --store store         # AIS + Elbe gauge forecast -> store/hamburg/tower.json
+
+(The live Chattogram tower was retired on 24 Nov 2026: no free source of its ship queue exists. The 13 Nov 2026
+Chattogram snapshot study is reproduced by run_nct_pipeline.py.)
 
 The output is what the Control Tower page loads at runtime (docs/tower/<site>.html). It holds the live queue, the
 CP-SAT + yard-simulation plan (optimised, FCFS baseline and plan-only), the yard block and reefer runs, and the
@@ -27,13 +29,6 @@ N_PARCEL = 360
 
 
 def site_setup(site: str, store: Path, now: Optional[datetime] = None):
-    if site == "chattogram":
-        import chattogram_live as cl
-        live = cl.build_live(store / "chattogram", now, fetch=lambda: cl.fetch_open_meteo(now or datetime.now(timezone.utc)))
-        cfg = dict(nct.NCT, daylight_hours=list(live["daylight_hours"]), objective="cost", yard_model="per_ship",
-                   max_draught_m=live["rules"]["max_draught_m"], spring_max_draught_m=live["rules"]["spring_max_draught_m"],
-                   max_loa_m=live["rules"]["max_loa_m"])
-        return live, cfg, nct
     if site == "hamburg":
         import hamburg as hh
         return hh.build_live(store, now), dict(hh.HAM), hh
@@ -54,13 +49,17 @@ def distances_nm(site: str, live: Dict[str, Any]) -> Dict[str, Optional[float]]:
     for v in live["vessels"]:
         if v.get("lat") is None:
             out[v["name"]] = None
-        elif site == "chattogram":
-            import chattogram_live as cl
-            out[v["name"]] = cl.route_nm(v["lat"], v["lon"])[0]
-        else:
-            import chattogram_live as cl
-            out[v["name"]] = 0.0 if v.get("area") in ("ELBE", "ESTUARY", "PORT") else cl.nm((v["lat"], v["lon"]), (54.0, 8.11))
+        else:                                              # to Elbe-1, where the passage starts
+            out[v["name"]] = 0.0 if v.get("area") in ("ELBE", "ESTUARY", "PORT") else nm((v["lat"], v["lon"]), (54.0, 8.11))
     return out
+
+
+def nm(a, b) -> float:
+    """Great-circle distance in nautical miles."""
+    import math
+    p1, p2, dl = math.radians(a[0]), math.radians(b[0]), math.radians(b[1] - a[1])
+    c = math.sin(p1) * math.sin(p2) + math.cos(p1) * math.cos(p2) * math.cos(dl)
+    return math.degrees(math.acos(max(-1.0, min(1.0, c)))) * 60.0
 
 
 def previous_hint(store: Optional[Path], site: str, live: Dict[str, Any]) -> Optional[Dict[str, Any]]:
@@ -151,7 +150,7 @@ def plan_site(site: str, live: Dict[str, Any], cfg: Dict[str, Any], rules: Any, 
         baseline = dict(optimised)
         baseline_rule = "no first-come-first-served plan fits the horizon; the optimised plan is shown in its place"
     plan_only = run(icd_ratio=0.0, sim_replications=reps)
-    tug = {k: run(pilot_tug_sets=k, sim_replications=10).get("kpis") for k in (1, 2, 3)} if site == "chattogram" else {}
+    tug: Dict[str, Any] = {}                                   # pilots and tugs are not a binding limit at Hamburg
 
     first = next((v for v in sorted(vs, key=lambda x: x["eta"]) if v["eta"] > 0), vs[0])
     big_pool = max((cfg.get("crane_pools") or {"all": cfg["qgc_total"]}).items(), key=lambda kv: kv[1])[0]
@@ -159,28 +158,16 @@ def plan_site(site: str, live: Dict[str, Any], cfg: Dict[str, Any], rules: Any, 
              ("6 quay cranes out 48 h", {"qgc_outages": [[0, 48, 6] + ([big_pool] if cfg.get("crane_pools") else [])]}),
              ("3 yard cranes out 24 h", {"rtg_outages": [[0.0, 1440.0]] * 3}), ("evacuation 10%", {"icd_ratio": 0.10}),
              ("evacuation 0%", {"icd_ratio": 0.0}), ("yard starts 86%", {"initial_yard_occupancy_pct": 86.0})]
-    if site == "chattogram":
-        cases.append(("one pilot/tug set", {"pilot_tug_sets": 1}))
     reference = []
     for name, kw in cases:
         r = run(sim_replications=10, **kw)
         reference.append({"case": name, "inputs": kw, "status": r["convergence_status"], "cuts": r["cuts"], "kpis": r.get("kpis")})
 
-    draught_check = []
-    if site == "chattogram":
-        tide = nct.tide_curve(live, H)
-        for v in vs:
-            src = next(x for x in live["vessels"] if x["name"] == v["id"])
-            rep = src["draught_reported_m"]
-            w_plan = rules.gate_windows(live, tide, v, H, cfg["transit_hrs"])[0]
-            w_rep = rules.gate_windows(live, tide, dict(v, draft=min(rep, 99.0)), H, cfg["transit_hrs"])[0] if rep is not None else None
-            draught_check.append({"vessel": v["id"], "reported_m": rep, "planned_m": v["draft"], "inbound_starts_planned": len(w_plan),
-                                  "first_start_planned": w_plan[0] if w_plan else None, "inbound_starts_reported": None if w_rep is None else len(w_rep),
-                                  "first_start_reported": (w_rep[0] if w_rep else None) if w_rep is not None else None})
+    draught_check: list = []
 
     payload: Dict[str, Any] = {
-        "status": "ok" if optimised.get("schedule") else "no_plan", "site_kind": site, "engine_version": "6.5",
-        "site": "Chattogram NCT" if site == "chattogram" else "Port of Hamburg container terminals",
+        "status": "ok" if optimised.get("schedule") else "no_plan", "site_kind": site, "engine_version": "6.7",
+        "site": "Port of Hamburg container terminals",
         "generated_utc": datetime.now(timezone.utc).isoformat(timespec="seconds"),
         "config": {k: (list(v) if isinstance(v, tuple) else v) for k, v in cfg.items()}, "live": live, "tide_hourly": nct.tide_curve(live, H),
         "hydrostatics": {"vessel_id": baplie["vessel_id"], "containers_parsed": baplie["containers_parsed"], "total_mass_tonnes": baplie["total_mass_tonnes"],
@@ -218,10 +205,6 @@ def plan_site(site: str, live: Dict[str, Any], cfg: Dict[str, Any], rules: Any, 
 
 
 def empty_reason(site: str, live: Dict[str, Any]) -> str:
-    if site == "chattogram":
-        sched = live.get("carrier_schedule_status") or "not read"
-        return ("no ship bound for Chattogram was heard on AIS in the last 21 days (AIS reaches only Singapore, the Malacca Strait and Colombo), "
-                f"the carrier port schedule is {sched}, and the port's due list (data/chattogram_due.csv) is older than 3 days or empty")
     return "no container ship declaring Hamburg on AIS or on the port's expected-vessel list"
 
 
@@ -248,7 +231,7 @@ def summary(p: Dict[str, Any]) -> str:
 
 def main() -> int:
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
-    ap.add_argument("--site", required=True, choices=["chattogram", "hamburg"])
+    ap.add_argument("--site", required=True, choices=["hamburg"])
     ap.add_argument("--store", default="store")
     ap.add_argument("--out", default=None, help="default: <store>/<site>/tower.json")
     ap.add_argument("--reps", type=int, default=20)

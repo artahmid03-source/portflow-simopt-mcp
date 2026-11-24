@@ -380,7 +380,7 @@ def main() -> int:
     ap.add_argument("--minutes", type=float, default=8.0, help="listening time per cycle")
     ap.add_argument("--url", default=os.environ.get("AISSTREAM_URL", URL))
     ap.add_argument("--site", default=DEFAULT_SITE, choices=sorted(SITES))
-    ap.add_argument("--also", default="chattogram", help="comma-separated extra sites followed on the third connection ('' for none)")
+    ap.add_argument("--also", default="", help="comma-separated extra sites followed on a third connection (none by default; the live Chattogram tower was retired)")
     ap.add_argument("--require-key", action="store_true", help="fail instead of skipping when AISSTREAM_API_KEY is not set")
     ap.add_argument("--cycles", type=int, default=1, help="always-on mode: number of listen-and-write cycles (0 = forever)")
     ap.add_argument("--git-push", action="store_true", help="after each cycle, commit and push the store (a clone of the data branch)")
