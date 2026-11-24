@@ -245,3 +245,8 @@
 {"mmsi":256641000,"name":"YORK","heard_utc":"2026-11-24T08:00:37Z","eta_utc":"2026-11-19T12:30Z","len":179,"dest":"PTAVE-DEHAM"}
 {"mmsi":305978000,"name":"MARBURG","heard_utc":"2026-11-24T08:02:24Z","eta_utc":"2026-11-23T02:00Z","len":158,"dest":"DEHAM"}
 {"mmsi":538005733,"name":"SAN FELIX","heard_utc":"2026-11-24T08:03:36Z","eta_utc":"2026-11-26T14:30Z","len":300,"dest":"DEHAM"}
+{"mmsi":218038370,"name":"DAMIETTA EXPRESS","heard_utc":"2026-11-24T19:04:42Z","eta_utc":"2026-11-25T22:00Z","len":400,"dest":"NLRTM > DEHAM"}
+{"mmsi":229921000,"name":"CMA CGM DOLPHIN","heard_utc":"2026-11-24T19:07:22Z","eta_utc":"2026-11-24T05:00Z","len":294,"dest":"DEHAM"}
+{"mmsi":255916314,"name":"DP WORLD LONDON","heard_utc":"2026-11-24T19:08:56Z","eta_utc":"2026-11-24T18:00Z","len":148,"dest":"DEHAM"}
+{"mmsi":440487000,"name":"HMM COPENHAGEN","heard_utc":"2026-11-24T19:04:30Z","eta_utc":"2026-11-24T08:30Z","len":400,"dest":"BEANR>DEHAM"}
+{"mmsi":636093197,"name":"SCI DELHI","heard_utc":"2026-11-24T19:05:46Z","eta_utc":"2026-11-25T14:00Z","len":300,"dest":"NLRTM>DEHAM"}
