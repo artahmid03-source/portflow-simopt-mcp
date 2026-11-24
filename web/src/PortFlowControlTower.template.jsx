@@ -815,7 +815,7 @@ function Tower({ data, feed }) {
             return <span className="pf-lamp" title={bad.length ? bad.map((c) => `${c.name}: ${c.detail}`).join('\n') : `all checks passed at ${feed.health.checked_utc.slice(0, 16)} UTC`}
               style={{ '--c': f === 'ok' ? C.ok : f === 'warn' ? C.amber : C.red }}><i />{f === 'ok' ? 'PIPELINE OK' : `PIPELINE: ${bad.length} ${f === 'fail' ? 'FAULT' : 'NOTICE'}${bad.length > 1 ? 'S' : ''}`}</span>; })()}
           <span className="pf-lamp" style={{ '--c': isLive && !(feed && feed.src === 'embedded') && !(data.generated_utc && Date.now() - Date.parse(data.generated_utc) > 8 * 3600e3) ? C.ok : C.amber }}><i />{feed && feed.src === 'embedded' ? `SAVED PLAN ${data.live.retrieved}` : isLive ? `LIVE DATA ${data.live.retrieved}` : `SNAPSHOT ${data.live.retrieved}`}</span>
-          <span className="pf-lamp" style={{ '--c': C.blue }}><i />{HH ? `ST. PAULI +${fmt(tideNow, 2)} m MLW` : `TIDE ${fmt(tideNow, 2)} m`}</span>
+          <span className="pf-lamp" style={{ '--c': C.blue }}><i />{HH ? `ST. PAULI ${tideNow >= 0 ? '+' : '−'}${fmt(Math.abs(tideNow), 2)} m MLW` : `TIDE ${fmt(tideNow, 2)} m`}</span>
           {!HH && <span className="pf-lamp" style={{ '--c': night ? C.amber : C.ok }}><i />{night ? 'NIGHT RULE ON' : 'DAYLIGHT'}</span>}
           {windNow != null && <span className="pf-lamp" style={{ '--c': windNow >= cfg.wind_limit_ms ? C.red : C.ok }}><i />WIND {fmt(windNow)} m/s{windNow >= cfg.wind_limit_ms ? ': BIG SHIPS HOLD' : ''}</span>}
           <span className="pf-lamp" style={{ '--c': k.peak >= 80 ? C.red : C.ok }}><i />YARD PEAK {fmt(k.peak)}%</span>

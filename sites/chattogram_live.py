@@ -393,7 +393,7 @@ def build_live(store: Path, now: Optional[datetime] = None, fetch: Optional[Call
                         f"tide from {tb['source']}; sunrise and sunset computed for the plan date.",
         "what_is_not_live": "AISStream has no receiver at Chattogram, so ships are heard in Singapore, the Malacca Strait or Colombo and dead-reckoned from there; "
                             "berth occupancy at the plan start, terminal assignment, box counts and the yard level are not published and are estimated or assumed.",
-        "sources": {"ais": "AISStream.io websocket, collected hourly by GitHub Actions", "tide": "Open-Meteo marine API (sea_level_height_msl), calibrated to the Chittagong tide table",
+        "sources": {"ais": "AISStream.io websocket, collected in 12-minute runs through the day (GitHub Actions) and before every plan", "tide": "Open-Meteo marine API (sea_level_height_msl), calibrated to the Chittagong tide table",
                     "carrier_schedule": f"Maersk port schedule (DCSA API) when MAERSK_CONSUMER_KEY is set; CNC / CMA CGM schedule for BDCGP read {snap['retrieved']} (ships AIS has not picked up)"},
         "estimates": {"teu_capacity": f"{TEU_A} x (LOA x beam)^{TEU_B}", "moves_per_call": f"{MOVES_PER_TEU} x estimated TEU", "draught_used": "AIS draught capped at 9.5 m; 9.0 m if not reported",
                       "berth_occupancy": "quay assumed free at the plan start (not observable)"},

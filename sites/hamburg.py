@@ -515,7 +515,7 @@ def build_live(store: Path, now: Optional[datetime] = None, max_ships: int = 14)
         "what_is_not_live": "Terminal assignments of inbound ships, crane allocations, box counts per call and yard levels are not published; "
                             "they are estimated or assumed. AIS does not say whether a cargo ship carries containers; ships without a carrier name "
                             "that have not been seen at a container quay are left out.",
-        "sources": {"ais": "AISStream.io websocket, collected hourly by GitHub Actions", "tide": "PEGELONLINE (WSV) gauges, harmonic + surge forecast (sites/tides.py)",
+        "sources": {"ais": "AISStream.io websocket, collected in 12-minute runs through the day (GitHub Actions) and before every plan", "tide": "PEGELONLINE (WSV) gauges, harmonic + surge forecast (sites/tides.py)",
                     "terminals": "OpenStreetMap terminal outlines via Nominatim (quay lines)", "fairway": "Elbe fairway adjustment: tide-independent and tide-dependent draughts"},
         "estimates": {"teu_capacity": f"{HAM['teu_a']} x (LOA x beam)^{HAM['teu_b']}", "moves_per_call": "TEU / 1.6 x 35% (300 m and over) or 70%",
                       "terminal": "seen on AIS, else carrier-to-terminal assumption", "release_of_moored_ships": "arrival + estimated working time + 4 h"},
