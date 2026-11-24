@@ -250,3 +250,8 @@
 {"mmsi":255916314,"name":"DP WORLD LONDON","heard_utc":"2026-11-24T19:08:56Z","eta_utc":"2026-11-24T18:00Z","len":148,"dest":"DEHAM"}
 {"mmsi":440487000,"name":"HMM COPENHAGEN","heard_utc":"2026-11-24T19:04:30Z","eta_utc":"2026-11-24T08:30Z","len":400,"dest":"BEANR>DEHAM"}
 {"mmsi":636093197,"name":"SCI DELHI","heard_utc":"2026-11-24T19:05:46Z","eta_utc":"2026-11-25T14:00Z","len":300,"dest":"NLRTM>DEHAM"}
+{"mmsi":211141000,"name":"BIANCA RAMBOW","heard_utc":"2026-11-24T19:34:21Z","eta_utc":"2026-11-25T05:00Z","len":134,"dest":"DEHAM"}
+{"mmsi":311001819,"name":"WILSON NANJING","heard_utc":"2026-11-24T19:30:23Z","eta_utc":"2026-11-26T02:00Z","len":123,"dest":"DEHAM"}
+{"mmsi":440486000,"name":"HMM ST PETERSBURG","heard_utc":"2026-11-24T19:28:53Z","eta_utc":"2026-11-24T05:30Z","len":400,"dest":"BEANR > DEHAM"}
+{"mmsi":563143500,"name":"ATLANTIC MONACO","heard_utc":"2026-11-24T19:29:59Z","eta_utc":"2026-11-23T14:00Z","len":146,"dest":"DEHAM"}
+{"mmsi":636021386,"name":"ASANAGI","heard_utc":"2026-11-24T19:35:28Z","eta_utc":"2026-11-24T03:00Z","len":292,"dest":"DEHAM"}
