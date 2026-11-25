@@ -61,7 +61,7 @@
  },
  "211141000": {
   "first_seen": "2026-11-18T01:26:17Z",
-  "last_seen": "2026-11-25T03:22:25Z",
+  "last_seen": "2026-11-25T13:14:36Z",
   "name": "BIANCA RAMBOW",
   "imo": 9297591,
   "dest": "DEHAM",
@@ -131,13 +131,13 @@
  },
  "215804000": {
   "first_seen": "2026-11-22T07:30:12Z",
-  "last_seen": "2026-11-25T03:26:13Z",
+  "last_seen": "2026-11-25T13:14:14Z",
   "name": "ATLANTIC SKY",
   "imo": 9670602,
   "dest": "GBLIV>DEHAM",
   "draught": 8.4,
   "len": 296,
-  "eta_utc": null
+  "eta_utc": "2026-11-23T18:00Z"
  },
  "218038370": {
   "first_seen": "2026-11-24T19:04:42Z",
@@ -161,13 +161,13 @@
  },
  "218854000": {
   "first_seen": "2026-11-23T02:39:13Z",
-  "last_seen": "2026-11-23T11:15:11Z",
+  "last_seen": "2026-11-25T13:15:15Z",
   "name": "SANTOS EXPRESS",
   "imo": 9777632,
   "dest": "GB LGP>DE HAM",
   "draught": 12.2,
   "len": 333,
-  "eta_utc": "2026-11-25T09:00Z"
+  "eta_utc": "2026-11-25T08:00Z"
  },
  "219019094": {
   "first_seen": "2026-11-19T07:59:29Z",
@@ -221,7 +221,7 @@
  },
  "229630000": {
   "first_seen": "2026-11-18T06:43:57Z",
-  "last_seen": "2026-11-25T03:25:55Z",
+  "last_seen": "2026-11-25T13:13:56Z",
   "name": "X-PRESS MULHACEN",
   "imo": 9365960,
   "dest": "DEHAM",
@@ -241,7 +241,7 @@
  },
  "229921000": {
   "first_seen": "2026-11-24T19:07:22Z",
-  "last_seen": "2026-11-25T03:25:21Z",
+  "last_seen": "2026-11-25T13:13:29Z",
   "name": "CMA CGM DOLPHIN",
   "imo": 9322487,
   "dest": "DEHAM",
@@ -261,7 +261,7 @@
  },
  "229989000": {
   "first_seen": "2026-11-23T23:05:20Z",
-  "last_seen": "2026-11-25T03:25:36Z",
+  "last_seen": "2026-11-25T13:14:20Z",
   "name": "CMA CGM RHONE",
   "imo": 9674543,
   "dest": "NLRTM>>DEHAM",
@@ -291,13 +291,13 @@
  },
  "232032457": {
   "first_seen": "2026-11-24T07:04:46Z",
-  "last_seen": "2026-11-25T03:25:23Z",
+  "last_seen": "2026-11-25T13:13:30Z",
   "name": "CUMBRIA",
   "imo": 9713480,
   "dest": "HAMBURG",
   "draught": 13.2,
   "len": 199,
-  "eta_utc": "2026-11-17T08:00Z"
+  "eta_utc": null
  },
  "242410400": {
   "first_seen": "2026-11-15T14:14:04Z",
@@ -361,7 +361,7 @@
  },
  "247078800": {
   "first_seen": "2026-11-22T21:45:25Z",
-  "last_seen": "2026-11-25T03:27:23Z",
+  "last_seen": "2026-11-25T13:15:24Z",
   "name": "GRANDE FRANCIA",
   "imo": 9246592,
   "dest": "BEANR>DEHAM",
@@ -421,13 +421,13 @@
  },
  "255805884": {
   "first_seen": "2026-11-15T17:07:00Z",
-  "last_seen": "2026-11-16T09:34:09Z",
+  "last_seen": "2026-11-25T13:15:37Z",
   "name": "ELBSUMMER",
   "imo": 9386718,
   "dest": "DEHAM",
-  "draught": 8.5,
+  "draught": 7.9,
   "len": 168,
-  "eta_utc": "2026-11-13T17:30Z"
+  "eta_utc": "2026-11-25T13:00Z"
  },
  "255805899": {
   "first_seen": "2026-11-15T14:15:35Z",
@@ -491,13 +491,13 @@
  },
  "255806514": {
   "first_seen": "2026-11-25T03:18:06Z",
-  "last_seen": "2026-11-25T03:18:06Z",
+  "last_seen": "2026-11-25T13:12:03Z",
   "name": "ANNABA",
   "imo": 9306201,
   "dest": "DEHAM",
   "draught": 9,
   "len": 167,
-  "eta_utc": "2026-11-25T13:00Z"
+  "eta_utc": "2026-11-25T15:00Z"
  },
  "255915667": {
   "first_seen": "2026-11-17T09:10:47Z",
@@ -551,13 +551,13 @@
  },
  "256641000": {
   "first_seen": "2026-11-19T17:28:03Z",
-  "last_seen": "2026-11-25T03:25:13Z",
+  "last_seen": "2026-11-25T13:14:24Z",
   "name": "YORK",
   "imo": 1020514,
   "dest": "PTAVE-DEHAM",
   "draught": 7.8,
   "len": 179,
-  "eta_utc": "2026-11-19T12:30Z"
+  "eta_utc": null
  },
  "256981000": {
   "first_seen": "2026-11-20T07:04:30Z",
@@ -571,7 +571,7 @@
  },
  "259468000": {
   "first_seen": "2026-11-25T03:26:36Z",
-  "last_seen": "2026-11-25T03:26:36Z",
+  "last_seen": "2026-11-25T13:15:28Z",
   "name": "LYSVIK SEAWAYS",
   "imo": 9144251,
   "dest": "HAMBURG",
@@ -641,13 +641,13 @@
  },
  "305313000": {
   "first_seen": "2026-11-17T18:33:04Z",
-  "last_seen": "2026-11-25T03:23:07Z",
+  "last_seen": "2026-11-25T13:09:49Z",
   "name": "ANNALISA P",
   "imo": 9437141,
   "dest": "HAMBURG",
   "draught": 9.1,
   "len": 166,
-  "eta_utc": null
+  "eta_utc": "2026-11-25T06:00Z"
  },
  "305412000": {
   "first_seen": "2026-11-18T18:08:40Z",
@@ -721,13 +721,13 @@
  },
  "309901000": {
   "first_seen": "2026-11-19T17:22:38Z",
-  "last_seen": "2026-11-23T11:22:13Z",
+  "last_seen": "2026-11-25T13:04:29Z",
   "name": "MOL CELEBRATION",
   "imo": 9321251,
   "dest": "DEHAM",
   "draught": 13.1,
   "len": 316,
-  "eta_utc": "2026-11-25T14:00Z"
+  "eta_utc": "2026-11-25T22:00Z"
  },
  "310750000": {
   "first_seen": "2026-11-18T06:43:43Z",
@@ -801,17 +801,17 @@
  },
  "440144000": {
   "first_seen": "2026-11-23T22:56:55Z",
-  "last_seen": "2026-11-24T08:02:43Z",
+  "last_seen": "2026-11-25T13:08:43Z",
   "name": "HMM TACOMA",
   "imo": 9385001,
   "dest": "NLRTM-DEHAM",
-  "draught": 12.2,
+  "draught": 11.7,
   "len": 293,
-  "eta_utc": "2026-11-25T13:00Z"
+  "eta_utc": "2026-11-30T23:00Z"
  },
  "440486000": {
   "first_seen": "2026-11-24T19:28:53Z",
-  "last_seen": "2026-11-25T03:22:53Z",
+  "last_seen": "2026-11-25T13:04:54Z",
   "name": "HMM ST PETERSBURG",
   "imo": 9868364,
   "dest": "BEANR > DEHAM",
@@ -881,7 +881,7 @@
  },
  "477194100": {
   "first_seen": "2026-11-22T00:21:34Z",
-  "last_seen": "2026-11-25T03:25:44Z",
+  "last_seen": "2026-11-25T13:13:45Z",
   "name": "COSCO SAGITTARIUS",
   "imo": 9783473,
   "dest": "HAMBURG",
@@ -1021,7 +1021,7 @@
  },
  "563274400": {
   "first_seen": "2026-11-20T22:47:10Z",
-  "last_seen": "2026-11-25T03:23:10Z",
+  "last_seen": "2026-11-25T13:11:10Z",
   "name": "EVER ECO",
   "imo": 1025203,
   "dest": "NLRTM > DEHAM",
@@ -1051,7 +1051,7 @@
  },
  "563287300": {
   "first_seen": "2026-11-24T07:04:10Z",
-  "last_seen": "2026-11-25T03:28:11Z",
+  "last_seen": "2026-11-25T13:04:12Z",
   "name": "XIAMEN EXPRESS",
   "imo": 9630420,
   "dest": "DEHAM",
@@ -1121,7 +1121,7 @@
  },
  "636021386": {
   "first_seen": "2026-11-24T19:05:32Z",
-  "last_seen": "2026-11-24T19:35:28Z",
+  "last_seen": "2026-11-25T13:04:22Z",
   "name": "ASANAGI",
   "imo": 9916197,
   "dest": "DEHAM",
@@ -1181,13 +1181,13 @@
  },
  "636023421": {
   "first_seen": "2026-11-20T16:08:09Z",
-  "last_seen": "2026-11-25T03:23:53Z",
+  "last_seen": "2026-11-25T13:11:53Z",
   "name": "MSC NAIROBI X",
   "imo": 9605243,
   "dest": "DEHAM",
   "draught": 11.6,
   "len": 300,
-  "eta_utc": "2026-11-24T15:00Z"
+  "eta_utc": null
  },
  "636024513": {
   "first_seen": "2026-11-15T17:01:38Z",
@@ -1211,7 +1211,7 @@
  },
  "636024999": {
   "first_seen": "2026-11-22T21:49:12Z",
-  "last_seen": "2026-11-25T03:14:51Z",
+  "last_seen": "2026-11-25T13:14:52Z",
   "name": "MSC RUBY",
   "imo": 9502960,
   "dest": "DEHAM",
@@ -1231,13 +1231,13 @@
  },
  "636025327": {
   "first_seen": "2026-11-23T02:42:11Z",
-  "last_seen": "2026-11-25T03:24:21Z",
+  "last_seen": "2026-11-25T13:04:39Z",
   "name": "MSC ALESSIA",
   "imo": 9987330,
   "dest": "DEHAM",
-  "draught": 13.7,
+  "draught": 13.2,
   "len": 366,
-  "eta_utc": "2026-11-26T14:00Z"
+  "eta_utc": "2026-11-26T18:00Z"
  },
  "636025449": {
   "first_seen": "2026-11-15T14:15:02Z",
@@ -1251,7 +1251,7 @@
  },
  "636025672": {
   "first_seen": "2026-11-17T00:51:47Z",
-  "last_seen": "2026-11-25T03:27:07Z",
+  "last_seen": "2026-11-25T13:10:10Z",
   "name": "NETA A.",
   "imo": 9412531,
   "dest": "DEHAM",
@@ -1291,12 +1291,12 @@
  },
  "636093197": {
   "first_seen": "2026-11-24T19:05:46Z",
-  "last_seen": "2026-11-24T19:05:46Z",
+  "last_seen": "2026-11-25T13:07:58Z",
   "name": "SCI DELHI",
   "imo": 9699127,
   "dest": "NLRTM>DEHAM",
   "draught": 13.2,
   "len": 300,
-  "eta_utc": "2026-11-25T14:00Z"
+  "eta_utc": "2026-11-25T16:00Z"
  }
 }
