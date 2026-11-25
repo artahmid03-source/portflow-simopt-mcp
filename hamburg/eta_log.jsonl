@@ -276,3 +276,7 @@
 {"mmsi":636025327,"name":"MSC ALESSIA","heard_utc":"2026-11-25T03:12:20Z","eta_utc":"2026-11-26T14:00Z","len":366,"dest":"DEHAM"}
 {"mmsi":636025672,"name":"NETA A.","heard_utc":"2026-11-25T03:15:06Z","eta_utc":"2026-11-23T21:00Z","len":158,"dest":"DEHAM"}
 {"mmsi":636093159,"name":"AS CLAUDIA","heard_utc":"2026-11-25T03:14:22Z","eta_utc":"2026-11-29T21:00Z","len":222,"dest":"DEHAM-BEANR"}
+{"mmsi":255806313,"name":"KILIA","heard_utc":"2026-11-25T03:28:28Z","eta_utc":"2026-11-25T05:00Z","len":158,"dest":"DEHAM"}
+{"mmsi":255916314,"name":"DP WORLD LONDON","heard_utc":"2026-11-25T03:26:56Z","eta_utc":"2026-11-25T02:30Z","len":148,"dest":"DEHAM"}
+{"mmsi":259468000,"name":"LYSVIK SEAWAYS","heard_utc":"2026-11-25T03:26:36Z","eta_utc":"2026-11-24T23:30Z","len":129,"dest":"HAMBURG"}
+{"mmsi":440486000,"name":"HMM ST PETERSBURG","heard_utc":"2026-11-25T03:22:53Z","eta_utc":"2026-11-24T05:30Z","len":400,"dest":"BEANR > DEHAM"}
