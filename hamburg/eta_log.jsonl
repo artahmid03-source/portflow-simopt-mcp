@@ -288,3 +288,6 @@
 {"mmsi":636021386,"name":"ASANAGI","heard_utc":"2026-11-25T13:04:22Z","eta_utc":"2026-11-24T03:00Z","len":292,"dest":"DEHAM"}
 {"mmsi":636025327,"name":"MSC ALESSIA","heard_utc":"2026-11-25T13:04:39Z","eta_utc":"2026-11-26T18:00Z","len":366,"dest":"DEHAM"}
 {"mmsi":636093197,"name":"SCI DELHI","heard_utc":"2026-11-25T13:07:58Z","eta_utc":"2026-11-25T16:00Z","len":300,"dest":"NLRTM>DEHAM"}
+{"mmsi":244597000,"name":"ENFORCER","heard_utc":"2026-11-25T13:37:41Z","eta_utc":"2026-11-25T15:30Z","len":135,"dest":"HAMBURG"}
+{"mmsi":247078800,"name":"GRANDE FRANCIA","heard_utc":"2026-11-25T13:39:29Z","eta_utc":"2026-11-23T06:00Z","len":214,"dest":"BEANR>DEHAM"}
+{"mmsi":636014740,"name":"IRENES REMEDY","heard_utc":"2026-11-25T13:38:35Z","eta_utc":"2026-11-24T13:00Z","len":222,"dest":"DEHAM"}
