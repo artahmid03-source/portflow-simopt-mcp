@@ -299,3 +299,24 @@
 {"mmsi":218038370,"name":"DAMIETTA EXPRESS","heard_utc":"2026-11-25T22:42:17Z","eta_utc":"2026-11-25T21:00Z","len":400,"dest":"NLRTM > DEHAM"}
 {"mmsi":440144000,"name":"HMM TACOMA","heard_utc":"2026-11-25T22:43:24Z","eta_utc":"2026-11-28T23:59Z","len":293,"dest":"NLRTM-DEHAM"}
 {"mmsi":563342800,"name":"EVER ECLAT","heard_utc":"2026-11-25T23:46:17Z","eta_utc":"2026-11-25T21:00Z","len":369,"dest":"GBFXT > DEHAM"}
+{"mmsi":211141000,"name":"BIANCA RAMBOW","heard_utc":"2026-11-26T04:26:45Z","eta_utc":"2026-11-25T05:00Z","len":134,"dest":"DEHAM"}
+{"mmsi":215804000,"name":"ATLANTIC SKY","heard_utc":"2026-11-26T04:26:16Z","eta_utc":"2026-11-23T18:00Z","len":296,"dest":"GBLIV>DEHAM"}
+{"mmsi":218038370,"name":"DAMIETTA EXPRESS","heard_utc":"2026-11-26T04:30:18Z","eta_utc":"2026-11-25T21:00Z","len":400,"dest":"NLRTM > DEHAM"}
+{"mmsi":232032457,"name":"CUMBRIA","heard_utc":"2026-11-26T04:25:24Z","eta_utc":"2026-11-17T08:00Z","len":199,"dest":"HAMBURG"}
+{"mmsi":244597000,"name":"ENFORCER","heard_utc":"2026-11-26T04:25:10Z","eta_utc":"2026-11-25T15:30Z","len":135,"dest":"HAMBURG"}
+{"mmsi":255805884,"name":"ELBSUMMER","heard_utc":"2026-11-26T04:28:28Z","eta_utc":"2026-11-25T13:00Z","len":168,"dest":"DEHAM"}
+{"mmsi":255806352,"name":"FINE SCHEPERS","heard_utc":"2026-11-26T04:26:55Z","eta_utc":"2026-11-25T18:00Z","len":141,"dest":"DEHAM"}
+{"mmsi":255915667,"name":"ELBINSEL","heard_utc":"2026-11-26T04:28:47Z","eta_utc":"2026-11-26T05:00Z","len":170,"dest":"DEHAM"}
+{"mmsi":256259000,"name":"MBC DAISY","heard_utc":"2026-11-26T04:29:39Z","eta_utc":"2026-11-25T13:00Z","len":146,"dest":"DEHAM"}
+{"mmsi":309901000,"name":"MOL CELEBRATION","heard_utc":"2026-11-26T04:29:28Z","eta_utc":"2026-11-25T22:45Z","len":316,"dest":"DEHAM"}
+{"mmsi":311001819,"name":"WILSON NANJING","heard_utc":"2026-11-26T04:30:22Z","eta_utc":"2026-11-26T02:00Z","len":123,"dest":"DEHAM"}
+{"mmsi":357214000,"name":"CMA CGM ALCAZAR","heard_utc":"2026-11-26T04:21:35Z","eta_utc":"2026-11-26T09:00Z","len":294,"dest":"DEHAM"}
+{"mmsi":440487000,"name":"HMM COPENHAGEN","heard_utc":"2026-11-26T04:28:31Z","eta_utc":"2026-11-24T08:30Z","len":400,"dest":"BEANR>DEHAM"}
+{"mmsi":477194100,"name":"COSCO SAGITTARIUS","heard_utc":"2026-11-26T04:25:44Z","eta_utc":"2026-11-23T05:00Z","len":400,"dest":"HAMBURG"}
+{"mmsi":477211100,"name":"MAERSK BAYETE","heard_utc":"2026-11-26T04:20:51Z","eta_utc":"2026-11-27T21:30Z","len":223,"dest":"BEANR>>>DEHAM"}
+{"mmsi":563342800,"name":"EVER ECLAT","heard_utc":"2026-11-26T04:28:17Z","eta_utc":"2026-11-25T21:00Z","len":369,"dest":"GBFXT > DEHAM"}
+{"mmsi":636021386,"name":"ASANAGI","heard_utc":"2026-11-26T04:20:11Z","eta_utc":"2026-11-24T03:00Z","len":292,"dest":"DEHAM"}
+{"mmsi":636023421,"name":"MSC NAIROBI X","heard_utc":"2026-11-26T04:29:51Z","eta_utc":"2026-11-24T15:00Z","len":300,"dest":"DEHAM"}
+{"mmsi":636024999,"name":"MSC RUBY","heard_utc":"2026-11-26T04:26:54Z","eta_utc":"2026-11-18T05:20Z","len":366,"dest":"DEHAM"}
+{"mmsi":636025672,"name":"NETA A.","heard_utc":"2026-11-26T04:29:51Z","eta_utc":"2026-11-23T21:00Z","len":158,"dest":"DEHAM"}
+{"mmsi":636093159,"name":"AS CLAUDIA","heard_utc":"2026-11-26T04:25:33Z","eta_utc":"2026-11-29T21:00Z","len":222,"dest":"DEHAM-BEANR"}
