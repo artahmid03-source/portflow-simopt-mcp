@@ -331,3 +331,5 @@
 {"mmsi":440486000,"name":"HMM ST PETERSBURG","heard_utc":"2026-11-26T08:58:54Z","eta_utc":"2026-11-24T05:30Z","len":400,"dest":"BEANR > DEHAM"}
 {"mmsi":538009076,"name":"CANOLA ZIBO","heard_utc":"2026-11-26T09:04:38Z","eta_utc":"2026-11-25T18:12Z","len":229,"dest":"HAMBURG"}
 {"mmsi":538090453,"name":"BRIGHT SKY","heard_utc":"2026-11-26T09:01:42Z","eta_utc":"2026-11-26T03:00Z","len":200,"dest":"DEHAM"}
+{"mmsi":255917275,"name":"ELBOCEAN","heard_utc":"2026-11-26T13:05:15Z","eta_utc":"2026-11-26T06:00Z","len":170,"dest":"HAMBURG"}
+{"mmsi":636093172,"name":"ALULA EXPRESS","heard_utc":"2026-11-26T13:12:00Z","eta_utc":"2026-11-26T09:00Z","len":368,"dest":"DEHAM"}
