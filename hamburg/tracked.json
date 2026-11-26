@@ -61,13 +61,13 @@
  },
  "211141000": {
   "first_seen": "2026-11-18T01:26:17Z",
-  "last_seen": "2026-11-25T22:47:26Z",
+  "last_seen": "2026-11-25T23:53:29Z",
   "name": "BIANCA RAMBOW",
   "imo": 9297591,
   "dest": "DEHAM",
   "draught": 8.4,
   "len": 134,
-  "eta_utc": "2026-11-25T05:00Z"
+  "eta_utc": null
  },
  "211191500": {
   "first_seen": "2026-11-15T14:11:19Z",
@@ -131,7 +131,7 @@
  },
  "215804000": {
   "first_seen": "2026-11-22T07:30:12Z",
-  "last_seen": "2026-11-25T22:44:15Z",
+  "last_seen": "2026-11-25T23:50:14Z",
   "name": "ATLANTIC SKY",
   "imo": 9670602,
   "dest": "GBLIV>DEHAM",
@@ -161,7 +161,7 @@
  },
  "218854000": {
   "first_seen": "2026-11-23T02:39:13Z",
-  "last_seen": "2026-11-25T22:45:14Z",
+  "last_seen": "2026-11-25T23:51:13Z",
   "name": "SANTOS EXPRESS",
   "imo": 9777632,
   "dest": "GB LGP>DE HAM",
@@ -221,7 +221,7 @@
  },
  "229630000": {
   "first_seen": "2026-11-18T06:43:57Z",
-  "last_seen": "2026-11-25T22:43:56Z",
+  "last_seen": "2026-11-25T23:49:55Z",
   "name": "X-PRESS MULHACEN",
   "imo": 9365960,
   "dest": "DEHAM",
@@ -241,7 +241,7 @@
  },
  "229921000": {
   "first_seen": "2026-11-24T19:07:22Z",
-  "last_seen": "2026-11-25T22:43:21Z",
+  "last_seen": "2026-11-25T23:49:21Z",
   "name": "CMA CGM DOLPHIN",
   "imo": 9322487,
   "dest": "DEHAM",
@@ -321,13 +321,13 @@
  },
  "244597000": {
   "first_seen": "2026-11-25T13:37:41Z",
-  "last_seen": "2026-11-25T22:43:44Z",
+  "last_seen": "2026-11-25T23:49:09Z",
   "name": "ENFORCER",
   "imo": 9255737,
   "dest": "HAMBURG",
   "draught": 7.3,
   "len": 135,
-  "eta_utc": null
+  "eta_utc": "2026-11-25T15:30Z"
  },
  "244742000": {
   "first_seen": "2026-11-22T07:29:56Z",
@@ -431,13 +431,13 @@
  },
  "255805884": {
   "first_seen": "2026-11-15T17:07:00Z",
-  "last_seen": "2026-11-25T22:46:10Z",
+  "last_seen": "2026-11-25T23:52:13Z",
   "name": "ELBSUMMER",
   "imo": 9386718,
   "dest": "DEHAM",
   "draught": 7.9,
   "len": 168,
-  "eta_utc": "2026-11-25T13:00Z"
+  "eta_utc": null
  },
  "255805899": {
   "first_seen": "2026-11-15T14:15:35Z",
@@ -491,17 +491,17 @@
  },
  "255806352": {
   "first_seen": "2026-11-19T00:22:48Z",
-  "last_seen": "2026-11-25T22:28:58Z",
+  "last_seen": "2026-11-25T23:53:00Z",
   "name": "FINE SCHEPERS",
   "imo": 9323467,
   "dest": "DEHAM",
   "draught": 6.8,
   "len": 141,
-  "eta_utc": "2026-11-25T18:00Z"
+  "eta_utc": null
  },
  "255806514": {
   "first_seen": "2026-11-25T03:18:06Z",
-  "last_seen": "2026-11-25T22:44:04Z",
+  "last_seen": "2026-11-25T23:52:01Z",
   "name": "ANNABA",
   "imo": 9306201,
   "dest": "DEHAM",
@@ -551,13 +551,13 @@
  },
  "256259000": {
   "first_seen": "2026-11-24T06:58:51Z",
-  "last_seen": "2026-11-25T22:47:43Z",
+  "last_seen": "2026-11-25T23:47:41Z",
   "name": "MBC DAISY",
   "imo": 9609902,
   "dest": "DEHAM",
   "draught": 7.2,
   "len": 146,
-  "eta_utc": "2026-11-25T13:00Z"
+  "eta_utc": null
  },
  "256641000": {
   "first_seen": "2026-11-19T17:28:03Z",
@@ -651,7 +651,7 @@
  },
  "305313000": {
   "first_seen": "2026-11-17T18:33:04Z",
-  "last_seen": "2026-11-25T22:43:47Z",
+  "last_seen": "2026-11-25T23:49:37Z",
   "name": "ANNALISA P",
   "imo": 9437141,
   "dest": "HAMBURG",
@@ -761,7 +761,7 @@
  },
  "311001819": {
   "first_seen": "2026-11-24T19:30:23Z",
-  "last_seen": "2026-11-25T22:47:32Z",
+  "last_seen": "2026-11-25T23:48:25Z",
   "name": "WILSON NANJING",
   "imo": 9431018,
   "dest": "DEHAM",
@@ -831,7 +831,7 @@
  },
  "440487000": {
   "first_seen": "2026-11-24T19:04:30Z",
-  "last_seen": "2026-11-25T22:46:30Z",
+  "last_seen": "2026-11-25T23:52:30Z",
   "name": "HMM COPENHAGEN",
   "imo": 9863302,
   "dest": "BEANR>DEHAM",
@@ -891,7 +891,7 @@
  },
  "477194100": {
   "first_seen": "2026-11-22T00:21:34Z",
-  "last_seen": "2026-11-25T22:43:49Z",
+  "last_seen": "2026-11-25T23:49:44Z",
   "name": "COSCO SAGITTARIUS",
   "imo": 9783473,
   "dest": "HAMBURG",
@@ -1081,13 +1081,13 @@
  },
  "563342800": {
   "first_seen": "2026-11-22T15:40:17Z",
-  "last_seen": "2026-11-22T15:40:17Z",
+  "last_seen": "2026-11-25T23:46:17Z",
   "name": "EVER ECLAT",
   "imo": 1025265,
   "dest": "GBFXT > DEHAM",
-  "draught": 14.4,
+  "draught": 12.9,
   "len": 369,
-  "eta_utc": "2026-11-25T00:00Z"
+  "eta_utc": "2026-11-25T21:00Z"
  },
  "564398000": {
   "first_seen": "2026-11-19T00:18:13Z",
@@ -1201,7 +1201,7 @@
  },
  "636023421": {
   "first_seen": "2026-11-20T16:08:09Z",
-  "last_seen": "2026-11-25T22:47:50Z",
+  "last_seen": "2026-11-25T23:47:53Z",
   "name": "MSC NAIROBI X",
   "imo": 9605243,
   "dest": "DEHAM",
@@ -1231,7 +1231,7 @@
  },
  "636024999": {
   "first_seen": "2026-11-22T21:49:12Z",
-  "last_seen": "2026-11-25T22:44:54Z",
+  "last_seen": "2026-11-25T23:50:52Z",
   "name": "MSC RUBY",
   "imo": 9502960,
   "dest": "DEHAM",
@@ -1271,7 +1271,7 @@
  },
  "636025672": {
   "first_seen": "2026-11-17T00:51:47Z",
-  "last_seen": "2026-11-25T22:41:13Z",
+  "last_seen": "2026-11-25T23:53:22Z",
   "name": "NETA A.",
   "imo": 9412531,
   "dest": "DEHAM",

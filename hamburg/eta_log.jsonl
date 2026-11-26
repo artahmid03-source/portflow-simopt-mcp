@@ -298,3 +298,4 @@
 {"mmsi":311001819,"name":"WILSON NANJING","heard_utc":"2026-11-25T22:38:24Z","eta_utc":"2026-11-26T02:00Z","len":123,"dest":"DEHAM"}
 {"mmsi":218038370,"name":"DAMIETTA EXPRESS","heard_utc":"2026-11-25T22:42:17Z","eta_utc":"2026-11-25T21:00Z","len":400,"dest":"NLRTM > DEHAM"}
 {"mmsi":440144000,"name":"HMM TACOMA","heard_utc":"2026-11-25T22:43:24Z","eta_utc":"2026-11-28T23:59Z","len":293,"dest":"NLRTM-DEHAM"}
+{"mmsi":563342800,"name":"EVER ECLAT","heard_utc":"2026-11-25T23:46:17Z","eta_utc":"2026-11-25T21:00Z","len":369,"dest":"GBFXT > DEHAM"}
