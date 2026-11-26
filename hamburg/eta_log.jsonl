@@ -337,3 +337,7 @@
 {"mmsi":228394600,"name":"CMA CGM PALAIS ROYAL","heard_utc":"2026-11-26T14:05:56Z","eta_utc":"2026-11-26T16:00Z","len":400,"dest":"DEHAM"}
 {"mmsi":249877000,"name":"CMA CGM RODOLPHE","heard_utc":"2026-11-26T14:06:16Z","eta_utc":"2026-11-25T18:15Z","len":300,"dest":"DEHAM"}
 {"mmsi":636014740,"name":"IRENES REMEDY","heard_utc":"2026-11-26T14:08:35Z","eta_utc":"2026-11-24T13:00Z","len":222,"dest":"DEHAM"}
+{"mmsi":218098000,"name":"IDA RAMBOW","heard_utc":"2026-11-26T19:23:18Z","eta_utc":"2026-11-26T15:00Z","len":149,"dest":"DEHAM"}
+{"mmsi":305287000,"name":"NEUENFELDE","heard_utc":"2026-11-26T19:23:30Z","eta_utc":"2026-11-26T23:00Z","len":133,"dest":"DEHAM"}
+{"mmsi":636022873,"name":"MSC ATHENS","heard_utc":"2026-11-26T19:17:50Z","eta_utc":"2026-11-27T13:00Z","len":300,"dest":"HAMBURG"}
+{"mmsi":636093159,"name":"AS CLAUDIA","heard_utc":"2026-11-26T19:22:21Z","eta_utc":"2026-11-30T18:00Z","len":222,"dest":"DEHAM-BEANR"}
