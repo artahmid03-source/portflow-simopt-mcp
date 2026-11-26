@@ -61,7 +61,7 @@
  },
  "211141000": {
   "first_seen": "2026-11-18T01:26:17Z",
-  "last_seen": "2026-11-26T06:37:36Z",
+  "last_seen": "2026-11-26T06:43:35Z",
   "name": "BIANCA RAMBOW",
   "imo": 9297591,
   "dest": "DEHAM",
@@ -141,7 +141,7 @@
  },
  "218038370": {
   "first_seen": "2026-11-24T19:04:42Z",
-  "last_seen": "2026-11-26T06:36:15Z",
+  "last_seen": "2026-11-26T06:42:16Z",
   "name": "DAMIETTA EXPRESS",
   "imo": 9543108,
   "dest": "NLRTM > DEHAM",
@@ -301,7 +301,7 @@
  },
  "232032457": {
   "first_seen": "2026-11-24T07:04:46Z",
-  "last_seen": "2026-11-26T06:37:26Z",
+  "last_seen": "2026-11-26T06:43:23Z",
   "name": "CUMBRIA",
   "imo": 9713480,
   "dest": "HAMBURG",
@@ -331,7 +331,7 @@
  },
  "244597000": {
   "first_seen": "2026-11-25T13:37:41Z",
-  "last_seen": "2026-11-26T06:37:10Z",
+  "last_seen": "2026-11-26T06:43:10Z",
   "name": "ENFORCER",
   "imo": 9255737,
   "dest": "HAMBURG",
@@ -441,7 +441,7 @@
  },
  "255805884": {
   "first_seen": "2026-11-15T17:07:00Z",
-  "last_seen": "2026-11-26T06:37:54Z",
+  "last_seen": "2026-11-26T06:43:53Z",
   "name": "ELBSUMMER",
   "imo": 9386718,
   "dest": "DEHAM",
@@ -501,7 +501,7 @@
  },
  "255806352": {
   "first_seen": "2026-11-19T00:22:48Z",
-  "last_seen": "2026-11-26T06:33:35Z",
+  "last_seen": "2026-11-26T06:45:23Z",
   "name": "FINE SCHEPERS",
   "imo": 9323467,
   "dest": "DEHAM",
@@ -511,17 +511,17 @@
  },
  "255806514": {
   "first_seen": "2026-11-25T03:18:06Z",
-  "last_seen": "2026-11-26T06:36:39Z",
+  "last_seen": "2026-11-26T06:42:42Z",
   "name": "ANNABA",
   "imo": 9306201,
   "dest": "DEHAM",
   "draught": 8.6,
   "len": 167,
-  "eta_utc": "2026-11-25T23:00Z"
+  "eta_utc": null
  },
  "255915667": {
   "first_seen": "2026-11-17T09:10:47Z",
-  "last_seen": "2026-11-26T06:28:47Z",
+  "last_seen": "2026-11-26T06:40:47Z",
   "name": "ELBINSEL",
   "imo": 9977426,
   "dest": "DEHAM",
@@ -741,7 +741,7 @@
  },
  "309901000": {
   "first_seen": "2026-11-19T17:22:38Z",
-  "last_seen": "2026-11-26T06:35:29Z",
+  "last_seen": "2026-11-26T06:41:38Z",
   "name": "MOL CELEBRATION",
   "imo": 9321251,
   "dest": "DEHAM",
@@ -771,13 +771,13 @@
  },
  "311001819": {
   "first_seen": "2026-11-24T19:30:23Z",
-  "last_seen": "2026-11-26T04:30:22Z",
+  "last_seen": "2026-11-26T06:42:23Z",
   "name": "WILSON NANJING",
   "imo": 9431018,
   "dest": "DEHAM",
   "draught": 5.1,
   "len": 123,
-  "eta_utc": "2026-11-26T02:00Z"
+  "eta_utc": null
  },
  "311001831": {
   "first_seen": "2026-11-21T12:38:21Z",
@@ -861,7 +861,7 @@
  },
  "440487000": {
   "first_seen": "2026-11-24T19:04:30Z",
-  "last_seen": "2026-11-26T06:34:31Z",
+  "last_seen": "2026-11-26T06:40:32Z",
   "name": "HMM COPENHAGEN",
   "imo": 9863302,
   "dest": "BEANR>DEHAM",
@@ -921,7 +921,7 @@
  },
  "477194100": {
   "first_seen": "2026-11-22T00:21:34Z",
-  "last_seen": "2026-11-26T06:37:44Z",
+  "last_seen": "2026-11-26T06:43:44Z",
   "name": "COSCO SAGITTARIUS",
   "imo": 9783473,
   "dest": "HAMBURG",
@@ -981,7 +981,7 @@
  },
  "538005733": {
   "first_seen": "2026-11-24T08:03:36Z",
-  "last_seen": "2026-11-24T08:03:36Z",
+  "last_seen": "2026-11-26T06:39:36Z",
   "name": "SAN FELIX",
   "imo": 9698630,
   "dest": "DEHAM",
@@ -1201,7 +1201,7 @@
  },
  "636021386": {
   "first_seen": "2026-11-24T19:05:32Z",
-  "last_seen": "2026-11-26T06:32:12Z",
+  "last_seen": "2026-11-26T06:44:12Z",
   "name": "ASANAGI",
   "imo": 9916197,
   "dest": "DEHAM",
@@ -1261,7 +1261,7 @@
  },
  "636023421": {
   "first_seen": "2026-11-20T16:08:09Z",
-  "last_seen": "2026-11-26T06:35:52Z",
+  "last_seen": "2026-11-26T06:41:58Z",
   "name": "MSC NAIROBI X",
   "imo": 9605243,
   "dest": "DEHAM",
@@ -1291,7 +1291,7 @@
  },
  "636024999": {
   "first_seen": "2026-11-22T21:49:12Z",
-  "last_seen": "2026-11-26T06:26:53Z",
+  "last_seen": "2026-11-26T06:44:53Z",
   "name": "MSC RUBY",
   "imo": 9502960,
   "dest": "DEHAM",
@@ -1338,6 +1338,16 @@
   "draught": 8.7,
   "len": 158,
   "eta_utc": null
+ },
+ "636093154": {
+  "first_seen": "2026-11-26T06:40:00Z",
+  "last_seen": "2026-11-26T06:40:00Z",
+  "name": "NINGBO EXPRESS",
+  "imo": 9229843,
+  "dest": "DEHAM",
+  "draught": 10.7,
+  "len": 320,
+  "eta_utc": "2026-11-26T22:00Z"
  },
  "636093159": {
   "first_seen": "2026-11-20T16:10:54Z",

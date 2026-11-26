@@ -326,3 +326,5 @@
 {"mmsi":355351000,"name":"MALACCA HIGHWAY","heard_utc":"2026-11-26T06:29:44Z","eta_utc":"2026-11-27T13:30Z","len":139,"dest":"DEHAM"}
 {"mmsi":440144000,"name":"HMM TACOMA","heard_utc":"2026-11-26T06:26:41Z","eta_utc":"2026-11-28T23:59Z","len":293,"dest":"NLRTM-DEHAM"}
 {"mmsi":636016305,"name":"MSC ALINA","heard_utc":"2026-11-26T06:29:39Z","eta_utc":"2026-11-29T07:00Z","len":300,"dest":"DEHAM"}
+{"mmsi":538005733,"name":"SAN FELIX","heard_utc":"2026-11-26T06:39:36Z","eta_utc":"2026-11-26T14:30Z","len":300,"dest":"DEHAM"}
+{"mmsi":636093154,"name":"NINGBO EXPRESS","heard_utc":"2026-11-26T06:40:00Z","eta_utc":"2026-11-26T22:00Z","len":320,"dest":"DEHAM"}
