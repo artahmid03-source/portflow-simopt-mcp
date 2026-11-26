@@ -333,3 +333,7 @@
 {"mmsi":538090453,"name":"BRIGHT SKY","heard_utc":"2026-11-26T09:01:42Z","eta_utc":"2026-11-26T03:00Z","len":200,"dest":"DEHAM"}
 {"mmsi":255917275,"name":"ELBOCEAN","heard_utc":"2026-11-26T13:05:15Z","eta_utc":"2026-11-26T06:00Z","len":170,"dest":"HAMBURG"}
 {"mmsi":636093172,"name":"ALULA EXPRESS","heard_utc":"2026-11-26T13:12:00Z","eta_utc":"2026-11-26T09:00Z","len":368,"dest":"DEHAM"}
+{"mmsi":218816000,"name":"BEATE","heard_utc":"2026-11-26T14:03:48Z","eta_utc":"2026-11-27T02:00Z","len":135,"dest":"DEHAM"}
+{"mmsi":228394600,"name":"CMA CGM PALAIS ROYAL","heard_utc":"2026-11-26T14:05:56Z","eta_utc":"2026-11-26T16:00Z","len":400,"dest":"DEHAM"}
+{"mmsi":249877000,"name":"CMA CGM RODOLPHE","heard_utc":"2026-11-26T14:06:16Z","eta_utc":"2026-11-25T18:15Z","len":300,"dest":"DEHAM"}
+{"mmsi":636014740,"name":"IRENES REMEDY","heard_utc":"2026-11-26T14:08:35Z","eta_utc":"2026-11-24T13:00Z","len":222,"dest":"DEHAM"}
