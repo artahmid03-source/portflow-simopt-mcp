@@ -358,3 +358,12 @@
 {"mmsi":636023421,"name":"MSC NAIROBI X","heard_utc":"2026-11-27T00:05:53Z","eta_utc":"2026-11-24T15:00Z","len":300,"dest":"DEHAM"}
 {"mmsi":636025327,"name":"MSC ALESSIA","heard_utc":"2026-11-27T00:06:02Z","eta_utc":"2026-11-26T21:30Z","len":366,"dest":"DEHAM"}
 {"mmsi":636093172,"name":"ALULA EXPRESS","heard_utc":"2026-11-27T00:00:54Z","eta_utc":"2026-11-26T09:00Z","len":368,"dest":"DEHAM"}
+{"mmsi":215949000,"name":"GRANDE ARGENTINA","heard_utc":"2026-11-27T02:30:40Z","eta_utc":"2026-11-28T05:00Z","len":214,"dest":"BEANR>DEHAM"}
+{"mmsi":230984000,"name":"LINDA","heard_utc":"2026-11-27T02:29:05Z","eta_utc":"2026-11-26T22:30Z","len":141,"dest":"DEHAM"}
+{"mmsi":249877000,"name":"CMA CGM RODOLPHE","heard_utc":"2026-11-27T02:25:17Z","eta_utc":"2026-11-25T18:15Z","len":300,"dest":"DEHAM"}
+{"mmsi":256259000,"name":"MBC DAISY","heard_utc":"2026-11-27T02:35:43Z","eta_utc":"2026-11-25T13:00Z","len":146,"dest":"DEHAM"}
+{"mmsi":305287000,"name":"NEUENFELDE","heard_utc":"2026-11-27T02:35:32Z","eta_utc":"2026-11-26T23:00Z","len":133,"dest":"DEHAM"}
+{"mmsi":355351000,"name":"MALACCA HIGHWAY","heard_utc":"2026-11-27T02:28:01Z","eta_utc":"2026-11-27T18:00Z","len":139,"dest":"DEHAM"}
+{"mmsi":440486000,"name":"HMM ST PETERSBURG","heard_utc":"2026-11-27T02:28:55Z","eta_utc":"2026-11-24T05:30Z","len":400,"dest":"BEANR > DEHAM"}
+{"mmsi":440487000,"name":"HMM COPENHAGEN","heard_utc":"2026-11-27T02:34:31Z","eta_utc":"2026-11-24T08:30Z","len":400,"dest":"BEANR>DEHAM"}
+{"mmsi":563270400,"name":"JUNIPER POINT","heard_utc":"2026-11-27T02:28:14Z","eta_utc":"2026-11-28T14:00Z","len":199,"dest":"HAMBURG"}
