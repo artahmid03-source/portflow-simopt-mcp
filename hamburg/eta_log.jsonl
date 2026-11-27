@@ -377,3 +377,8 @@
 {"mmsi":636093154,"name":"NINGBO EXPRESS","heard_utc":"2026-11-27T13:07:57Z","eta_utc":"2026-11-27T02:30Z","len":320,"dest":"DEHAM"}
 {"mmsi":215949000,"name":"GRANDE ARGENTINA","heard_utc":"2026-11-27T14:53:55Z","eta_utc":"2026-11-28T02:00Z","len":214,"dest":"BEANR>DEHAM"}
 {"mmsi":249877000,"name":"CMA CGM RODOLPHE","heard_utc":"2026-11-27T14:55:40Z","eta_utc":"2026-11-28T22:00Z","len":300,"dest":"DEHAM"}
+{"mmsi":212006000,"name":"JUDITH","heard_utc":"2026-11-27T20:27:04Z","eta_utc":"2026-11-27T21:00Z","len":170,"dest":"DEHAM"}
+{"mmsi":218098000,"name":"IDA RAMBOW","heard_utc":"2026-11-27T20:24:21Z","eta_utc":"2026-11-29T19:00Z","len":149,"dest":"DEHAM"}
+{"mmsi":248247000,"name":"CMA CGM MUSSET","heard_utc":"2026-11-27T20:27:32Z","eta_utc":"2026-11-27T13:30Z","len":300,"dest":"DEHAM"}
+{"mmsi":255805906,"name":"EDITH","heard_utc":"2026-11-27T20:28:54Z","eta_utc":"2026-11-27T21:00Z","len":139,"dest":"DEHAM"}
+{"mmsi":440486000,"name":"HMM ST PETERSBURG","heard_utc":"2026-11-27T20:21:15Z","eta_utc":"2026-11-29T05:15Z","len":400,"dest":"BEANR > DEHAM"}
