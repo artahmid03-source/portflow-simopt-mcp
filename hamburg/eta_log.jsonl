@@ -367,3 +367,5 @@
 {"mmsi":440486000,"name":"HMM ST PETERSBURG","heard_utc":"2026-11-27T02:28:55Z","eta_utc":"2026-11-24T05:30Z","len":400,"dest":"BEANR > DEHAM"}
 {"mmsi":440487000,"name":"HMM COPENHAGEN","heard_utc":"2026-11-27T02:34:31Z","eta_utc":"2026-11-24T08:30Z","len":400,"dest":"BEANR>DEHAM"}
 {"mmsi":563270400,"name":"JUNIPER POINT","heard_utc":"2026-11-27T02:28:14Z","eta_utc":"2026-11-28T14:00Z","len":199,"dest":"HAMBURG"}
+{"mmsi":229934000,"name":"CMA CGM ELBE","heard_utc":"2026-11-27T05:05:40Z","eta_utc":"2026-11-26T21:30Z","len":300,"dest":"DEHAM"}
+{"mmsi":477321000,"name":"OOCL MONTREAL","heard_utc":"2026-11-27T04:59:06Z","eta_utc":"2026-11-27T05:30Z","len":294,"dest":"BE ANR > DE HAM"}
