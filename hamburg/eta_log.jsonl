@@ -369,3 +369,5 @@
 {"mmsi":563270400,"name":"JUNIPER POINT","heard_utc":"2026-11-27T02:28:14Z","eta_utc":"2026-11-28T14:00Z","len":199,"dest":"HAMBURG"}
 {"mmsi":229934000,"name":"CMA CGM ELBE","heard_utc":"2026-11-27T05:05:40Z","eta_utc":"2026-11-26T21:30Z","len":300,"dest":"DEHAM"}
 {"mmsi":477321000,"name":"OOCL MONTREAL","heard_utc":"2026-11-27T04:59:06Z","eta_utc":"2026-11-27T05:30Z","len":294,"dest":"BE ANR > DE HAM"}
+{"mmsi":232032457,"name":"CUMBRIA","heard_utc":"2026-11-27T05:13:26Z","eta_utc":"2026-11-17T08:00Z","len":199,"dest":"HAMBURG"}
+{"mmsi":248247000,"name":"CMA CGM MUSSET","heard_utc":"2026-11-27T05:09:32Z","eta_utc":"2026-11-27T14:00Z","len":300,"dest":"DEHAM"}
