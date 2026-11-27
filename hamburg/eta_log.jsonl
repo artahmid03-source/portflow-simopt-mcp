@@ -375,3 +375,5 @@
 {"mmsi":255805555,"name":"AKACIA","heard_utc":"2026-11-27T13:04:49Z","eta_utc":"2026-11-27T05:00Z","len":149,"dest":"DEHAM"}
 {"mmsi":357214000,"name":"CMA CGM ALCAZAR","heard_utc":"2026-11-27T13:03:36Z","eta_utc":"2026-11-28T15:00Z","len":294,"dest":"DEHAM"}
 {"mmsi":636093154,"name":"NINGBO EXPRESS","heard_utc":"2026-11-27T13:07:57Z","eta_utc":"2026-11-27T02:30Z","len":320,"dest":"DEHAM"}
+{"mmsi":215949000,"name":"GRANDE ARGENTINA","heard_utc":"2026-11-27T14:53:55Z","eta_utc":"2026-11-28T02:00Z","len":214,"dest":"BEANR>DEHAM"}
+{"mmsi":249877000,"name":"CMA CGM RODOLPHE","heard_utc":"2026-11-27T14:55:40Z","eta_utc":"2026-11-28T22:00Z","len":300,"dest":"DEHAM"}
