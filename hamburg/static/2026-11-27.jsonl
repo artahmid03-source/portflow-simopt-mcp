@@ -183,3 +183,82 @@
 {"t":"2026-11-27T05:15:21Z","mmsi":548781000,"imo":1014369,"name":"OCEAN TRADER","type":70,"len":179,"beam":30,"draught":7.1,"dest":"DE BKE","eta_utc":"2026-11-27T00:01Z","bound":false,"src":"near"}
 {"t":"2026-11-27T05:15:27Z","mmsi":211363350,"imo":0,"name":"LEYHOERN","type":54,"len":41,"beam":9,"draught":1.6,"dest":"OSTFR.KUESTE","eta_utc":"2027-09-29T01:00Z","bound":false,"src":"near"}
 {"t":"2026-11-27T05:09:32Z","mmsi":248247000,"imo":9406611,"name":"CMA CGM MUSSET","type":70,"len":300,"beam":40,"draught":11.3,"dest":"DEHAM","eta_utc":"2026-11-27T14:00Z","bound":true,"src":"feeder"}
+{"t":"2026-11-27T11:25:20Z","mmsi":636022775,"imo":9125671,"name":"RIX VOYAGER","type":70,"len":90,"beam":13,"draught":3.7,"dest":"FREDERICIA","eta_utc":"2026-11-28T18:00Z","bound":false,"src":"near"}
+{"t":"2026-11-27T11:25:03Z","mmsi":211510990,"imo":0,"name":"CATALEYA","type":79,"len":101,"beam":24,"draught":3.7,"dest":"HAMBURG","eta_utc":null,"bound":false,"src":"near"}
+{"t":"2026-11-27T11:25:04Z","mmsi":255917312,"imo":9842932,"name":"FAIRPLAY 85","type":52,"len":25,"beam":13,"draught":6.1,"dest":"DESTD","eta_utc":"2026-11-18T18:30Z","bound":false,"src":"near"}
+{"t":"2026-11-27T11:25:06Z","mmsi":211283460,"imo":0,"name":"WESTERHUESEN","type":89,"len":85,"beam":10,"draught":1.2,"dest":"HAMBURG","eta_utc":null,"bound":false,"src":"near"}
+{"t":"2026-11-27T11:25:05Z","mmsi":211711370,"imo":5046281,"name":"BLEICHEN","type":79,"len":93,"beam":12,"draught":4.4,"dest":"DEHAM","eta_utc":"2027-05-11T19:00Z","bound":false,"src":"near"}
+{"t":"2026-11-27T11:25:13Z","mmsi":211626350,"imo":9647409,"name":"VB PROMPT","type":52,"len":25,"beam":12,"draught":5.6,"dest":"HAMBURG","eta_utc":null,"bound":false,"src":"near"}
+{"t":"2026-11-27T11:31:16Z","mmsi":211366340,"imo":6923888,"name":"LEVENSAU","type":52,"len":30,"beam":9,"draught":4.7,"dest":"DEHAM","eta_utc":null,"bound":false,"src":"near"}
+{"t":"2026-11-27T11:25:14Z","mmsi":538071095,"imo":1010222,"name":"LUNA","type":37,"len":114,"beam":20,"draught":5.6,"dest":"HAMBURG","eta_utc":null,"bound":false,"src":"near"}
+{"t":"2026-11-27T11:25:16Z","mmsi":211464790,"imo":0,"name":"BETTINA EHLERS","type":60,"len":18,"beam":5,"draught":1.2,"dest":"HAMBURG","eta_utc":"2027-01-01T00:00Z","bound":false,"src":"near"}
+{"t":"2026-11-27T11:31:18Z","mmsi":211518370,"imo":0,"name":"SALMO","type":52,"len":14,"beam":5,"draught":2.4,"dest":"HAMBURG","eta_utc":null,"bound":false,"src":"near"}
+{"t":"2026-11-27T11:31:30Z","mmsi":232032457,"imo":9713480,"name":"CUMBRIA","type":70,"len":199,"beam":32,"draught":13.2,"dest":"HAMBURG","eta_utc":null,"bound":true,"src":"near"}
+{"t":"2026-11-27T11:31:30Z","mmsi":255915673,"imo":1089209,"name":"HAV SARDIS","type":70,"len":89,"beam":16,"draught":4.3,"dest":"DE HAM","eta_utc":"2026-11-26T08:00Z","bound":false,"src":"near"}
+{"t":"2026-11-27T11:25:30Z","mmsi":211559130,"imo":0,"name":"HAFENKAPITAEN","type":99,"len":20,"beam":4,"draught":1.5,"dest":"HAMBURG","eta_utc":"2026-12-31T00:00Z","bound":false,"src":"near"}
+{"t":"2026-11-27T11:35:36Z","mmsi":219285000,"imo":9760859,"name":"SVITZER ROTA","type":52,"len":24,"beam":12,"draught":5.9,"dest":"TOWING BREMERHAVEN","eta_utc":"2026-11-27T09:00Z","bound":false,"src":"near"}
+{"t":"2026-11-27T11:31:54Z","mmsi":636093154,"imo":9229843,"name":"NINGBO EXPRESS","type":71,"len":320,"beam":42,"draught":10.9,"dest":"DEHAM","eta_utc":null,"bound":true,"src":"near"}
+{"t":"2026-11-27T11:25:54Z","mmsi":211437320,"imo":0,"name":"WALTERSHOF","type":60,"len":29,"beam":9,"draught":0,"dest":"HAMBURG","eta_utc":"2026-11-19T00:00Z","bound":false,"src":"near"}
+{"t":"2026-11-27T11:32:02Z","mmsi":211805140,"imo":9639737,"name":"WULF 4","type":52,"len":26,"beam":9,"draught":2.7,"dest":"DEBUZ","eta_utc":"2026-11-27T13:00Z","bound":false,"src":"near"}
+{"t":"2026-11-27T11:26:06Z","mmsi":211203490,"imo":0,"name":"HAFEN  HAMBURG","type":0,"len":27,"beam":7,"draught":1.3,"dest":"HAMBURG","eta_utc":null,"bound":false,"src":"near"}
+{"t":"2026-11-27T11:32:14Z","mmsi":211147880,"imo":0,"name":"WS31","type":99,"len":18,"beam":5,"draught":0,"dest":"HH","eta_utc":"2027-01-01T00:00Z","bound":false,"src":"near"}
+{"t":"2026-11-27T11:32:29Z","mmsi":305287000,"imo":9231846,"name":"NEUENFELDE","type":79,"len":133,"beam":23,"draught":8.2,"dest":"DEHAM","eta_utc":"2026-11-26T23:00Z","bound":true,"src":"near"}
+{"t":"2026-11-27T11:32:33Z","mmsi":211611680,"imo":0,"name":"HAMBURGENSIE","type":69,"len":29,"beam":9,"draught":1.8,"dest":"HAMBURG","eta_utc":null,"bound":false,"src":"near"}
+{"t":"2026-11-27T11:26:31Z","mmsi":218008130,"imo":9067271,"name":"GROSSNORDSEE","type":52,"len":35,"beam":11,"draught":4.7,"dest":"DEKEL","eta_utc":"2026-11-27T16:00Z","bound":false,"src":"near"}
+{"t":"2026-11-27T11:32:33Z","mmsi":538090453,"imo":9465435,"name":"BRIGHT SKY","type":70,"len":200,"beam":30,"draught":8,"dest":"DEHAM","eta_utc":"2026-11-26T03:00Z","bound":true,"src":"near"}
+{"t":"2026-11-27T11:26:39Z","mmsi":211471880,"imo":0,"name":"TMS ANTONIA","type":89,"len":100,"beam":10,"draught":3.1,"dest":"HAMBURG","eta_utc":"2027-10-03T19:00Z","bound":false,"src":"near"}
+{"t":"2026-11-27T11:26:43Z","mmsi":244060081,"imo":0,"name":"IBIS 7","type":90,"len":46,"beam":10,"draught":1.9,"dest":"HAMBURG","eta_utc":"2026-11-23T19:00Z","bound":false,"src":"near"}
+{"t":"2026-11-27T11:32:46Z","mmsi":211596250,"imo":0,"name":"CHICAGO","type":52,"len":28,"beam":10,"draught":2.6,"dest":"HAMBURG","eta_utc":null,"bound":false,"src":"near"}
+{"t":"2026-11-27T11:26:49Z","mmsi":211278420,"imo":1120974,"name":"NICO","type":52,"len":25,"beam":12,"draught":6.4,"dest":"WILHELMSHAVEN","eta_utc":"2026-11-27T18:00Z","bound":false,"src":"near"}
+{"t":"2026-11-27T11:32:51Z","mmsi":211188880,"imo":0,"name":"DETTMER SCHUB 124","type":80,"len":80,"beam":9,"draught":1.6,"dest":"HAMBURG","eta_utc":"2027-03-26T12:14Z","bound":false,"src":"near"}
+{"t":"2026-11-27T11:33:02Z","mmsi":211619970,"imo":0,"name":"LA PALOMA","type":60,"len":45,"beam":11,"draught":0,"dest":"","eta_utc":null,"bound":false,"src":"near"}
+{"t":"2026-11-27T11:27:03Z","mmsi":441657000,"imo":9338694,"name":"MORNING CHARLOTTE","type":79,"len":200,"beam":32,"draught":8.9,"dest":"GBSOU","eta_utc":"2026-11-30T05:00Z","bound":false,"src":"near"}
+{"t":"2026-11-27T11:33:39Z","mmsi":218028060,"imo":9597355,"name":"VB SPIRIT","type":52,"len":24,"beam":12,"draught":5.8,"dest":"DESTA#","eta_utc":"2027-10-21T12:00Z","bound":false,"src":"near"}
+{"t":"2026-11-27T11:27:05Z","mmsi":257344000,"imo":9780354,"name":"HOEGH ESPERANZA","type":80,"len":294,"beam":46,"draught":9.2,"dest":"FOR ORDER","eta_utc":"2027-04-10T17:00Z","bound":false,"src":"near"}
+{"t":"2026-11-27T11:27:14Z","mmsi":211151080,"imo":0,"name":"OEVELGOENNE","type":60,"len":29,"beam":8,"draught":1.8,"dest":"HAMBURG","eta_utc":null,"bound":false,"src":"near"}
+{"t":"2026-11-27T11:27:12Z","mmsi":211540760,"imo":0,"name":"HANSEN SIEN 2","type":79,"len":19,"beam":4,"draught":2,"dest":"HAMBURG","eta_utc":null,"bound":false,"src":"near"}
+{"t":"2026-11-27T11:36:23Z","mmsi":255805754,"imo":9212486,"name":"PATRICIA ESSBERGER","type":80,"len":100,"beam":16,"draught":5.5,"dest":"DE STA","eta_utc":"2026-11-27T11:00Z","bound":false,"src":"near"}
+{"t":"2026-11-27T11:33:38Z","mmsi":265061000,"imo":9983968,"name":"FURE VICTORIA","type":80,"len":149,"beam":23,"draught":6.4,"dest":"SE BRO","eta_utc":"2026-11-28T22:00Z","bound":false,"src":"near"}
+{"t":"2026-11-27T11:27:52Z","mmsi":211669950,"imo":0,"name":"MODI","type":33,"len":35,"beam":13,"draught":1.6,"dest":"HAMBURG","eta_utc":"2027-01-15T10:00Z","bound":false,"src":"near"}
+{"t":"2026-11-27T11:28:00Z","mmsi":255738000,"imo":9881299,"name":"AUTO ADVANCE","type":70,"len":169,"beam":28,"draught":7.6,"dest":"DEWVN","eta_utc":"2026-11-27T10:00Z","bound":false,"src":"near"}
+{"t":"2026-11-27T11:34:09Z","mmsi":253082000,"imo":9226152,"name":"KAISHUU","type":33,"len":158,"beam":28,"draught":7.2,"dest":"DREDGE","eta_utc":"2027-08-26T06:00Z","bound":false,"src":"near"}
+{"t":"2026-11-27T11:28:10Z","mmsi":244514000,"imo":9705718,"name":"NEPTUN FURY","type":52,"len":27,"beam":10,"draught":2.9,"dest":"WILHELMSHAVEN","eta_utc":"2026-11-28T09:00Z","bound":false,"src":"near"}
+{"t":"2026-11-27T11:28:10Z","mmsi":211513680,"imo":0,"name":"BAYERN","type":70,"len":86,"beam":10,"draught":1.1,"dest":"HAMBURG","eta_utc":"2026-11-27T17:00Z","bound":false,"src":"near"}
+{"t":"2026-11-27T11:28:22Z","mmsi":211693600,"imo":0,"name":"REINHARD WOLTMAN","type":99,"len":21,"beam":5,"draught":1.8,"dest":"HAMBURG","eta_utc":null,"bound":false,"src":"near"}
+{"t":"2026-11-27T11:28:31Z","mmsi":355283000,"imo":9398383,"name":"MSC LUCIANA","type":70,"len":363,"beam":46,"draught":13.8,"dest":"FRLEH","eta_utc":"2026-11-28T19:00Z","bound":false,"src":"near"}
+{"t":"2026-11-27T11:28:32Z","mmsi":255804460,"imo":9480980,"name":"JOHANN ESSBERGER","type":89,"len":100,"beam":18,"draught":6,"dest":"DE HAM","eta_utc":"2026-11-27T07:00Z","bound":false,"src":"near"}
+{"t":"2026-11-27T11:28:36Z","mmsi":245472000,"imo":9198630,"name":"ANTJE K","type":70,"len":90,"beam":15,"draught":4,"dest":"DEBKE","eta_utc":"2026-11-25T05:00Z","bound":false,"src":"near"}
+{"t":"2026-11-27T11:28:41Z","mmsi":211523910,"imo":9588914,"name":"EBBA2","type":80,"len":50,"beam":10,"draught":2.5,"dest":"BREMERHAVEN","eta_utc":"2026-11-27T21:00Z","bound":false,"src":"near"}
+{"t":"2026-11-27T11:28:42Z","mmsi":209968000,"imo":9111125,"name":"RIX STREAM","type":70,"len":82,"beam":12,"draught":3.2,"dest":"DERSK","eta_utc":"2026-11-28T16:00Z","bound":false,"src":"near"}
+{"t":"2026-11-27T11:28:47Z","mmsi":255915667,"imo":9977426,"name":"ELBINSEL","type":70,"len":170,"beam":27,"draught":8,"dest":"DEHAM","eta_utc":"2026-11-26T05:00Z","bound":true,"src":"near"}
+{"t":"2026-11-27T11:35:10Z","mmsi":477321000,"imo":9253739,"name":"OOCL MONTREAL","type":70,"len":294,"beam":32,"draught":9.2,"dest":"BE ANR > DE HAM","eta_utc":null,"bound":true,"src":"near"}
+{"t":"2026-11-27T11:35:20Z","mmsi":259210000,"imo":9231951,"name":"FINNMARKEN","type":60,"len":139,"beam":26,"draught":5.3,"dest":"DKESBJ","eta_utc":"2026-11-28T07:00Z","bound":false,"src":"near"}
+{"t":"2026-11-27T11:35:31Z","mmsi":255806329,"imo":9294680,"name":"CHARLOTTE ESSBERGER","type":89,"len":100,"beam":17,"draught":5.5,"dest":"HAMBURG","eta_utc":"2026-11-26T19:00Z","bound":false,"src":"near"}
+{"t":"2026-11-27T11:35:37Z","mmsi":218098000,"imo":9354478,"name":"IDA RAMBOW","type":71,"len":149,"beam":23,"draught":8.3,"dest":"PLGDN","eta_utc":"2026-11-29T19:00Z","bound":false,"src":"near"}
+{"t":"2026-11-27T11:35:46Z","mmsi":256259000,"imo":9609902,"name":"MBC DAISY","type":70,"len":146,"beam":21,"draught":7.2,"dest":"DEHAM","eta_utc":null,"bound":true,"src":"near"}
+{"t":"2026-11-27T11:35:47Z","mmsi":636025327,"imo":9987330,"name":"MSC ALESSIA","type":71,"len":366,"beam":51,"draught":13.5,"dest":"NLRTM","eta_utc":"2026-11-30T23:30Z","bound":false,"src":"near"}
+{"t":"2026-11-27T11:35:54Z","mmsi":230984000,"imo":9354325,"name":"LINDA","type":79,"len":141,"beam":22,"draught":8.2,"dest":"DEHAM","eta_utc":null,"bound":true,"src":"near"}
+{"t":"2026-11-27T11:35:49Z","mmsi":211751550,"imo":0,"name":"WS 23","type":99,"len":15,"beam":4,"draught":1.4,"dest":"HAMBURG","eta_utc":"2027-03-06T10:00Z","bound":false,"src":"near"}
+{"t":"2026-11-27T11:36:04Z","mmsi":211816550,"imo":0,"name":"ENNSTAL","type":69,"len":25,"beam":7,"draught":1.1,"dest":"HAMBURG","eta_utc":"2027-03-01T22:10Z","bound":false,"src":"near"}
+{"t":"2026-11-27T11:36:07Z","mmsi":211378190,"imo":7928615,"name":"KOI","type":60,"len":54,"beam":10,"draught":2.1,"dest":"DEHAM","eta_utc":null,"bound":false,"src":"near"}
+{"t":"2026-11-27T11:30:14Z","mmsi":211555980,"imo":0,"name":"TMS-4","type":80,"len":33,"beam":6,"draught":2,"dest":"HAFEN HAMBURF","eta_utc":null,"bound":false,"src":"near"}
+{"t":"2026-11-27T11:36:22Z","mmsi":256154000,"imo":9521423,"name":"CHEMICAL LUNA","type":82,"len":134,"beam":20,"draught":6.5,"dest":"DE HAM","eta_utc":null,"bound":false,"src":"near"}
+{"t":"2026-11-27T11:30:30Z","mmsi":211105740,"imo":9984780,"name":"BRGM WEICHMANN","type":55,"len":24,"beam":6,"draught":2,"dest":"DECUX","eta_utc":"2027-08-29T02:37Z","bound":false,"src":"near"}
+{"t":"2026-11-27T11:30:57Z","mmsi":211668700,"imo":0,"name":"LENI TF2","type":33,"len":27,"beam":7,"draught":1.2,"dest":"HAMBURG-","eta_utc":null,"bound":false,"src":"near"}
+{"t":"2026-11-27T11:31:05Z","mmsi":305490000,"imo":9368780,"name":"JOTAGAS","type":83,"len":120,"beam":20,"draught":6.1,"dest":"NL TNZ","eta_utc":"2026-11-28T07:00Z","bound":false,"src":"near"}
+{"t":"2026-11-27T11:31:22Z","mmsi":563287300,"imo":9630420,"name":"XIAMEN EXPRESS","type":74,"len":336,"beam":48,"draught":11.9,"dest":"DEHAM->DEBRV","eta_utc":"2026-11-27T07:00Z","bound":false,"src":"near"}
+{"t":"2026-11-27T11:31:52Z","mmsi":255916313,"imo":1037218,"name":"DP WORLD ROTTERDAM","type":70,"len":148,"beam":27,"draught":6.8,"dest":"DEBRV","eta_utc":"2026-11-27T02:00Z","bound":false,"src":"near"}
+{"t":"2026-11-27T11:32:25Z","mmsi":211234080,"imo":0,"name":"TK14","type":90,"len":20,"beam":13,"draught":2.3,"dest":"HAMBURG","eta_utc":null,"bound":false,"src":"near"}
+{"t":"2026-11-27T11:32:40Z","mmsi":563297100,"imo":9952763,"name":"ONE RESOLUTION","type":71,"len":272,"beam":43,"draught":13.9,"dest":"DEBRV>ESALG","eta_utc":"2026-12-01T06:00Z","bound":false,"src":"near"}
+{"t":"2026-11-27T11:32:43Z","mmsi":211536850,"imo":0,"name":"FELIX","type":90,"len":11,"beam":6,"draught":1.2,"dest":"HAMTRAVE","eta_utc":null,"bound":false,"src":"near"}
+{"t":"2026-11-27T11:33:27Z","mmsi":211363350,"imo":0,"name":"LEYHOERN","type":54,"len":41,"beam":9,"draught":1.6,"dest":"OSTFR.KUESTE","eta_utc":null,"bound":false,"src":"near"}
+{"t":"2026-11-27T11:34:00Z","mmsi":209488000,"imo":9190183,"name":"FRI BREVIK","type":79,"len":89,"beam":13,"draught":4.2,"dest":"DERSK","eta_utc":"2026-11-28T06:00Z","bound":false,"src":"near"}
+{"t":"2026-11-27T11:34:38Z","mmsi":253494000,"imo":9573062,"name":"VITUS BERING","type":33,"len":119,"beam":23,"draught":8,"dest":"DEHAM > E3","eta_utc":"2027-10-26T09:30Z","bound":false,"src":"near"}
+{"t":"2026-11-27T11:35:03Z","mmsi":211437100,"imo":0,"name":"NECKAR","type":79,"len":86,"beam":10,"draught":1,"dest":"MAGDEBURG","eta_utc":null,"bound":false,"src":"near"}
+{"t":"2026-11-27T11:35:10Z","mmsi":211840050,"imo":0,"name":"BREMEN 10","type":55,"len":8,"beam":3,"draught":0,"dest":"","eta_utc":"2027-01-01T01:00Z","bound":false,"src":"near"}
+{"t":"2026-11-27T11:35:16Z","mmsi":211476540,"imo":0,"name":"LINAH","type":99,"len":null,"beam":null,"draught":2.4,"dest":"BRAKE","eta_utc":null,"bound":false,"src":"near"}
+{"t":"2026-11-27T11:35:29Z","mmsi":211247340,"imo":8995055,"name":"HH 204","type":99,"len":59,"beam":10,"draught":1.3,"dest":"DEHAM","eta_utc":"2027-01-16T11:00Z","bound":false,"src":"near"}
+{"t":"2026-11-27T11:35:33Z","mmsi":245015000,"imo":9240744,"name":"SAMIRA","type":79,"len":80,"beam":10,"draught":3.5,"dest":"DEBRE","eta_utc":"2026-11-28T08:00Z","bound":false,"src":"near"}
+{"t":"2026-11-27T11:35:40Z","mmsi":229090000,"imo":9641730,"name":"MEIN SCHIFF 3","type":69,"len":294,"beam":39,"draught":8.2,"dest":"DEBRV","eta_utc":"2026-11-27T15:00Z","bound":false,"src":"near"}
+{"t":"2026-11-27T11:36:15Z","mmsi":229934000,"imo":9674529,"name":"CMA CGM ELBE","type":71,"len":300,"beam":49,"draught":13.4,"dest":"DEHAM","eta_utc":null,"bound":true,"src":"near"}
+{"t":"2026-11-27T11:36:23Z","mmsi":255916312,"imo":1049974,"name":"DP WORLD ANTWERP","type":70,"len":148,"beam":27,"draught":6.9,"dest":"DEBRV","eta_utc":"2026-11-27T06:00Z","bound":false,"src":"near"}
