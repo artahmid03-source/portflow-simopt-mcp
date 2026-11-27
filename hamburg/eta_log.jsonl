@@ -372,3 +372,6 @@
 {"mmsi":232032457,"name":"CUMBRIA","heard_utc":"2026-11-27T05:13:26Z","eta_utc":"2026-11-17T08:00Z","len":199,"dest":"HAMBURG"}
 {"mmsi":248247000,"name":"CMA CGM MUSSET","heard_utc":"2026-11-27T05:09:32Z","eta_utc":"2026-11-27T14:00Z","len":300,"dest":"DEHAM"}
 {"mmsi":636093197,"name":"SCI DELHI","heard_utc":"2026-11-27T11:44:38Z","eta_utc":"2026-11-27T08:00Z","len":300,"dest":"NLRTM>DEHAM"}
+{"mmsi":255805555,"name":"AKACIA","heard_utc":"2026-11-27T13:04:49Z","eta_utc":"2026-11-27T05:00Z","len":149,"dest":"DEHAM"}
+{"mmsi":357214000,"name":"CMA CGM ALCAZAR","heard_utc":"2026-11-27T13:03:36Z","eta_utc":"2026-11-28T15:00Z","len":294,"dest":"DEHAM"}
+{"mmsi":636093154,"name":"NINGBO EXPRESS","heard_utc":"2026-11-27T13:07:57Z","eta_utc":"2026-11-27T02:30Z","len":320,"dest":"DEHAM"}

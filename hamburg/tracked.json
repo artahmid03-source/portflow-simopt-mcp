@@ -151,13 +151,13 @@
  },
  "218038370": {
   "first_seen": "2026-11-24T19:04:42Z",
-  "last_seen": "2026-11-27T11:42:21Z",
+  "last_seen": "2026-11-27T13:06:17Z",
   "name": "DAMIETTA EXPRESS",
   "imo": 9543108,
   "dest": "NLRTM > DEHAM",
   "draught": 12.1,
   "len": 400,
-  "eta_utc": null
+  "eta_utc": "2026-11-25T21:00Z"
  },
  "218098000": {
   "first_seen": "2026-11-15T14:18:18Z",
@@ -281,7 +281,7 @@
  },
  "229934000": {
   "first_seen": "2026-11-26T06:26:37Z",
-  "last_seen": "2026-11-27T11:42:12Z",
+  "last_seen": "2026-11-27T13:06:21Z",
   "name": "CMA CGM ELBE",
   "imo": 9674529,
   "dest": "DEHAM",
@@ -481,13 +481,13 @@
  },
  "255805555": {
   "first_seen": "2026-11-17T00:50:17Z",
-  "last_seen": "2026-11-19T08:01:12Z",
+  "last_seen": "2026-11-27T13:04:49Z",
   "name": "AKACIA",
   "imo": 9315020,
-  "dest": "DEHAM EGH",
-  "draught": 7,
+  "dest": "DEHAM",
+  "draught": 8.6,
   "len": 149,
-  "eta_utc": "2026-11-19T07:00Z"
+  "eta_utc": "2026-11-27T05:00Z"
  },
  "255805884": {
   "first_seen": "2026-11-15T17:07:00Z",
@@ -571,7 +571,7 @@
  },
  "255915667": {
   "first_seen": "2026-11-17T09:10:47Z",
-  "last_seen": "2026-11-27T11:41:08Z",
+  "last_seen": "2026-11-27T13:04:48Z",
   "name": "ELBINSEL",
   "imo": 9977426,
   "dest": "DEHAM",
@@ -691,7 +691,7 @@
  },
  "305287000": {
   "first_seen": "2026-11-19T23:55:42Z",
-  "last_seen": "2026-11-27T11:38:30Z",
+  "last_seen": "2026-11-27T13:08:29Z",
   "name": "NEUENFELDE",
   "imo": 9231846,
   "dest": "DEHAM",
@@ -871,13 +871,13 @@
  },
  "357214000": {
   "first_seen": "2026-11-26T04:21:35Z",
-  "last_seen": "2026-11-26T04:21:35Z",
+  "last_seen": "2026-11-27T13:03:36Z",
   "name": "CMA CGM ALCAZAR",
   "imo": 9335197,
   "dest": "DEHAM",
   "draught": 12.4,
   "len": 294,
-  "eta_utc": "2026-11-26T09:00Z"
+  "eta_utc": "2026-11-28T15:00Z"
  },
  "372319000": {
   "first_seen": "2026-11-17T18:36:53Z",
@@ -921,7 +921,7 @@
  },
  "440487000": {
   "first_seen": "2026-11-24T19:04:30Z",
-  "last_seen": "2026-11-27T11:40:31Z",
+  "last_seen": "2026-11-27T13:04:31Z",
   "name": "HMM COPENHAGEN",
   "imo": 9863302,
   "dest": "BEANR>DEHAM",
@@ -1001,7 +1001,7 @@
  },
  "477321000": {
   "first_seen": "2026-11-20T16:09:14Z",
-  "last_seen": "2026-11-27T11:41:15Z",
+  "last_seen": "2026-11-27T13:05:06Z",
   "name": "OOCL MONTREAL",
   "imo": 9253739,
   "dest": "BE ANR > DE HAM",
@@ -1061,7 +1061,7 @@
  },
  "538009076": {
   "first_seen": "2026-11-26T04:22:39Z",
-  "last_seen": "2026-11-27T11:40:52Z",
+  "last_seen": "2026-11-27T13:04:37Z",
   "name": "CANOLA ZIBO",
   "imo": 9883778,
   "dest": "HAMBURG",
@@ -1091,13 +1091,13 @@
  },
  "538090453": {
   "first_seen": "2026-11-26T09:01:42Z",
-  "last_seen": "2026-11-27T11:44:37Z",
+  "last_seen": "2026-11-27T13:08:42Z",
   "name": "BRIGHT SKY",
   "imo": 9465435,
   "dest": "DEHAM",
   "draught": 8,
   "len": 200,
-  "eta_utc": null
+  "eta_utc": "2026-11-26T03:00Z"
  },
  "538090729": {
   "first_seen": "2026-11-17T09:16:53Z",
@@ -1291,7 +1291,7 @@
  },
  "636021386": {
   "first_seen": "2026-11-24T19:05:32Z",
-  "last_seen": "2026-11-27T11:35:19Z",
+  "last_seen": "2026-11-27T13:05:19Z",
   "name": "ASANAGI",
   "imo": 9916197,
   "dest": "DEHAM",
@@ -1441,13 +1441,13 @@
  },
  "636093154": {
   "first_seen": "2026-11-26T06:40:00Z",
-  "last_seen": "2026-11-27T11:43:52Z",
+  "last_seen": "2026-11-27T13:07:57Z",
   "name": "NINGBO EXPRESS",
   "imo": 9229843,
   "dest": "DEHAM",
   "draught": 10.9,
   "len": 320,
-  "eta_utc": null
+  "eta_utc": "2026-11-27T02:30Z"
  },
  "636093159": {
   "first_seen": "2026-11-20T16:10:54Z",
@@ -1471,8 +1471,8 @@
  },
  "636093172": {
   "first_seen": "2026-11-24T06:56:24Z",
-  "last_seen": "2026-11-27T11:42:38Z",
-  "name": "ALULA EXPRESS",
+  "last_seen": "2026-11-27T13:09:28Z",
+  "name": "ATHENS EXPRESS",
   "imo": 9525883,
   "dest": "DEHAM",
   "draught": 12.6,
@@ -1481,7 +1481,7 @@
  },
  "636093197": {
   "first_seen": "2026-11-24T19:05:46Z",
-  "last_seen": "2026-11-27T11:44:38Z",
+  "last_seen": "2026-11-27T13:02:40Z",
   "name": "SCI DELHI",
   "imo": 9699127,
   "dest": "NLRTM>DEHAM",
