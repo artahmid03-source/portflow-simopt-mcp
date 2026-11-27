@@ -1,30 +1,30 @@
 {
- "checked_utc": "2026-11-26T23:08:29+00:00",
+ "checked_utc": "2026-11-27T00:15:35+00:00",
  "overall": "ok",
  "checks": [
   {
    "name": "collector",
    "state": "ok",
-   "detail": "last AIS run ended 2026-11-26T23:08:10Z: 1988 messages near Hamburg, 146 ships tracked, 0 connection errors, 0 s offline",
-   "age_h": 0.0
+   "detail": "last AIS run ended 2026-11-27T00:06:40Z: 1357 messages near Hamburg, 146 ships tracked, 0 connection errors, 0 s offline",
+   "age_h": 0.1
   },
   {
    "name": "plan_hamburg",
    "state": "ok",
-   "detail": "14 ships planned at 2026-11-26T19:56, 1.41 days average turnaround",
-   "age_h": 3.2
+   "detail": "14 ships planned at 2026-11-27T00:09, 1.56 days average turnaround",
+   "age_h": 0.1
   },
   {
    "name": "tide_forecast",
    "state": "ok",
-   "detail": "Elbe tide forecast from 6 gauges, made 2026-11-26T19:36",
-   "age_h": 3.5
+   "detail": "Elbe tide forecast from 6 gauges, made 2026-11-27T00:06",
+   "age_h": 0.1
   },
   {
    "name": "port_list",
    "state": "ok",
-   "detail": "23 ships on the Port of Hamburg's expected list",
-   "age_h": 0.0
+   "detail": "24 ships on the Port of Hamburg's expected list",
+   "age_h": 0.2
   },
   {
    "name": "planning_api",
