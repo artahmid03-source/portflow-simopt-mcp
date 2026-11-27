@@ -382,3 +382,6 @@
 {"mmsi":248247000,"name":"CMA CGM MUSSET","heard_utc":"2026-11-27T20:27:32Z","eta_utc":"2026-11-27T13:30Z","len":300,"dest":"DEHAM"}
 {"mmsi":255805906,"name":"EDITH","heard_utc":"2026-11-27T20:28:54Z","eta_utc":"2026-11-27T21:00Z","len":139,"dest":"DEHAM"}
 {"mmsi":440486000,"name":"HMM ST PETERSBURG","heard_utc":"2026-11-27T20:21:15Z","eta_utc":"2026-11-29T05:15Z","len":400,"dest":"BEANR > DEHAM"}
+{"mmsi":210017000,"name":"ELBWIND","heard_utc":"2026-11-27T23:30:55Z","eta_utc":"2026-11-28T08:00Z","len":151,"dest":"DEHAM"}
+{"mmsi":244010871,"name":"HEEMSKERKGRACHT","heard_utc":"2026-11-27T23:26:26Z","eta_utc":"2026-11-29T07:00Z","len":139,"dest":"DEHAM"}
+{"mmsi":563051300,"name":"MAERSK MONTE PASCOAL","heard_utc":"2026-11-27T23:25:22Z","eta_utc":"2026-11-29T02:30Z","len":272,"dest":"DEHAM"}
