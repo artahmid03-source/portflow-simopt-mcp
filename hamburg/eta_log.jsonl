@@ -385,3 +385,4 @@
 {"mmsi":210017000,"name":"ELBWIND","heard_utc":"2026-11-27T23:30:55Z","eta_utc":"2026-11-28T08:00Z","len":151,"dest":"DEHAM"}
 {"mmsi":244010871,"name":"HEEMSKERKGRACHT","heard_utc":"2026-11-27T23:26:26Z","eta_utc":"2026-11-29T07:00Z","len":139,"dest":"DEHAM"}
 {"mmsi":563051300,"name":"MAERSK MONTE PASCOAL","heard_utc":"2026-11-27T23:25:22Z","eta_utc":"2026-11-29T02:30Z","len":272,"dest":"DEHAM"}
+{"mmsi":477211100,"name":"MAERSK BAYETE","heard_utc":"2026-11-27T23:43:04Z","eta_utc":"2026-11-28T22:30Z","len":223,"dest":"BEANR>>>DEHAM"}
