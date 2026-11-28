@@ -386,3 +386,23 @@
 {"mmsi":244010871,"name":"HEEMSKERKGRACHT","heard_utc":"2026-11-27T23:26:26Z","eta_utc":"2026-11-29T07:00Z","len":139,"dest":"DEHAM"}
 {"mmsi":563051300,"name":"MAERSK MONTE PASCOAL","heard_utc":"2026-11-27T23:25:22Z","eta_utc":"2026-11-29T02:30Z","len":272,"dest":"DEHAM"}
 {"mmsi":477211100,"name":"MAERSK BAYETE","heard_utc":"2026-11-27T23:43:04Z","eta_utc":"2026-11-28T22:30Z","len":223,"dest":"BEANR>>>DEHAM"}
+{"mmsi":212006000,"name":"JUDITH","heard_utc":"2026-11-28T03:03:35Z","eta_utc":"2026-11-27T21:00Z","len":170,"dest":"DEHAM"}
+{"mmsi":215949000,"name":"GRANDE ARGENTINA","heard_utc":"2026-11-28T02:59:54Z","eta_utc":"2026-11-28T02:00Z","len":214,"dest":"BEANR>DEHAM"}
+{"mmsi":218038370,"name":"DAMIETTA EXPRESS","heard_utc":"2026-11-28T03:00:16Z","eta_utc":"2026-11-25T21:00Z","len":400,"dest":"NLRTM > DEHAM"}
+{"mmsi":218098000,"name":"IDA RAMBOW","heard_utc":"2026-11-28T03:06:51Z","eta_utc":"2026-11-29T19:00Z","len":149,"dest":"DEHAM"}
+{"mmsi":218816000,"name":"BEATE","heard_utc":"2026-11-28T03:06:23Z","eta_utc":"2026-11-27T02:00Z","len":135,"dest":"DEHAM"}
+{"mmsi":229934000,"name":"CMA CGM ELBE","heard_utc":"2026-11-28T03:07:23Z","eta_utc":"2026-11-26T21:30Z","len":300,"dest":"DEHAM"}
+{"mmsi":232032457,"name":"CUMBRIA","heard_utc":"2026-11-28T03:07:52Z","eta_utc":"2026-11-17T08:00Z","len":199,"dest":"HAMBURG"}
+{"mmsi":255805906,"name":"EDITH","heard_utc":"2026-11-28T03:04:54Z","eta_utc":"2026-11-27T21:00Z","len":139,"dest":"DEHAM"}
+{"mmsi":305287000,"name":"NEUENFELDE","heard_utc":"2026-11-28T03:03:34Z","eta_utc":"2026-11-26T23:00Z","len":133,"dest":"DEHAM"}
+{"mmsi":309901000,"name":"MOL CELEBRATION","heard_utc":"2026-11-28T03:05:33Z","eta_utc":"2026-11-25T22:45Z","len":316,"dest":"DEHAM"}
+{"mmsi":355351000,"name":"MALACCA HIGHWAY","heard_utc":"2026-11-28T03:07:54Z","eta_utc":"2026-11-27T18:00Z","len":139,"dest":"DEHAM"}
+{"mmsi":419001859,"name":"JAG AMAIRA","heard_utc":"2026-11-28T03:03:23Z","eta_utc":"2026-11-28T18:00Z","len":229,"dest":"DEHAM"}
+{"mmsi":440487000,"name":"HMM COPENHAGEN","heard_utc":"2026-11-28T03:05:00Z","eta_utc":"2026-11-24T08:30Z","len":400,"dest":"BEANR>DEHAM"}
+{"mmsi":477321000,"name":"OOCL MONTREAL","heard_utc":"2026-11-28T03:05:06Z","eta_utc":"2026-11-27T05:30Z","len":294,"dest":"BE ANR > DE HAM"}
+{"mmsi":477949300,"name":"OOCL SWEDEN","heard_utc":"2026-11-28T03:01:10Z","eta_utc":"2026-11-28T11:15Z","len":399,"dest":"DEHAM"}
+{"mmsi":538005733,"name":"SAN FELIX","heard_utc":"2026-11-28T03:03:36Z","eta_utc":"2026-11-27T21:00Z","len":300,"dest":"DEHAM"}
+{"mmsi":563270400,"name":"JUNIPER POINT","heard_utc":"2026-11-28T02:58:14Z","eta_utc":"2026-11-28T14:00Z","len":199,"dest":"HAMBURG"}
+{"mmsi":636016305,"name":"MSC ALINA","heard_utc":"2026-11-28T02:58:18Z","eta_utc":"2026-11-29T07:00Z","len":300,"dest":"DEHAM"}
+{"mmsi":636021386,"name":"ASANAGI","heard_utc":"2026-11-28T03:04:27Z","eta_utc":"2026-11-24T03:00Z","len":292,"dest":"DEHAM"}
+{"mmsi":636093197,"name":"SCI DELHI","heard_utc":"2026-11-28T03:04:19Z","eta_utc":"2026-11-27T08:00Z","len":300,"dest":"NLRTM>DEHAM"}
