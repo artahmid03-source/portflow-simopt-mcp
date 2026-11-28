@@ -424,3 +424,5 @@
 {"mmsi":256259000,"name":"MBC DAISY","heard_utc":"2026-11-28T12:37:03Z","eta_utc":"2026-12-01T13:00Z","len":146,"dest":"DEHAM"}
 {"mmsi":440486000,"name":"HMM ST PETERSBURG","heard_utc":"2026-11-28T12:31:58Z","eta_utc":"2026-11-29T05:15Z","len":400,"dest":"BEANR > DEHAM"}
 {"mmsi":636023348,"name":"ONE INSPIRATION","heard_utc":"2026-11-28T12:32:37Z","eta_utc":"2026-11-29T13:00Z","len":400,"dest":"DEHAM"}
+{"mmsi":215800000,"name":"ATLANTIC SEA","heard_utc":"2026-11-28T14:03:14Z","eta_utc":"2026-11-30T19:00Z","len":296,"dest":"GBLIV > DEHAM"}
+{"mmsi":440144000,"name":"HMM TACOMA","heard_utc":"2026-11-28T14:02:41Z","eta_utc":"2026-11-28T23:59Z","len":293,"dest":"NLRTM-DEHAM"}
