@@ -412,3 +412,6 @@
 {"mmsi":256259000,"name":"MBC DAISY","heard_utc":"2026-11-28T05:05:45Z","eta_utc":"2026-11-25T13:00Z","len":146,"dest":"DEHAM"}
 {"mmsi":538090453,"name":"BRIGHT SKY","heard_utc":"2026-11-28T05:04:11Z","eta_utc":"2026-11-26T03:00Z","len":200,"dest":"DEHAM"}
 {"mmsi":636023066,"name":"BULK PRUDENCE","heard_utc":"2026-11-28T05:03:03Z","eta_utc":"2026-11-28T12:30Z","len":199,"dest":"DEHAM"}
+{"mmsi":248247000,"name":"CMA CGM MUSSET","heard_utc":"2026-11-28T05:09:32Z","eta_utc":"2026-11-27T13:30Z","len":300,"dest":"DEHAM"}
+{"mmsi":636025327,"name":"MSC ALESSIA","heard_utc":"2026-11-28T05:13:21Z","eta_utc":"2026-11-28T06:30Z","len":366,"dest":"DEHAM CTB"}
+{"mmsi":636093154,"name":"NINGBO EXPRESS","heard_utc":"2026-11-28T05:12:53Z","eta_utc":"2026-11-27T02:30Z","len":320,"dest":"DEHAM"}
