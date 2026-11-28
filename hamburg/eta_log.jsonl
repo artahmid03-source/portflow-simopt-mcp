@@ -406,3 +406,9 @@
 {"mmsi":636016305,"name":"MSC ALINA","heard_utc":"2026-11-28T02:58:18Z","eta_utc":"2026-11-29T07:00Z","len":300,"dest":"DEHAM"}
 {"mmsi":636021386,"name":"ASANAGI","heard_utc":"2026-11-28T03:04:27Z","eta_utc":"2026-11-24T03:00Z","len":292,"dest":"DEHAM"}
 {"mmsi":636093197,"name":"SCI DELHI","heard_utc":"2026-11-28T03:04:19Z","eta_utc":"2026-11-27T08:00Z","len":300,"dest":"NLRTM>DEHAM"}
+{"mmsi":219854000,"name":"MARSEILLE MAERSK","heard_utc":"2026-11-28T05:02:47Z","eta_utc":"2026-11-29T00:01Z","len":399,"dest":"DEHAM"}
+{"mmsi":255805555,"name":"AKACIA","heard_utc":"2026-11-28T05:04:45Z","eta_utc":"2026-11-27T05:00Z","len":149,"dest":"DEHAM"}
+{"mmsi":255915667,"name":"ELBINSEL","heard_utc":"2026-11-28T05:04:47Z","eta_utc":"2026-11-26T05:00Z","len":170,"dest":"DEHAM"}
+{"mmsi":256259000,"name":"MBC DAISY","heard_utc":"2026-11-28T05:05:45Z","eta_utc":"2026-11-25T13:00Z","len":146,"dest":"DEHAM"}
+{"mmsi":538090453,"name":"BRIGHT SKY","heard_utc":"2026-11-28T05:04:11Z","eta_utc":"2026-11-26T03:00Z","len":200,"dest":"DEHAM"}
+{"mmsi":636023066,"name":"BULK PRUDENCE","heard_utc":"2026-11-28T05:03:03Z","eta_utc":"2026-11-28T12:30Z","len":199,"dest":"DEHAM"}
