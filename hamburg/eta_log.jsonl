@@ -419,3 +419,8 @@
 {"mmsi":215800000,"name":"ATLANTIC SEA","heard_utc":"2026-11-28T12:18:42Z","eta_utc":"2026-12-01T00:00Z","len":296,"dest":"GBLIV > DEHAM"}
 {"mmsi":255805555,"name":"AKACIA","heard_utc":"2026-11-28T12:16:52Z","eta_utc":"2026-11-28T13:00Z","len":149,"dest":"DEHAM CTB"}
 {"mmsi":636022873,"name":"MSC ATHENS","heard_utc":"2026-11-28T12:17:00Z","eta_utc":"2026-11-29T10:00Z","len":300,"dest":"DRIFTING HAMBURG"}
+{"mmsi":219854000,"name":"MARSEILLE MAERSK","heard_utc":"2026-11-28T12:37:47Z","eta_utc":"2026-11-29T12:30Z","len":399,"dest":"DEHAM"}
+{"mmsi":232063671,"name":"CMA CGM JANE","heard_utc":"2026-11-28T12:27:48Z","eta_utc":"2026-11-29T14:00Z","len":178,"dest":"DEHAM"}
+{"mmsi":256259000,"name":"MBC DAISY","heard_utc":"2026-11-28T12:37:03Z","eta_utc":"2026-12-01T13:00Z","len":146,"dest":"DEHAM"}
+{"mmsi":440486000,"name":"HMM ST PETERSBURG","heard_utc":"2026-11-28T12:31:58Z","eta_utc":"2026-11-29T05:15Z","len":400,"dest":"BEANR > DEHAM"}
+{"mmsi":636023348,"name":"ONE INSPIRATION","heard_utc":"2026-11-28T12:32:37Z","eta_utc":"2026-11-29T13:00Z","len":400,"dest":"DEHAM"}
