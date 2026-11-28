@@ -415,3 +415,7 @@
 {"mmsi":248247000,"name":"CMA CGM MUSSET","heard_utc":"2026-11-28T05:09:32Z","eta_utc":"2026-11-27T13:30Z","len":300,"dest":"DEHAM"}
 {"mmsi":636025327,"name":"MSC ALESSIA","heard_utc":"2026-11-28T05:13:21Z","eta_utc":"2026-11-28T06:30Z","len":366,"dest":"DEHAM CTB"}
 {"mmsi":636093154,"name":"NINGBO EXPRESS","heard_utc":"2026-11-28T05:12:53Z","eta_utc":"2026-11-27T02:30Z","len":320,"dest":"DEHAM"}
+{"mmsi":210017000,"name":"ELBWIND","heard_utc":"2026-11-28T12:21:56Z","eta_utc":"2026-11-28T08:00Z","len":151,"dest":"DEHAM"}
+{"mmsi":215800000,"name":"ATLANTIC SEA","heard_utc":"2026-11-28T12:18:42Z","eta_utc":"2026-12-01T00:00Z","len":296,"dest":"GBLIV > DEHAM"}
+{"mmsi":255805555,"name":"AKACIA","heard_utc":"2026-11-28T12:16:52Z","eta_utc":"2026-11-28T13:00Z","len":149,"dest":"DEHAM CTB"}
+{"mmsi":636022873,"name":"MSC ATHENS","heard_utc":"2026-11-28T12:17:00Z","eta_utc":"2026-11-29T10:00Z","len":300,"dest":"DRIFTING HAMBURG"}
